@@ -1,0 +1,345 @@
+/* =====================================================
+   SOLO LEVELING – FINAL HARLOWE UI
+   Content-sized panels + boxed cinematic crawl
+===================================================== */
+
+/* ---------- GLOBAL RESET ---------- */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* ---------- BR HANDLING (OPTION 1) ---------- */
+/* Remove ghost <br>, allow intentional manual <br> */
+br:empty {
+  display: none;
+}
+
+/* ---------- ROOT ---------- */
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  background:
+    radial-gradient(circle at 50% 30%, #0c1638 0%, #050812 65%),
+    radial-gradient(circle at 20% 20%, rgba(47,164,255,.12), transparent 45%),
+    radial-gradient(circle at 80% 15%, rgba(47,164,255,.08), transparent 50%);
+  color: #e9f1ff;
+  font-family: system-ui, "Segoe UI", sans-serif;
+}
+
+/* ---------- HARLOWE CORE ---------- */
+tw-story {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+tw-passage {
+  width: 100%;
+  height: 100%;
+  padding: 4%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ---------- SYSTEM CENTER ---------- */
+#system-center {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* =====================================================
+   SYSTEM BOX (DEFAULT — CONTENT SIZED)
+===================================================== */
+.system-rectangle {
+  width: 100%;
+  max-width: 900px;
+  padding: 2.4rem 3rem;
+
+  border-radius: 18px;
+  border: 2px solid #2fa4ff;
+  background: linear-gradient(180deg, #0e1836, #060b18);
+  box-shadow:
+    0 0 30px rgba(47,164,255,.45),
+    inset 0 0 0 1px rgba(255,255,255,.06);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  height: auto;
+}
+
+/* ---------- PANEL ---------- */
+.system-panel {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- HEADER ---------- */
+.system-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.system-alert {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid #2fa4ff;
+  color: #2fa4ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  box-shadow: 0 0 12px rgba(47,164,255,.6);
+}
+
+.system-title {
+  font-size: 1.25rem;
+  letter-spacing: .22rem;
+  text-transform: uppercase;
+  color: #dce9ff;
+}
+
+/* ---------- TEXT ---------- */
+.system-content {
+  font-size: 1rem;
+  line-height: 1.55;
+  color: #b6c9ec;
+  text-align: center;
+}
+
+.system-content p {
+  margin: 0 0 0.6rem 0;
+}
+
+/* ---------- LINKS / CHOICES ---------- */
+.system-content a,
+.system-content tw-link {
+  display: block;
+  width: fit-content;
+  margin: 1.2rem auto 0 auto;
+  padding: 0.6rem 1.8rem;
+
+  border-radius: 12px;
+  border: 1px solid #2fa4ff;
+  background: rgba(0,0,0,.2);
+
+  color: #e9f1ff;
+  letter-spacing: .14rem;
+  text-transform: uppercase;
+  text-decoration: none;
+  text-align: center;
+
+  box-shadow: 0 0 10px rgba(47,164,255,.35);
+}
+
+.system-content a:hover,
+.system-content tw-link:hover {
+  background: #2fa4ff;
+  color: #061021;
+}
+
+/* =====================================================
+   MENU
+===================================================== */
+.menu {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.menu-card {
+  width: 100%;
+  max-width: 900px;
+  padding: 3rem;
+
+  border-radius: 18px;
+  border: 2px solid #2fa4ff;
+  background: linear-gradient(180deg, #0e1836, #060b18);
+  box-shadow: 0 0 34px rgba(47,164,255,.45);
+
+  text-align: center;
+}
+
+.menu-title {
+  font-size: 2rem;
+  letter-spacing: .25rem;
+  text-transform: uppercase;
+  color: #2fa4ff;
+  margin-bottom: 2rem;
+}
+
+/* =====================================================
+   CRAWL (BOXED + CINEMATIC)
+===================================================== */
+.system-rectangle.is-crawl {
+  max-width: 900px;
+  height: 100%;
+  padding: 2.4rem 3rem;
+
+  border-radius: 18px;
+  border: 2px solid #2fa4ff;
+  background: linear-gradient(180deg, #0e1836, #060b18);
+  box-shadow:
+    0 0 30px rgba(47,164,255,.45),
+    inset 0 0 0 1px rgba(255,255,255,.06);
+
+  overflow: hidden;
+}
+
+.crawl {
+  max-width: 70ch;
+  text-align: center;
+  animation: crawlUp 42s linear forwards;
+}
+
+.crawl p {
+  font-size: 1.25rem;
+  line-height: 1.9rem;
+  margin-bottom: 1.2rem;
+  color: #d8e6ff;
+  text-shadow: 0 0 14px rgba(47,164,255,.25);
+}
+
+/* ---------- CRAWL ANIMATION ---------- */
+@keyframes crawlUp {
+  0%   { transform: translateY(45%); opacity: 1; }
+  85%  { opacity: 1; }
+  100% { transform: translateY(-120%); opacity: 0; }
+}
+
+/* =====================================================
+   COUNTDOWN TIMER (SYSTEM STYLE)
+===================================================== */
+
+tw-hook[name="countdown"] {
+  display: block;
+  margin-top: 1.4rem;
+
+  font-size: 1.1rem;
+  letter-spacing: .12rem;
+  text-transform: uppercase;
+
+  color: #7fbaff;
+  text-align: center;
+
+  animation: pulseCountdown 1s infinite;
+}
+
+/* Optional subtle pulse */
+@keyframes pulseCountdown {
+  0%   { opacity: .85; }
+  50%  { opacity: 1; }
+  100% { opacity: .85; }
+}
+
+tw-sidebar {
+  display: none !important;
+}
+
+/* =====================================================
+   SPEECH BOX — DIALOGUE UI (SOLO LEVELING STYLE)
+===================================================== */
+
+.SpeechBox {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+
+  padding: 1.8rem 2.4rem 2.2rem;
+
+  border-radius: 16px;
+  border: 2px solid #2fa4ff;
+
+  background:
+    linear-gradient(180deg, #0e1836, #060b18);
+
+  box-shadow:
+    0 0 28px rgba(47,164,255,.45),
+    inset 0 0 0 1px rgba(255,255,255,.05);
+
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+/* ---------- SPEAKER NAME ---------- */
+.SpeechName {
+  align-self: flex-start;
+
+  padding: 0.35rem 1.2rem;
+
+  border-radius: 999px;
+  border: 1px solid #2fa4ff;
+
+  background: rgba(0,0,0,.35);
+
+  font-size: 0.85rem;
+  letter-spacing: .18rem;
+  text-transform: uppercase;
+
+  color: #9ccaff;
+
+  box-shadow: 0 0 10px rgba(47,164,255,.35);
+}
+
+/* ---------- DIALOGUE TEXT ---------- */
+.Speech {
+  font-size: 1rem;
+  line-height: 1.55;
+
+  color: #dbe9ff;
+
+  padding: 0.6rem 0.2rem 0;
+
+  position: relative;
+}
+
+/* ---------- CONTINUE BUTTON ---------- */
+.SpeechContinueButton {
+  margin-top: 1.2rem;
+  text-align: right;
+}
+
+/* Style the Twine link inside */
+.SpeechContinueButton a,
+.SpeechContinueButton tw-link {
+  display: inline-block;
+
+  padding: 0.5rem 1.6rem;
+
+  border-radius: 10px;
+  border: 1px solid #2fa4ff;
+
+  background: rgba(0,0,0,.2);
+
+  color: #e9f1ff;
+  letter-spacing: .14rem;
+  text-transform: uppercase;
+  text-decoration: none;
+
+  box-shadow: 0 0 10px rgba(47,164,255,.35);
+}
+
+/* Hover polish */
+.SpeechContinueButton a:hover,
+.SpeechContinueButton tw-link:hover {
+  background: #2fa4ff;
+  color: #061021;
+}
