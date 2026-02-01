@@ -166,6 +166,73 @@
 
     const tabs = Array.from(document.querySelectorAll(".ko-recent-tab[data-recent]"));
 
+    // Loading animation HTML generator
+    function getLoaderHTML(id) {
+      return `
+        <div class="ko-loader-wrapper">
+          <div class="ko-loader" data-loader-id="${id}">
+            <div class="ko-loader__text">
+              Loading<span class="ko-loader__dots"><span class="ko-loader__dot">.</span><span class="ko-loader__dot">.</span><span class="ko-loader__dot">.</span></span>
+            </div>
+            <div class="ko-loader__bar-wrap">
+              <div class="ko-loader__bar-container">
+                <div class="ko-loader__bar"></div>
+                <div class="ko-loader__percent">0%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Progress simulation
+    function simulateProgress(loaderId, onComplete) {
+      const loader = document.querySelector(`[data-loader-id="${loaderId}"]`);
+      if (!loader) return { stop: () => {} };
+
+      const bar = loader.querySelector('.ko-loader__bar');
+      const percent = loader.querySelector('.ko-loader__percent');
+      let progress = 0;
+      let speed = 2;
+      let completed = false;
+
+      const interval = setInterval(() => {
+        if (completed) return;
+        
+        // Slow down as we approach 90%
+        if (progress < 30) speed = 3;
+        else if (progress < 60) speed = 2;
+        else if (progress < 85) speed = 1;
+        else speed = 0.3;
+
+        progress = Math.min(progress + speed + Math.random() * speed, 90);
+        bar.style.width = Math.round(progress) + '%';
+        percent.textContent = Math.round(progress) + '%';
+      }, 80);
+
+      return {
+        stop: () => {
+          completed = true;
+          clearInterval(interval);
+        },
+        complete: () => {
+          completed = true;
+          clearInterval(interval);
+          // Animate to 100%
+          let current = progress;
+          const finishInterval = setInterval(() => {
+            current = Math.min(current + 5, 100);
+            bar.style.width = Math.round(current) + '%';
+            percent.textContent = Math.round(current) + '%';
+            if (current >= 100) {
+              clearInterval(finishInterval);
+              if (onComplete) setTimeout(onComplete, 150);
+            }
+          }, 30);
+        }
+      };
+    }
+
     function setActiveTab(key) {
       tabs.forEach(btn => {
         const isActive = btn.getAttribute("data-recent") === key;
@@ -183,7 +250,7 @@
 
           return `
             <a href="${href}" class="post-card">
-              ${img ? `<img src="${img}" alt="${p.title.rendered}">` : ""}
+              ${img ? `<img src="${img}" alt="${p.title.rendered}" draggable="false">` : ""}
               <h3>${p.title.rendered}</h3>
               <p>${excerpt}</p>
               <span>Read more →</span>
@@ -193,12 +260,17 @@
         .join("");
     }
 
+    let currentLoaderId = 0;
+
     function loadRecent(key) {
       const src = SOURCES[key];
       if (!src) return;
 
       setActiveTab(key);
-      container.innerHTML = "<p>Loading…</p>";
+      const loaderId = 'recent-' + (++currentLoaderId);
+      container.innerHTML = getLoaderHTML(loaderId);
+
+      const progress = simulateProgress(loaderId);
 
       const getHref =
         window.location.protocol === "file:"
@@ -211,9 +283,13 @@
           return res.json();
         })
         .then(items => {
-          container.innerHTML = renderCards(items, getHref);
+          progress.complete();
+          setTimeout(() => {
+            container.innerHTML = renderCards(items, getHref);
+          }, 200);
         })
         .catch(() => {
+          progress.stop();
           container.innerHTML = `<p>${src.errorText}</p>`;
         });
     }

@@ -35,6 +35,43 @@
 
   onReady(() => updateThemeToggleIcons());
 
+  /* ======================
+     IMAGE DRAG (UX)
+     Stop "ghost dragging" images
+  ====================== */
+  onReady(() => {
+    // 1) Block dragging globally (covers dynamically-inserted images too)
+    document.addEventListener(
+      "dragstart",
+      (e) => {
+        const t = e.target;
+        if (t && t.tagName === "IMG") e.preventDefault();
+      },
+      { capture: true }
+    );
+
+    // 2) Mark current + future <img> as draggable=false (nice to have)
+    const setDraggableFalse = (scope) => {
+      scope.querySelectorAll?.("img").forEach((img) => {
+        img.setAttribute("draggable", "false");
+      });
+    };
+
+    setDraggableFalse(document);
+
+    const mo = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        for (const node of m.addedNodes) {
+          if (!(node instanceof Element)) continue;
+          if (node.tagName === "IMG") node.setAttribute("draggable", "false");
+          setDraggableFalse(node);
+        }
+      }
+    });
+
+    mo.observe(document.documentElement, { childList: true, subtree: true });
+  });
+
   window.toggleTheme = function () {
     const isDark = root.getAttribute("data-theme") === "dark";
     const newTheme = isDark ? "light" : "dark";
@@ -42,6 +79,216 @@
     localStorage.setItem("theme", newTheme);
     updateThemeToggleIcons(newTheme);
   };
+
+  /* ======================
+     LIGHTBOX GALLERY
+  ====================== */
+  onReady(() => {
+    // Selectors for images that should NOT open in lightbox
+    const EXCLUDE_SELECTORS = [
+      ".nav-icon",
+      ".theme-toggle__icon",
+      ".ko-home__pfp img",
+      ".post-card img",
+      ".ko-compare__img"
+    ].join(", ");
+
+    let lightbox = null;
+    let lightboxImg = null;
+    let lightboxContent = null;
+    let lightboxCounter = null;
+    let prevBtn = null;
+    let nextBtn = null;
+    let galleryItems = []; // Can be images or .ko-compare elements
+    let currentIndex = 0;
+
+    function createLightbox() {
+      if (lightbox) return;
+
+      lightbox = document.createElement("div");
+      lightbox.className = "lightbox";
+      lightbox.innerHTML = `
+        <button class="lightbox__close" aria-label="Close">&times;</button>
+        <button class="lightbox__nav lightbox__nav--prev" aria-label="Previous">&#8249;</button>
+        <img class="lightbox__img" src="" alt="">
+        <div class="lightbox__content"></div>
+        <button class="lightbox__nav lightbox__nav--next" aria-label="Next">&#8250;</button>
+        <div class="lightbox__counter"></div>
+      `;
+      document.body.appendChild(lightbox);
+
+      lightboxImg = lightbox.querySelector(".lightbox__img");
+      lightboxContent = lightbox.querySelector(".lightbox__content");
+      lightboxCounter = lightbox.querySelector(".lightbox__counter");
+      prevBtn = lightbox.querySelector(".lightbox__nav--prev");
+      nextBtn = lightbox.querySelector(".lightbox__nav--next");
+
+      // Close handlers
+      lightbox.querySelector(".lightbox__close").addEventListener("click", closeLightbox);
+      lightbox.addEventListener("click", (e) => {
+        if (e.target === lightbox) closeLightbox();
+      });
+
+      // Navigation
+      prevBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        navigate(-1);
+      });
+      nextBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        navigate(1);
+      });
+
+      // Keyboard
+      document.addEventListener("keydown", (e) => {
+        if (!lightbox.classList.contains("is-open")) return;
+        if (e.key === "Escape") closeLightbox();
+        if (e.key === "ArrowLeft") navigate(-1);
+        if (e.key === "ArrowRight") navigate(1);
+      });
+    }
+
+    function collectGalleryItems() {
+      galleryItems = [];
+
+      // Collect regular images (excluding UI images and images inside ko-compare)
+      const allImages = document.querySelectorAll("img");
+      allImages.forEach(img => {
+        if (img.matches(EXCLUDE_SELECTORS)) return;
+        if (img.closest(".ko-compare")) return; // Skip images inside comparison sliders
+        if (!img.src || img.src.includes("data:")) return;
+        if (img.naturalWidth && img.naturalWidth < 50) return;
+        galleryItems.push({ type: "image", element: img });
+        img.classList.add("gallery-item");
+      });
+
+      // Collect comparison sliders
+      const compares = document.querySelectorAll(".ko-compare");
+      compares.forEach(compare => {
+        galleryItems.push({ type: "compare", element: compare });
+        compare.classList.add("gallery-item");
+      });
+
+      // Sort by document order
+      galleryItems.sort((a, b) => {
+        const pos = a.element.compareDocumentPosition(b.element);
+        return pos & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+      });
+    }
+
+    function openLightbox(item) {
+      createLightbox();
+      collectGalleryItems();
+
+      currentIndex = galleryItems.findIndex(gi => gi.element === item.element);
+      if (currentIndex === -1) currentIndex = 0;
+
+      updateLightbox();
+      lightbox.classList.add("is-open");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeLightbox() {
+      if (!lightbox) return;
+      lightbox.classList.remove("is-open", "is-compare");
+      lightboxContent.innerHTML = "";
+      document.body.style.overflow = "";
+    }
+
+    function navigate(dir) {
+      currentIndex += dir;
+      if (currentIndex < 0) currentIndex = galleryItems.length - 1;
+      if (currentIndex >= galleryItems.length) currentIndex = 0;
+      updateLightbox();
+    }
+
+    function setupCompareSlider(wrapper) {
+      const viewport = wrapper.querySelector(".ko-compare__viewport");
+      const range = wrapper.querySelector(".ko-compare__range");
+      if (!viewport || !range) return;
+
+      const sync = (value) => {
+        const v = Math.max(0, Math.min(100, Number(value)));
+        wrapper.style.setProperty("--pos", `${v}%`);
+        range.value = String(v);
+      };
+
+      range.addEventListener("input", (e) => sync(e.target.value));
+
+      const updateFromPointer = (clientX) => {
+        const rect = viewport.getBoundingClientRect();
+        const ratio = (clientX - rect.left) / rect.width;
+        sync(Math.round(ratio * 100));
+      };
+
+      const onPointerMove = (e) => updateFromPointer(e.clientX);
+      const onPointerUp = () => {
+        window.removeEventListener("pointermove", onPointerMove);
+        window.removeEventListener("pointerup", onPointerUp);
+      };
+
+      viewport.addEventListener("pointerdown", (e) => {
+        e.stopPropagation();
+        updateFromPointer(e.clientX);
+        window.addEventListener("pointermove", onPointerMove);
+        window.addEventListener("pointerup", onPointerUp);
+      });
+    }
+
+    function updateLightbox() {
+      if (!galleryItems.length) return;
+
+      const item = galleryItems[currentIndex];
+      lightboxContent.innerHTML = "";
+
+      if (item.type === "compare") {
+        // Clone the comparison slider
+        const clone = item.element.cloneNode(true);
+        clone.classList.remove("gallery-item");
+        clone.style.setProperty("--pos", item.element.style.getPropertyValue("--pos") || "50%");
+        lightboxContent.appendChild(clone);
+        setupCompareSlider(clone);
+        lightbox.classList.add("is-compare");
+      } else {
+        // Regular image
+        lightboxImg.src = item.element.src;
+        lightboxImg.alt = item.element.alt || "";
+        lightbox.classList.remove("is-compare");
+      }
+
+      lightboxCounter.textContent = `${currentIndex + 1} / ${galleryItems.length}`;
+
+      // Show/hide nav if only one item
+      const showNav = galleryItems.length > 1;
+      prevBtn.style.display = showNav ? "" : "none";
+      nextBtn.style.display = showNav ? "" : "none";
+      lightboxCounter.style.display = showNav ? "" : "none";
+    }
+
+    // Delegate click handler for images and comparison sliders
+    document.addEventListener("click", (e) => {
+      // Check for comparison slider click (on the viewport)
+      const compare = e.target.closest(".ko-compare");
+      if (compare && compare.classList.contains("gallery-item")) {
+        // Only open if clicking the viewport area, not the range slider
+        if (e.target.closest(".ko-compare__range")) return;
+        e.preventDefault();
+        openLightbox({ type: "compare", element: compare });
+        return;
+      }
+
+      // Check for regular image click
+      const img = e.target.closest("img");
+      if (!img) return;
+      if (img.matches(EXCLUDE_SELECTORS)) return;
+      if (img.closest(".ko-compare")) return;
+      if (!img.src || img.src.includes("data:")) return;
+      if (img.closest("a")) return;
+
+      e.preventDefault();
+      openLightbox({ type: "image", element: img });
+    });
+  });
 
   /* ======================
      PAGE → WORDPRESS MAP
@@ -105,6 +352,76 @@
   }
 
   const API_BASE = config.api;
+
+  /* ======================
+     LOADING ANIMATION
+  ====================== */
+  let loaderIdCounter = 0;
+
+  function getLoaderHTML(id) {
+    return `
+      <div class="ko-loader-wrapper">
+        <div class="ko-loader" data-loader-id="${id}">
+          <div class="ko-loader__text">
+            Loading<span class="ko-loader__dots"><span class="ko-loader__dot">.</span><span class="ko-loader__dot">.</span><span class="ko-loader__dot">.</span></span>
+          </div>
+          <div class="ko-loader__bar-wrap">
+            <div class="ko-loader__bar-container">
+              <div class="ko-loader__bar"></div>
+              <div class="ko-loader__percent">0%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function simulateProgress(loaderId) {
+    const loader = document.querySelector(`[data-loader-id="${loaderId}"]`);
+    if (!loader) return { stop: () => {}, complete: (cb) => cb && cb() };
+
+    const bar = loader.querySelector('.ko-loader__bar');
+    const percent = loader.querySelector('.ko-loader__percent');
+    let progress = 0;
+    let speed = 2;
+    let completed = false;
+
+    const interval = setInterval(() => {
+      if (completed) return;
+      
+      // Slow down as we approach 90%
+      if (progress < 30) speed = 3;
+      else if (progress < 60) speed = 2;
+      else if (progress < 85) speed = 1;
+      else speed = 0.3;
+
+      progress = Math.min(progress + speed + Math.random() * speed, 90);
+      bar.style.width = Math.round(progress) + '%';
+      percent.textContent = Math.round(progress) + '%';
+    }, 80);
+
+    return {
+      stop: () => {
+        completed = true;
+        clearInterval(interval);
+      },
+      complete: (onComplete) => {
+        completed = true;
+        clearInterval(interval);
+        // Animate to 100%
+        let current = progress;
+        const finishInterval = setInterval(() => {
+          current = Math.min(current + 5, 100);
+          bar.style.width = Math.round(current) + '%';
+          percent.textContent = Math.round(current) + '%';
+          if (current >= 100) {
+            clearInterval(finishInterval);
+            if (onComplete) setTimeout(onComplete, 150);
+          }
+        }, 30);
+      }
+    };
+  }
 
   /* ======================
      DOM
@@ -365,6 +682,11 @@
     const url = `${API_BASE}/posts?slug=${encodeURIComponent(slug)}&_embed`;
     console.log("Fetching post by slug:", slug, "URL:", url);
     
+    // Show loader
+    const loaderId = 'post-' + (++loaderIdCounter);
+    postContainer.innerHTML = getLoaderHTML(loaderId);
+    const progress = simulateProgress(loaderId);
+    
     fetch(url)
       .then(res => {
         if (!res.ok) throw new Error("Post not found");
@@ -373,23 +695,32 @@
       .then(posts => {
         console.log("Posts returned:", posts.length, posts);
         if (!posts.length) throw new Error("Post not found");
-        renderPost(posts[0]);
+        progress.complete(() => renderPost(posts[0]));
       })
       .catch(err => {
         console.error("Load error:", err);
+        progress.stop();
         postContainer.innerHTML = `<p>Failed to load post. Slug: "${slug}"</p>`;
       });
   }
 
   function loadPostById(id) {
+    // Show loader
+    const loaderId = 'post-' + (++loaderIdCounter);
+    postContainer.innerHTML = getLoaderHTML(loaderId);
+    const progress = simulateProgress(loaderId);
+    
     fetch(`${API_BASE}/posts/${id}?_embed`)
       .then(res => {
         if (!res.ok) throw new Error("Post not found");
         return res.json();
       })
-      .then(renderPost)
+      .then(post => {
+        progress.complete(() => renderPost(post));
+      })
       .catch(err => {
         console.error(err);
+        progress.stop();
         postContainer.innerHTML = `<p>Failed to load post.</p>`;
       });
   }
@@ -398,6 +729,11 @@
      POST LIST
   ====================== */
   function loadPostList() {
+    // Show loader
+    const loaderId = 'posts-' + (++loaderIdCounter);
+    postsContainer.innerHTML = getLoaderHTML(loaderId);
+    const progress = simulateProgress(loaderId);
+    
     fetch(`${API_BASE}/posts?_embed&per_page=100`)
       .then(res => {
         if (!res.ok) throw new Error("Posts not found");
@@ -411,28 +747,31 @@
           })
         );
 
-        postsContainer.innerHTML = posts.map(p => {
-          const img =
-            p._embedded?.["wp:featuredmedia"]?.[0]?.source_url;
+        progress.complete(() => {
+          postsContainer.innerHTML = posts.map(p => {
+            const img =
+              p._embedded?.["wp:featuredmedia"]?.[0]?.source_url;
 
-          // Local file: use query string; Online: use clean path
-          const href =
-            window.location.protocol === "file:"
-              ? `${config.link}.html?slug=${p.slug}`
-              : `/${config.link}/${p.slug}`;
+            // Local file: use query string; Online: use clean path
+            const href =
+              window.location.protocol === "file:"
+                ? `${config.link}.html?slug=${p.slug}`
+                : `/${config.link}/${p.slug}`;
 
-          return `
-            <a href="${href}" class="post-card">
-              ${img ? `<img src="${img}" alt="${p.title.rendered}">` : ""}
-              <h3>${p.title.rendered}</h3>
-              <p>${p.excerpt.rendered.replace(/<[^>]+>/g, "")}</p>
-              <span>Read more →</span>
-            </a>
-          `;
-        }).join("");
+            return `
+              <a href="${href}" class="post-card">
+                ${img ? `<img src="${img}" alt="${p.title.rendered}" draggable="false">` : ""}
+                <h3>${p.title.rendered}</h3>
+                <p>${p.excerpt.rendered.replace(/<[^>]+>/g, "")}</p>
+                <span>Read more →</span>
+              </a>
+            `;
+          }).join("");
+        });
       })
       .catch(err => {
         console.error(err);
+        progress.stop();
         postsContainer.innerHTML = `<p>Failed to load posts.</p>`;
       });
   }
