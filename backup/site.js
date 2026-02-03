@@ -1,154 +1,60 @@
-// Handle file:// protocol - remove base tag and fix links
+// URL handling for file:// protocol vs server
 (function () {
   const isFile = location.protocol === "file:";
 
-  if (isFile) {
-    // Remove the base tag that breaks file:// loading
-    const base = document.querySelector('base[href="/"]');
-    if (base) base.remove();
-
-    // Rewrite clean URL links to .html files
-    const map = {
-      "/": "index.html",
-      "/edu": "edu.html",
-      "/projects": "projects.html",
-      "/blog": "blog.html",
-      "/post": "post.html"
-    };
-
-    window.addEventListener("DOMContentLoaded", () => {
-      document.querySelectorAll('a[href^="/"]').forEach(a => {
-        const href = a.getAttribute("href") || "";
-        const baseHref = href.split("#")[0].split("?")[0];
-        const replacement = map[baseHref];
-        if (!replacement) return;
-        a.setAttribute("href", replacement + href.slice(baseHref.length));
-      });
-    });
+  if (!isFile) {
+    const base = document.createElement("base");
+    base.href = "/";
+    document.head.appendChild(base);
+    return;
   }
+
+  const map = {
+    "/": "index.html",
+    "/edu": "edu.html",
+    "/projects": "projects.html",
+    "/blog": "blog.html",
+    "/post": "post.html"
+  };
+
+  window.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll('a[href^="/"]').forEach(a => {
+      const href = a.getAttribute("href") || "";
+      const baseHref = href.split("#")[0].split("?")[0];
+      const replacement = map[baseHref];
+      if (!replacement) return;
+      a.setAttribute("href", replacement + href.slice(baseHref.length));
+    });
+  });
 })();
 
 // Theme toggle functionality
 function toggleTheme() {
-  const root = document.documentElement;
-  const currentTheme = root.getAttribute("data-theme");
-  const newTheme = currentTheme === "dark" ? "light" : "dark";
-  
-  root.setAttribute("data-theme", newTheme);
-  localStorage.setItem("theme", newTheme);
+  document.documentElement.classList.toggle("dark");
+  const isDark = document.documentElement.classList.contains("dark");
+  localStorage.setItem("theme", isDark ? "dark" : "light");
   updateThemeIcons();
-  updateThemeColor();
 }
 
 function updateThemeIcons() {
-  const root = document.documentElement;
-  const theme = root.getAttribute("data-theme");
-  const isDark = theme === "dark" || 
-    (!theme && window.matchMedia("(prefers-color-scheme: dark)").matches);
-  
+  const isDark = document.documentElement.classList.contains("dark");
   document.querySelectorAll(".theme-toggle__icon").forEach(icon => {
     const src = isDark ? icon.dataset.darkSrc : icon.dataset.lightSrc;
     if (src) icon.src = src;
   });
 }
 
-function updateThemeColor() {
-  const root = document.documentElement;
-  const theme = root.getAttribute("data-theme");
-  const isDark = theme === "dark" || 
-    (!theme && window.matchMedia("(prefers-color-scheme: dark)").matches);
-  
-  const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) {
-    meta.setAttribute("content", isDark ? "#0a0a0a" : "#0d9488");
-  }
-}
-
-// Initialize theme from localStorage or system preference
+// Initialize theme from localStorage
 (function () {
   const savedTheme = localStorage.getItem("theme");
-  if (savedTheme) {
-    document.documentElement.setAttribute("data-theme", savedTheme);
+  if (savedTheme === "dark") {
+    document.documentElement.classList.add("dark");
   }
 })();
 
-// Sidebar toggle functionality
-function initSidebarToggle() {
-  const sidebar = document.getElementById("sidebar");
-  const toggleBtn = document.querySelector(".sidebar__toggle");
-  
-  if (!sidebar || !toggleBtn) return;
-  
-  // Check saved state
-  const isCollapsed = localStorage.getItem("sidebar-collapsed") === "true";
-  if (isCollapsed) {
-    sidebar.classList.add("is-collapsed");
-    document.body.classList.add("sidebar-collapsed");
-  }
-  
-  toggleBtn.addEventListener("click", () => {
-    sidebar.classList.toggle("is-collapsed");
-    document.body.classList.toggle("sidebar-collapsed");
-    
-    const nowCollapsed = sidebar.classList.contains("is-collapsed");
-    localStorage.setItem("sidebar-collapsed", nowCollapsed ? "true" : "false");
-  });
-}
-
-// Hamburger menu functionality
-function initHamburgerMenu() {
-  const hamburger = document.querySelector(".hamburger");
-  const mobileNav = document.querySelector(".mobile-nav");
-  
-  if (!hamburger || !mobileNav) return;
-  
-  hamburger.addEventListener("click", () => {
-    const isOpen = hamburger.classList.toggle("is-active");
-    mobileNav.classList.toggle("is-open", isOpen);
-    hamburger.setAttribute("aria-expanded", isOpen ? "true" : "false");
-    
-    // Prevent body scroll when menu is open
-    document.body.style.overflow = isOpen ? "hidden" : "";
-  });
-  
-  // Close menu when clicking a link
-  mobileNav.querySelectorAll("a").forEach(link => {
-    link.addEventListener("click", () => {
-      hamburger.classList.remove("is-active");
-      mobileNav.classList.remove("is-open");
-      hamburger.setAttribute("aria-expanded", "false");
-      document.body.style.overflow = "";
-    });
-  });
-  
-  // Close menu on escape key
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && mobileNav.classList.contains("is-open")) {
-      hamburger.classList.remove("is-active");
-      mobileNav.classList.remove("is-open");
-      hamburger.setAttribute("aria-expanded", "false");
-      document.body.style.overflow = "";
-    }
-  });
-  
-  // Close menu when resizing to desktop
-  window.addEventListener("resize", () => {
-    if (window.innerWidth > 900) {
-      hamburger.classList.remove("is-active");
-      mobileNav.classList.remove("is-open");
-      hamburger.setAttribute("aria-expanded", "false");
-      document.body.style.overflow = "";
-    }
-  });
-}
-
-// Attach event listeners once DOM is ready
+// Attach theme toggle event listeners once DOM is ready
 document.addEventListener("DOMContentLoaded", () => {
   updateThemeIcons();
-  updateThemeColor();
-  initHamburgerMenu();
-  initSidebarToggle();
-  
   document.querySelectorAll(".theme-toggle").forEach(btn => {
     btn.addEventListener("click", toggleTheme);
   });
@@ -181,7 +87,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const status = data.discord_status || "offline";
     statusDots.forEach(dot => {
       dot.setAttribute("data-status", status);
-      dot.setAttribute("data-tooltip", STATUS_LABELS[status] || "Offline");
+      dot.setAttribute("title", STATUS_LABELS[status] || "Offline");
     });
   }
   
@@ -315,9 +221,7 @@ document.addEventListener("DOMContentLoaded", () => {
               ${img ? `<img src="${img}" alt="${p.title.rendered}" draggable="false">` : ""}
               <h3>${p.title.rendered}</h3>
               <p>${excerpt}</p>
-              <div class="meta">
-                <span>Read more →</span>
-              </div>
+              <span>Read more →</span>
             </a>
           `;
         })
@@ -365,3 +269,5 @@ document.addEventListener("DOMContentLoaded", () => {
     loadRecent("projects");
   });
 })();
+
+

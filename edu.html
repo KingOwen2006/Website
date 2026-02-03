@@ -3,102 +3,87 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script>
-    (function () {
-      // Make relative asset paths work on clean URLs (server), while still
-      // supporting file:// double-click by rewriting internal clean links
-      // (e.g. /projects -> projects.html).
-      const isFile = location.protocol === "file:";
-
-      if (!isFile) {
-        const base = document.createElement("base");
-        base.href = "/";
-        document.head.appendChild(base);
-        return;
-      }
-
-      const map = {
-        "/": "index.html",
-        "/edu": "edu.html",
-        "/projects": "projects.html",
-        "/blog": "blog.html",
-        "/post": "post.html"
-      };
-
-      window.addEventListener("DOMContentLoaded", () => {
-        document.querySelectorAll('a[href^="/"]').forEach(a => {
-          const href = a.getAttribute("href") || "";
-          const baseHref = href.split("#")[0].split("?")[0];
-          const replacement = map[baseHref];
-          if (!replacement) return;
-          a.setAttribute("href", replacement + href.slice(baseHref.length));
-        });
-      });
-    })();
-  </script>
+  <base href="/">
+  <meta name="theme-color" content="#e11d48">
+  <script src="site.js"></script>
   <link rel="stylesheet" href="site.css">
   <link rel="stylesheet" href="wordpress.css">
 </head>
 <body>
 
-  <header class="top-nav">
-    <nav>
-      <a href="index.html">
-        <img class="nav-icon" src="SVG/home.svg" alt="" aria-hidden="true">
-        <span>Home</span>
-      </a>
-      <a href="edu.html" class="active">
-        <img class="nav-icon" src="SVG/human.svg" alt="" aria-hidden="true">
-        <span>Education</span>
-      </a>
-      <a href="projects.html">
-        <img class="nav-icon" src="SVG/pfp.svg" alt="" aria-hidden="true">
-        <span>Personal</span>
-      </a>
-      <a href="#">
-        <img class="nav-icon" src="SVG/contact.svg" alt="" aria-hidden="true">
-        <span>Contact</span>
-      </a>
-      <button class="theme-toggle" type="button" onclick="toggleTheme()" aria-label="Toggle theme">
-        <img class="theme-toggle__icon" src="SVG/tooglelight.svg" data-light-src="SVG/tooglelight.svg" data-dark-src="SVG/toogledark.svg" alt="" aria-hidden="true">
-      </button>
-    </nav>
-  </header>
-  
-  <div class="app">
-  
-  <aside class="sidebar">
-    <nav>
-      <a href="index.html">
-        <img class="nav-icon" src="SVG/home.svg" alt="" aria-hidden="true">
-        <span>Home</span>
-      </a>
-      <a href="edu.html" class="active">
-        <img class="nav-icon" src="SVG/human.svg" alt="" aria-hidden="true">
-        <span>Education</span>
-      </a>
-      <a href="projects.html">
-        <img class="nav-icon" src="SVG/pfp.svg" alt="" aria-hidden="true">
-        <span>Personal</span>
-      </a>
-      <a href="#">
-        <img class="nav-icon" src="SVG/contact.svg" alt="" aria-hidden="true">
-        <span>Contact</span>
-      </a>
-      <button class="theme-toggle" type="button" onclick="toggleTheme()" aria-label="Toggle theme">
-        <img class="theme-toggle__icon" src="SVG/tooglelight.svg" data-light-src="SVG/tooglelight.svg" data-dark-src="SVG/toogledark.svg" alt="" aria-hidden="true">
-      </button>
-    </nav>
-  </aside>
+<!-- Mobile Top Nav -->
+<header class="top-nav">
+  <div class="top-nav__inner">
+    <button class="theme-toggle" type="button" aria-label="Toggle theme">
+      <img class="theme-toggle__icon" src="SVG/tooglelight.svg" data-light-src="SVG/tooglelight.svg" data-dark-src="SVG/toogledark.svg" alt="" aria-hidden="true">
+    </button>
+    <button class="hamburger" type="button" aria-label="Open menu" aria-expanded="false">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
+</header>
+
+<!-- Mobile Nav Menu -->
+<nav class="mobile-nav" aria-label="Mobile navigation">
+  <a href="index.html">
+    <img class="nav-icon" src="SVG/home.svg" alt="" aria-hidden="true">
+    <span>Home</span>
+  </a>
+  <a href="edu.html" class="active">
+    <img class="nav-icon" src="SVG/human.svg" alt="" aria-hidden="true">
+    <span>Education</span>
+  </a>
+  <a href="projects.html">
+    <img class="nav-icon discord-avatar" src="SVG/pfp.svg" alt="" aria-hidden="true">
+    <span>Personal</span>
+  </a>
+  <a href="#">
+    <img class="nav-icon" src="SVG/contact.svg" alt="" aria-hidden="true">
+    <span>Contact</span>
+  </a>
+</nav>
+
+<div class="app">
+
+<!-- Desktop Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <button class="sidebar__toggle" type="button" aria-label="Toggle sidebar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M15 18l-6-6 6-6"/>
+    </svg>
+  </button>
+  <nav>
+    <a href="index.html">
+      <img class="nav-icon" src="SVG/home.svg" alt="" aria-hidden="true">
+      <span>Home</span>
+    </a>
+    <a href="edu.html" class="active">
+      <img class="nav-icon" src="SVG/human.svg" alt="" aria-hidden="true">
+      <span>Education</span>
+    </a>
+    <a href="projects.html">
+      <img class="nav-icon discord-avatar" src="SVG/pfp.svg" alt="" aria-hidden="true">
+      <span>Personal</span>
+    </a>
+    <a href="#">
+      <img class="nav-icon" src="SVG/contact.svg" alt="" aria-hidden="true">
+      <span>Contact</span>
+    </a>
+    <button class="theme-toggle" type="button" aria-label="Toggle theme">
+      <img class="theme-toggle__icon" src="SVG/tooglelight.svg" data-light-src="SVG/tooglelight.svg" data-dark-src="SVG/toogledark.svg" alt="" aria-hidden="true">
+      <span>Theme</span>
+    </button>
+  </nav>
+</aside>
 
 <main class="content">
   <h1>Education</h1>
   <section id="posts" class="posts-grid"></section>
 </main>
 
-
-
-</div> 
-<script src="wordpress.js" defer></script>
+</div>
+<script src="wordpress.js"></script>
 </body>
 </html>

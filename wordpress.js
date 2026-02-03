@@ -152,7 +152,7 @@
       galleryItems = [];
 
       // Collect regular images (excluding UI images and images inside ko-compare)
-      const allImages = document.querySelectorAll("img");
+      const allImages = document.querySelectorAll(".post-content img");
       allImages.forEach(img => {
         if (img.matches(EXCLUDE_SELECTORS)) return;
         if (img.closest(".ko-compare")) return; // Skip images inside comparison sliders
@@ -163,10 +163,26 @@
       });
 
       // Collect comparison sliders
-      const compares = document.querySelectorAll(".ko-compare");
+      const compares = document.querySelectorAll(".post-content .ko-compare");
       compares.forEach(compare => {
         galleryItems.push({ type: "compare", element: compare });
         compare.classList.add("gallery-item");
+      });
+
+      // Collect YouTube embeds
+      const youtubeIframes = document.querySelectorAll(".post-content iframe[src*='youtube'], .post-content iframe[src*='youtu.be']");
+      youtubeIframes.forEach(iframe => {
+        const wrapper = iframe.closest(".figma-wrapper") || iframe;
+        galleryItems.push({ type: "youtube", element: wrapper, src: iframe.src });
+        wrapper.classList.add("gallery-item");
+      });
+
+      // Collect Figma embeds
+      const figmaIframes = document.querySelectorAll(".post-content iframe[src*='figma.com']");
+      figmaIframes.forEach(iframe => {
+        const wrapper = iframe.closest(".figma-wrapper") || iframe;
+        galleryItems.push({ type: "figma", element: wrapper, src: iframe.src });
+        wrapper.classList.add("gallery-item");
       });
 
       // Sort by document order
@@ -240,6 +256,7 @@
 
       const item = galleryItems[currentIndex];
       lightboxContent.innerHTML = "";
+      lightbox.classList.remove("is-compare", "is-embed");
 
       if (item.type === "compare") {
         // Clone the comparison slider
@@ -249,11 +266,19 @@
         lightboxContent.appendChild(clone);
         setupCompareSlider(clone);
         lightbox.classList.add("is-compare");
+      } else if (item.type === "youtube" || item.type === "figma") {
+        // Create iframe for embed
+        const iframe = document.createElement("iframe");
+        iframe.src = item.src;
+        iframe.setAttribute("frameborder", "0");
+        iframe.setAttribute("allowfullscreen", "true");
+        iframe.setAttribute("allow", "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture");
+        lightboxContent.appendChild(iframe);
+        lightbox.classList.add("is-embed");
       } else {
         // Regular image
         lightboxImg.src = item.element.src;
         lightboxImg.alt = item.element.alt || "";
-        lightbox.classList.remove("is-compare");
       }
 
       lightboxCounter.textContent = `${currentIndex + 1} / ${galleryItems.length}`;
@@ -265,7 +290,7 @@
       lightboxCounter.style.display = showNav ? "" : "none";
     }
 
-    // Delegate click handler for images and comparison sliders
+    // Delegate click handler for images, comparison sliders, and embeds
     document.addEventListener("click", (e) => {
       // Check for comparison slider click (on the viewport)
       const compare = e.target.closest(".ko-compare");
@@ -275,6 +300,20 @@
         e.preventDefault();
         openLightbox({ type: "compare", element: compare });
         return;
+      }
+
+      // Check for figma/youtube wrapper click
+      const embedWrapper = e.target.closest(".figma-wrapper.gallery-item");
+      if (embedWrapper) {
+        const iframe = embedWrapper.querySelector("iframe");
+        if (iframe) {
+          const src = iframe.src;
+          const type = src.includes("figma.com") ? "figma" : "youtube";
+          e.preventDefault();
+          e.stopPropagation();
+          openLightbox({ type, element: embedWrapper, src });
+          return;
+        }
       }
 
       // Check for regular image click

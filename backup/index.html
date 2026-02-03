@@ -3,56 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <base href="/">
-  <meta name="theme-color" content="#e11d48">
   <script src="site.js"></script>
   <link rel="stylesheet" href="site.css">
 </head>
 <body>
 
-<!-- Mobile Top Nav -->
 <header class="top-nav">
-  <div class="top-nav__inner">
-    <button class="theme-toggle" type="button" aria-label="Toggle theme">
-      <img class="theme-toggle__icon" src="SVG/tooglelight.svg" data-light-src="SVG/tooglelight.svg" data-dark-src="SVG/toogledark.svg" alt="" aria-hidden="true">
-    </button>
-    <button class="hamburger" type="button" aria-label="Open menu" aria-expanded="false">
-      <span></span>
-      <span></span>
-      <span></span>
-    </button>
-  </div>
-</header>
-
-<!-- Mobile Nav Menu -->
-<nav class="mobile-nav" aria-label="Mobile navigation">
-  <a href="index.html" class="active">
-    <img class="nav-icon" src="SVG/home.svg" alt="" aria-hidden="true">
-    <span>Home</span>
-  </a>
-  <a href="edu.html">
-    <img class="nav-icon" src="SVG/human.svg" alt="" aria-hidden="true">
-    <span>Education</span>
-  </a>
-  <a href="projects.html">
-    <img class="nav-icon discord-avatar" src="SVG/pfp.svg" alt="" aria-hidden="true">
-    <span>Personal</span>
-  </a>
-  <a href="#">
-    <img class="nav-icon" src="SVG/contact.svg" alt="" aria-hidden="true">
-    <span>Contact</span>
-  </a>
-</nav>
-
-<div class="app">
-
-<!-- Desktop Sidebar -->
-<aside class="sidebar" id="sidebar">
-  <button class="sidebar__toggle" type="button" aria-label="Toggle sidebar">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M15 18l-6-6 6-6"/>
-    </svg>
-  </button>
   <nav>
     <a href="index.html" class="active">
       <img class="nav-icon" src="SVG/home.svg" alt="" aria-hidden="true">
@@ -72,21 +28,45 @@
     </a>
     <button class="theme-toggle" type="button" aria-label="Toggle theme">
       <img class="theme-toggle__icon" src="SVG/tooglelight.svg" data-light-src="SVG/tooglelight.svg" data-dark-src="SVG/toogledark.svg" alt="" aria-hidden="true">
-      <span>Theme</span>
+    </button>
+  </nav>
+</header>
+
+<div class="app">
+
+<aside class="sidebar">
+  <nav>
+    <a href="index.html" class="active">
+      <img class="nav-icon" src="SVG/home.svg" alt="" aria-hidden="true">
+      <span>Home</span>
+    </a>
+    <a href="edu.html">
+      <img class="nav-icon" src="SVG/human.svg" alt="" aria-hidden="true">
+      <span>Education</span>
+    </a>
+    <a href="projects.html">
+      <img class="nav-icon discord-avatar" src="SVG/pfp.svg" alt="" aria-hidden="true">
+      <span>Personal</span>
+    </a>
+    <a href="#">
+      <img class="nav-icon" src="SVG/contact.svg" alt="" aria-hidden="true">
+      <span>Contact</span>
+    </a>
+    <button class="theme-toggle" type="button" aria-label="Toggle theme">
+      <img class="theme-toggle__icon" src="SVG/tooglelight.svg" data-light-src="SVG/tooglelight.svg" data-dark-src="SVG/toogledark.svg" alt="" aria-hidden="true">
     </button>
   </nav>
 </aside>
-
 <main class="ko-home">
   <section class="ko-home__grid" aria-label="Intro">
-    <a href="https://discord.com/users/YOUR_DISCORD_ID" target="_blank" rel="noopener noreferrer" class="ko-home__pfp" aria-label="View Discord profile">
+    <div class="ko-home__pfp" aria-hidden="true">
       <img class="discord-avatar" src="SVG/pfp.svg" alt="">
-      <span class="discord-status-dot" data-status="offline" data-tooltip="Offline"></span>
-    </a>
+      <span class="discord-status-dot" data-status="offline" title="Offline"></span>
+    </div>
 
     <div class="ko-home__facts">
       <article class="ko-card ko-card--fact">
-        <div class="ko-card__label">Hey, I'm</div>
+        <div class="ko-card__label">Hey, I’m</div>
         <div class="ko-card__value">Owen Moore</div>
       </article>
 
@@ -134,4 +114,5 @@
 
 <script src="wordpress.js"></script>
 </body>
+
 </html>
