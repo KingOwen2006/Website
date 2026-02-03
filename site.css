@@ -269,6 +269,7 @@ html, body, .sidebar, .top-nav, .content,
   border-radius: 50%;
   object-fit: cover;
   opacity: 1;
+  filter: none !important;
 }
 
 .sidebar nav .theme-toggle {
@@ -1302,6 +1303,8 @@ body.sidebar-collapsed .content .ko-loader-wrapper {
   
   .ko-home__pfp {
     max-width: 280px;
+    width: 100%;
+    min-height: 280px;
     margin: 0 auto;
   }
   
