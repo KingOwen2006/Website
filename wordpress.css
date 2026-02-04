@@ -3,6 +3,58 @@
    Editorial design matching site.css
 ========================= */
 
+/* =========================
+   POST FILTER BAR
+========================= */
+.post-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 14px 0 22px;
+}
+
+.filter-tag {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-secondary);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--transition), color var(--transition), border-color var(--transition), transform var(--transition);
+}
+
+.filter-tag:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.filter-tag.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+@media (max-width: 600px) {
+  .post-filters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px;
+  }
+
+  .post-filters::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .post-filters::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 999px;
+  }
+}
+
 /* Links in posts */
 .post-content a {
   color: var(--accent);
@@ -277,13 +329,46 @@
   border-color: var(--accent);
 }
 
-.word-count {
-  font-size: 0.85rem;
-  color: var(--text-muted);
+/* Post Meta (tags + word count) */
+.post-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
   margin-bottom: 24px;
-  padding: 8px 14px;
+}
+
+.post-meta .post-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.post-meta .post-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  transition: all var(--transition);
+}
+
+.post-meta .post-tag--category {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.word-count {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  padding: 6px 14px;
   background: var(--bg-alt);
-  border-radius: var(--radius);
+  border-radius: 999px;
   border: 1px solid var(--border);
   display: inline-block;
 }

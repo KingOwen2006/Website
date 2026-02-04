@@ -705,9 +705,19 @@
     const processedContent = replaceEmbeds(p.content.rendered);
     const wordCount = getWordCount(processedContent);
 
+    // Get categories from embedded terms
+    const terms = p._embedded?.["wp:term"] || [];
+    const categories = terms[0] || []; // Categories only
+    
+    // Build tags HTML
+    const tagsHTML = categories.map(cat => `<span class="post-tag post-tag--category">${cat.name}</span>`).join('');
+
     postContainer.innerHTML = `
       <h1>${p.title.rendered}</h1>
-      <p class="word-count">Word count: ${wordCount}</p>
+      <div class="post-meta">
+        <div class="post-tags">${tagsHTML}</div>
+        <span class="word-count">${wordCount} words</span>
+      </div>
       <div class="post-content">
         ${processedContent}
       </div>
@@ -765,47 +775,114 @@
   }
 
   /* ======================
-     POST LIST
+     POST LIST WITH FILTERS
   ====================== */
+  let allPosts = [];
+  let allCategories = [];
+  let activeFilter = 'all';
+
+  function renderPostCard(p) {
+    const img = p._embedded?.["wp:featuredmedia"]?.[0]?.source_url;
+
+    // Local file: use query string; Online: use clean path
+    const href =
+      window.location.protocol === "file:"
+        ? `${config.link}.html?slug=${p.slug}`
+        : `/${config.link}/${p.slug}`;
+
+    // Get categories from embedded terms
+    const terms = p._embedded?.["wp:term"] || [];
+    const categories = terms[0] || [];
+    const categoryIds = categories.map(c => c.id);
+    
+    // Build tags HTML
+    const tagsHTML = categories.map(cat => `<span class="post-tag post-tag--category">${cat.name}</span>`).join('');
+
+    return `
+      <a href="${href}" class="post-card" data-categories="${categoryIds.join(',')}">
+        ${img ? `<img src="${img}" alt="${p.title.rendered}" draggable="false">` : ""}
+        <div class="post-card__content">
+          <h3>${p.title.rendered}</h3>
+          <p>${p.excerpt.rendered.replace(/<[^>]+>/g, "")}</p>
+          <div class="post-tags">${tagsHTML}</div>
+          <span class="post-card__link">Read more →</span>
+        </div>
+      </a>
+    `;
+  }
+
+  function renderFilterBar() {
+    const filterContainer = document.getElementById("post-filters");
+    if (!filterContainer) return;
+
+    const filterHTML = `
+      <button class="filter-tag ${activeFilter === 'all' ? 'is-active' : ''}" data-filter="all">All</button>
+      ${allCategories.map(cat => `
+        <button class="filter-tag ${activeFilter === String(cat.id) ? 'is-active' : ''}" data-filter="${cat.id}">${cat.name}</button>
+      `).join('')}
+    `;
+    
+    filterContainer.innerHTML = filterHTML;
+
+    // Add click handlers
+    filterContainer.querySelectorAll('.filter-tag').forEach(btn => {
+      btn.addEventListener('click', () => {
+        activeFilter = btn.dataset.filter;
+        renderFilterBar();
+        filterPosts();
+      });
+    });
+  }
+
+  function filterPosts() {
+    const cards = postsContainer.querySelectorAll('.post-card');
+    
+    cards.forEach(card => {
+      if (activeFilter === 'all') {
+        card.style.display = '';
+      } else {
+        const cardCategories = (card.dataset.categories || '').split(',');
+        card.style.display = cardCategories.includes(activeFilter) ? '' : 'none';
+      }
+    });
+  }
+
   function loadPostList() {
     // Show loader
     const loaderId = 'posts-' + (++loaderIdCounter);
     postsContainer.innerHTML = getLoaderHTML(loaderId);
     const progress = simulateProgress(loaderId);
     
-    fetch(`${API_BASE}/posts?_embed&per_page=100`)
-      .then(res => {
-        if (!res.ok) throw new Error("Posts not found");
-        return res.json();
-      })
-      .then(posts => {
-        posts.sort((a, b) =>
+    // Fetch both posts and categories
+    Promise.all([
+      fetch(`${API_BASE}/posts?_embed&per_page=100`).then(res => res.json()),
+      fetch(`${API_BASE}/categories?per_page=100`).then(res => res.json())
+    ])
+      .then(([posts, categories]) => {
+        // Store for filtering
+        allPosts = posts;
+        allCategories = (categories || [])
+          // Only show categories with posts + hide Uncategorized
+          .filter(cat => cat && cat.count > 0 && String(cat.slug || "").toLowerCase() !== "uncategorized" && String(cat.name || "").toLowerCase() !== "uncategorized");
+        
+        // Sort posts
+        allPosts.sort((a, b) =>
           a.title.rendered.localeCompare(b.title.rendered, undefined, {
             numeric: true,
             sensitivity: "base"
           })
         );
 
+        // Sort categories by name
+        allCategories.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+
         progress.complete(() => {
-          postsContainer.innerHTML = posts.map(p => {
-            const img =
-              p._embedded?.["wp:featuredmedia"]?.[0]?.source_url;
-
-            // Local file: use query string; Online: use clean path
-            const href =
-              window.location.protocol === "file:"
-                ? `${config.link}.html?slug=${p.slug}`
-                : `/${config.link}/${p.slug}`;
-
-            return `
-              <a href="${href}" class="post-card">
-                ${img ? `<img src="${img}" alt="${p.title.rendered}" draggable="false">` : ""}
-                <h3>${p.title.rendered}</h3>
-                <p>${p.excerpt.rendered.replace(/<[^>]+>/g, "")}</p>
-                <span>Read more →</span>
-              </a>
-            `;
-          }).join("");
+          // Render filter bar
+          renderFilterBar();
+          
+          // Render posts
+          postsContainer.innerHTML = allPosts.map(renderPostCard).join("");
+          filterPosts();
         });
       })
       .catch(err => {

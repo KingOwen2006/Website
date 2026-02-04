@@ -26,6 +26,23 @@
   --radius-lg: 16px;
   --nav-width: 240px;
   --transition: 0.15s ease;
+  --font-body: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: "Outfit", sans-serif;
+  --pixel-step: 10px;
+  --pixel-clip: polygon(
+    0 var(--pixel-step),
+    var(--pixel-step) var(--pixel-step),
+    var(--pixel-step) 0,
+    calc(100% - var(--pixel-step)) 0,
+    calc(100% - var(--pixel-step)) var(--pixel-step),
+    100% var(--pixel-step),
+    100% calc(100% - var(--pixel-step)),
+    calc(100% - var(--pixel-step)) calc(100% - var(--pixel-step)),
+    calc(100% - var(--pixel-step)) 100%,
+    var(--pixel-step) 100%,
+    var(--pixel-step) calc(100% - var(--pixel-step)),
+    0 calc(100% - var(--pixel-step))
+  );
 }
 
 :root[data-theme="dark"] {
@@ -74,7 +91,7 @@ html {
 }
 
 body {
-  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-body);
   background: var(--bg);
   color: var(--text);
   line-height: 1.5;
@@ -94,6 +111,18 @@ a {
 /* =========================
    LAYOUT
 ========================= */
+.main-header,
+.about-section,
+.about-card,
+.about-bio,
+.ko-card--recent,
+.post-card,
+.post-content,
+.figma-wrapper {
+  border-radius: 0;
+  clip-path: var(--pixel-clip);
+}
+
 .app {
   display: flex;
   justify-content: center;
@@ -320,13 +349,48 @@ body.sidebar-collapsed .app {
 }
 
 .sidebar__activity-text {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-secondary);
+}
+
+.discord-activity-line {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.discord-activity-text-inner {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.discord-activity-line.is-marquee {
+  text-overflow: unset;
+}
+
+.discord-activity-line.is-marquee .discord-activity-text-inner {
+  padding-left: 0;
+  animation: activity-marquee 12s linear infinite;
+  will-change: transform;
+}
+
+@keyframes activity-marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .discord-activity-line.is-marquee .discord-activity-text-inner {
+    animation: none;
+  }
 }
 
 /* Navigation */
@@ -439,7 +503,7 @@ body.sidebar-collapsed .app {
 }
 
 .main-header__title {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-display);
   font-size: 2.5rem;
   font-weight: 800;
   letter-spacing: -0.02em;
@@ -467,7 +531,7 @@ body.sidebar-collapsed .app {
 
 /* Section Titles */
 .section-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-display);
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -535,7 +599,7 @@ a.contact-card .about-card__value {
 }
 
 .about-card__value {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-display);
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--text);
@@ -599,7 +663,7 @@ a.contact-card .about-card__value {
   background: var(--bg-alt);
   color: var(--text-muted);
   padding: 10px 20px;
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-body);
   font-weight: 600;
   font-size: 0.85rem;
   cursor: pointer;
@@ -654,20 +718,17 @@ a.contact-card .about-card__value {
 }
 
 .post-card h3 {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-display);
   font-size: 1rem;
   font-weight: 600;
   color: var(--text);
-  padding: 12px 12px 6px;
   line-height: 1.3;
 }
 
 .post-card p {
   color: var(--text-secondary);
   font-size: 0.85rem;
-  padding: 0 12px;
-  flex: 1;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 .post-card .meta {
@@ -676,11 +737,63 @@ a.contact-card .about-card__value {
   margin-top: 8px;
 }
 
-.post-card span {
+.post-card__content {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.post-card__content h3 {
+  padding: 0 0 6px;
+}
+
+.post-card__content p {
+  padding: 0;
+  flex: 1;
+}
+
+.post-card__link {
   color: var(--accent);
   font-weight: 600;
   font-size: 0.8rem;
-  padding: 12px;
+  margin-top: 12px;
+}
+
+/* Post Tags */
+.post-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.post-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  transition: all var(--transition);
+}
+
+.post-tag--category {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.post-card:hover .post-tag {
+  border-color: var(--border-strong);
+}
+
+.post-card:hover .post-tag--category {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
 }
 
 .post-card:hover h3 {
@@ -867,7 +980,7 @@ a.contact-card .about-card__value {
 }
 
 .content h1 {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-display);
   font-size: 2rem;
   font-weight: 800;
   color: var(--accent);
@@ -1164,7 +1277,7 @@ body.sidebar-collapsed .content .ko-loader-wrapper {
 }
 
 .ko-loader__text {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-display);
   font-size: 1.25rem;
   font-weight: 700;
   color: var(--text);

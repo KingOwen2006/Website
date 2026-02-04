@@ -274,30 +274,133 @@ document.addEventListener("DOMContentLoaded", () => {
       
       // For music apps, show song details
       if (isMusicApp(activity)) {
-        const song = activity.details || activity.state || activity.name;
-        return `🎵 ${song}`;
+        const rawDetails = (activity.details || "").trim();
+        const rawState = (activity.state || "").trim();
+
+        // Best-effort parsing for "Title - Artist, ..." (common in YouTube Music details)
+        const parseDetailsTitleArtist = (details) => {
+          if (!details) return { title: "", artist: "" };
+          // Remove any trailing extra context after a comma
+          const primary = details.split(",")[0].trim();
+
+          // Pattern: "Title - Artist"
+          const dashIdx = primary.indexOf(" - ");
+          if (dashIdx !== -1) {
+            return {
+              title: primary.slice(0, dashIdx).trim(),
+              artist: primary.slice(dashIdx + 3).trim()
+            };
+          }
+
+          // Pattern: "Title by Artist"
+          const byIdx = primary.toLowerCase().indexOf(" by ");
+          if (byIdx !== -1) {
+            return {
+              title: primary.slice(0, byIdx).trim(),
+              artist: primary.slice(byIdx + 4).trim()
+            };
+          }
+
+          return { title: primary, artist: "" };
+        };
+
+        let title = "";
+        let artist = "";
+
+        // Spotify rich presence: details=title, state=artist
+        if ((activity.name || "").toLowerCase().includes("spotify") && rawDetails) {
+          title = rawDetails;
+          artist = rawState;
+        } else if ((activity.name || "").toLowerCase().includes("youtube music") && rawDetails) {
+          const parsed = parseDetailsTitleArtist(rawDetails);
+          title = parsed.title;
+          artist = parsed.artist;
+          if (!artist && rawState && rawState.toLowerCase() !== title.toLowerCase()) {
+            artist = rawState;
+          }
+        } else if (rawDetails) {
+          const parsed = parseDetailsTitleArtist(rawDetails);
+          title = parsed.title;
+          artist = parsed.artist || rawState;
+        } else {
+          title = rawState || activity.name;
+        }
+
+        const songText = [title, artist].filter(Boolean).join(" — ");
+        return songText ? `Song: ${songText}` : "Song: Unknown";
       }
       
       const prefix = ACTIVITY_TYPES[activity.type] || "Playing";
       return prefix ? `${prefix} ${activity.name}` : activity.name;
     };
     
-    let activityText = "";
-    
+    const escapeHtml = (str) =>
+      String(str ?? "").replace(/[&<>"']/g, (ch) => {
+        switch (ch) {
+          case "&": return "&amp;";
+          case "<": return "&lt;";
+          case ">": return "&gt;";
+          case '"': return "&quot;";
+          case "'": return "&#39;";
+          default: return ch;
+        }
+      });
+
+    let activityLines = [];
+
     if (realActivities.length > 0) {
-      activityText = getActivityDisplay(realActivities[0]);
+      const seen = new Set();
+      for (const a of realActivities) {
+        const line = getActivityDisplay(a);
+        if (!line) continue;
+        if (seen.has(line)) continue;
+        seen.add(line);
+        activityLines.push(line);
+      }
     } else {
       // No activities
       if (status === "offline") {
-        activityText = "Sleeping 💤";
+        activityLines = ["Sleeping 💤"];
       } else {
         // Online, DND, or Idle but no activity
-        activityText = "Chilling ✨";
+        activityLines = ["Chilling ✨"];
       }
     }
-    
-    activityTexts.forEach(el => {
-      el.textContent = activityText;
+
+    // Render as a list (multiple activities supported)
+    const html = activityLines
+      .slice(0, 3)
+      .map((t) => {
+        const safe = escapeHtml(t);
+        return `<div class="discord-activity-line" data-text="${safe}"><span class="discord-activity-text-inner">${safe}</span></div>`;
+      })
+      .join("");
+
+    const renderFallback = () =>
+      `<div class="discord-activity-line" data-text="Chilling ✨"><span class="discord-activity-text-inner">Chilling ✨</span></div>`;
+
+    const applyMarquee = (container) => {
+      const lines = container.querySelectorAll(".discord-activity-line");
+      lines.forEach((line) => {
+        const span = line.querySelector(".discord-activity-text-inner");
+        if (!span) return;
+
+        // Reset to original text before measuring
+        const original = line.getAttribute("data-text") || span.textContent || "";
+        span.textContent = original;
+        line.classList.remove("is-marquee");
+
+        // If the text overflows, enable marquee
+        if (span.scrollWidth > line.clientWidth) {
+          line.classList.add("is-marquee");
+          span.textContent = `${original}   •   ${original}`;
+        }
+      });
+    };
+
+    activityTexts.forEach((el) => {
+      el.innerHTML = html || renderFallback();
+      requestAnimationFrame(() => applyMarquee(el));
     });
   }
   
@@ -429,13 +532,23 @@ document.addEventListener("DOMContentLoaded", () => {
           const img = p._embedded?.["wp:featuredmedia"]?.[0]?.source_url;
           const excerpt = (p.excerpt?.rendered || "").replace(/<[^>]+>/g, "").trim();
           const href = getHref(p.slug);
+          
+          // Get categories from embedded terms
+          const terms = p._embedded?.["wp:term"] || [];
+          const categories = terms[0] || []; // Categories only
+          
+          // Build tags HTML
+          const tagsHTML = categories.map(cat => `<span class="post-tag post-tag--category">${cat.name}</span>`).join('');
 
           return `
             <a href="${href}" class="post-card">
               ${img ? `<img src="${img}" alt="${p.title.rendered}" draggable="false">` : ""}
-              <h3>${p.title.rendered}</h3>
-              <p>${excerpt}</p>
-              <span>Read more →</span>
+              <div class="post-card__content">
+                <h3>${p.title.rendered}</h3>
+                <p>${excerpt}</p>
+                <div class="post-tags">${tagsHTML}</div>
+                <span class="post-card__link">Read more →</span>
+              </div>
             </a>
           `;
         })
