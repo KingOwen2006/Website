@@ -709,6 +709,31 @@ body.sidebar-collapsed .app {
   transform: translateY(-3px);
 }
 
+/* Activity Card */
+.ko-card--activity .ko-card__value {
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+}
+
+.discord-activity-list {
+  display: none;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.discord-activity-item {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  padding: 4px 0;
+  font-weight: 500;
+}
+
+.discord-activity-item:not(:last-child) {
+  border-bottom: 1px dashed var(--border);
+  padding-bottom: 6px;
+  margin-bottom: 2px;
+}
+
 .ko-card__label {
   font-size: 0.75rem;
   color: var(--text-muted);
