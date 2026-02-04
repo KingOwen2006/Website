@@ -13,7 +13,7 @@
   
   <!-- Open Graph / Social Media Preview -->
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Owen Moore - 3D Artist & Developer">
+  <meta property="og:title" content="Owen - 3D Artist & Developer">
   <meta property="og:description" content="Hi, I'm Owen! Passionate about 3D modelling and creative projects.">
   <meta property="og:image" content="https://kingowen.fyi/api/banner?size=1024">
   <meta property="og:image:width" content="1024">
@@ -22,7 +22,7 @@
   
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Owen Moore - 3D Artist & Developer">
+  <meta name="twitter:title" content="Owen - 3D Artist & Developer">
   <meta name="twitter:description" content="Hi, I'm Owen! Passionate about 3D modelling and creative projects.">
   <meta name="twitter:image" content="https://kingowen.fyi/api/banner?size=1024">
   <base href="/">
@@ -34,6 +34,10 @@
 <!-- Mobile Top Nav -->
 <header class="top-nav">
   <div class="top-nav__inner">
+    <a href="https://discord.com/users/798619259206500365" target="_blank" rel="noopener noreferrer" class="top-nav__avatar">
+      <img class="discord-avatar" src="SVG/pfp.svg" alt="">
+      <span class="discord-status-dot discord-status-dot--small" data-status="offline"></span>
+    </a>
     <button class="theme-toggle" type="button" aria-label="Toggle theme">
       <img class="theme-toggle__icon" src="SVG/tooglelight.svg" data-light-src="SVG/tooglelight.svg" data-dark-src="SVG/toogledark.svg" alt="" aria-hidden="true">
     </button>
@@ -52,14 +56,14 @@
     <span>Home</span>
   </a>
   <a href="edu.html">
-    <img class="nav-icon" src="SVG/human.svg" alt="" aria-hidden="true">
+    <img class="nav-icon" src="SVG/Edu.svg" alt="" aria-hidden="true">
     <span>Education</span>
   </a>
   <a href="projects.html">
-    <img class="nav-icon discord-avatar" src="SVG/pfp.svg" alt="" aria-hidden="true">
+    <img class="nav-icon" src="SVG/human.svg" alt="" aria-hidden="true">
     <span>Personal</span>
   </a>
-  <a href="#">
+  <a href="contact.html">
     <img class="nav-icon" src="SVG/contact.svg" alt="" aria-hidden="true">
     <span>Contact</span>
   </a>
@@ -74,17 +78,30 @@
       <path d="M15 18l-6-6 6-6"/>
     </svg>
   </button>
-  <nav>
+  <!-- Profile Section -->
+  <div class="sidebar__profile">
+    <a href="https://discord.com/users/798619259206500365" target="_blank" rel="noopener noreferrer" class="sidebar__avatar">
+      <img class="discord-avatar" src="SVG/pfp.svg" alt="KingOwen">
+      <span class="discord-status-dot" data-status="offline" data-tooltip="Offline"></span>
+    </a>
+    <div class="sidebar__activity">
+      <span class="sidebar__activity-label">Currently</span>
+      <span class="sidebar__activity-text discord-activity-text">Loading...</span>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="sidebar__nav">
     <a href="index.html" class="active">
       <img class="nav-icon" src="SVG/home.svg" alt="" aria-hidden="true">
       <span>Home</span>
     </a>
     <a href="edu.html">
-      <img class="nav-icon" src="SVG/human.svg" alt="" aria-hidden="true">
+      <img class="nav-icon" src="SVG/Edu.svg" alt="" aria-hidden="true">
       <span>Education</span>
     </a>
     <a href="projects.html">
-      <img class="nav-icon discord-avatar" src="SVG/pfp.svg" alt="" aria-hidden="true">
+      <img class="nav-icon" src="SVG/human.svg" alt="" aria-hidden="true">
       <span>Personal</span>
     </a>
     <a href="#">
@@ -98,50 +115,37 @@
   </nav>
 </aside>
 
-<main class="ko-home">
-  <section class="ko-home__grid" aria-label="Intro">
-    <a href="https://discord.com/users/798619259206500365" target="_blank" rel="noopener noreferrer" class="ko-home__pfp" aria-label="View Discord profile">
-      <img class="discord-avatar" src="SVG/pfp.svg" alt="">
-      <span class="discord-status-dot" data-status="offline" data-tooltip="Offline"></span>
-    </a>
+<main class="main-content">
+  <!-- Header -->
+  <header class="main-header">
+    <h1 class="main-header__title">KingOwen</h1>
+  </header>
 
-    <div class="ko-home__facts">
-      <article class="ko-card ko-card--fact">
-        <div class="ko-card__label">Hey, I'm</div>
-        <div class="ko-card__value">Owen Moore</div>
-      </article>
-
-      <article class="ko-card ko-card--fact">
-        <div class="ko-card__label">I am</div>
-        <div class="ko-card__value">19 years old</div>
-      </article>
-
-      <article class="ko-card ko-card--fact">
-        <div class="ko-card__label">Located in the</div>
-        <div class="ko-card__value">UK</div>
-      </article>
-
-      <article class="ko-card ko-card--fact ko-card--activity">
-        <div class="ko-card__label">Currently</div>
-        <div class="ko-card__value discord-activity-text">Loading...</div>
-        <div class="discord-activity-list"></div>
-      </article>
+  <!-- About Section -->
+  <section class="about-section">
+    <h2 class="section-title">About Me</h2>
+    <div class="about-cards">
+      <div class="about-card">
+        <span class="about-card__label">Name</span>
+        <span class="about-card__value">Owen</span>
+      </div>
+      <div class="about-card">
+        <span class="about-card__label">Age</span>
+        <span class="about-card__value">19 years old</span>
+      </div>
+      <div class="about-card">
+        <span class="about-card__label">Location</span>
+        <span class="about-card__value">UK</span>
+      </div>
+    </div>
+    <div class="about-bio">
+      <p>Hi, I am passionate about 3D modelling and have been modelling for around three years. During this time, I have also been studying it at college. I enjoy experimenting with many things within the Blender software which I use to create my 3D models.</p>
     </div>
   </section>
 
-  <section class="ko-card ko-card--about" aria-label="About me">
-    <h2 class="ko-card__title">About me</h2>
-    <div class="ko-card__inner">
-      <p>
-        Hi, I am passionate about 3D modelling and have been modelling for around three years.
-        During this time, I have also been studying it at college. I enjoy experimenting with many
-        things within the Blender software which I use to create my 3D models.
-      </p>
-    </div>
-  </section>
-
+  <!-- Recent Projects Section -->
   <section class="ko-card ko-card--recent" aria-label="Recent projects">
-    <h2 class="ko-card__title">Recent projects</h2>
+    <h2 class="section-title">Recent Projects</h2>
     <div class="ko-card__inner">
       <div class="ko-recent-tabs" role="tablist" aria-label="Recent content">
         <button class="ko-recent-tab is-active" type="button" role="tab" aria-selected="true" data-recent="projects">

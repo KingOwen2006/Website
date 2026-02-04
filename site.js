@@ -13,7 +13,8 @@
       "/edu": "edu.html",
       "/projects": "projects.html",
       "/blog": "blog.html",
-      "/post": "post.html"
+      "/post": "post.html",
+      "/contact": "contact.html"
     };
 
     window.addEventListener("DOMContentLoaded", () => {
@@ -142,12 +143,56 @@ function initHamburgerMenu() {
   });
 }
 
+// Interactive gradient title effect
+function initTitleGradient() {
+  const title = document.querySelector(".main-header__title");
+  if (!title) return;
+  
+  function updateGradient(x, y) {
+    const rect = title.getBoundingClientRect();
+    const mouseX = ((x - rect.left) / rect.width) * 100;
+    const mouseY = ((y - rect.top) / rect.height) * 100;
+    
+    title.style.setProperty("--mouse-x", `${mouseX}%`);
+    title.style.setProperty("--mouse-y", `${mouseY}%`);
+  }
+  
+  // Mouse events
+  title.addEventListener("mousemove", (e) => {
+    updateGradient(e.clientX, e.clientY);
+  });
+  
+  title.addEventListener("mouseleave", () => {
+    // Reset to center when mouse leaves
+    title.style.setProperty("--mouse-x", "50%");
+    title.style.setProperty("--mouse-y", "50%");
+  });
+  
+  // Touch events for mobile
+  title.addEventListener("touchstart", () => {
+    title.classList.add("is-interacting");
+  }, { passive: true });
+  
+  title.addEventListener("touchmove", (e) => {
+    const touch = e.touches[0];
+    updateGradient(touch.clientX, touch.clientY);
+  }, { passive: true });
+  
+  title.addEventListener("touchend", () => {
+    title.classList.remove("is-interacting");
+    // Reset to center when touch ends
+    title.style.setProperty("--mouse-x", "50%");
+    title.style.setProperty("--mouse-y", "50%");
+  });
+}
+
 // Attach event listeners once DOM is ready
 document.addEventListener("DOMContentLoaded", () => {
   updateThemeIcons();
   updateThemeColor();
-  initHamburgerMenu();
   initSidebarToggle();
+  initHamburgerMenu();
+  initTitleGradient();
   
   document.querySelectorAll(".theme-toggle").forEach(btn => {
     btn.addEventListener("click", toggleTheme);
@@ -177,8 +222,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function updatePresence(data) {
     const avatarElements = document.querySelectorAll(".discord-avatar");
     const statusDots = document.querySelectorAll(".discord-status-dot");
-    const activityText = document.querySelector(".discord-activity-text");
-    const activityList = document.querySelector(".discord-activity-list");
+    const activityTexts = document.querySelectorAll(".discord-activity-text");
     
     // Update avatar
     const user = data.discord_user;
@@ -202,89 +246,59 @@ document.addEventListener("DOMContentLoaded", () => {
       dot.setAttribute("data-tooltip", STATUS_LABELS[status] || "Offline");
     });
     
-    // Update activity card
-    if (activityText) {
-      const activities = data.activities || [];
-      // Filter out custom status (type 4)
-      const realActivities = activities.filter(a => a.type !== 4);
+    // Update activity text (sidebar and elsewhere)
+    const activities = data.activities || [];
+    // Filter out custom status (type 4)
+    const realActivities = activities.filter(a => a.type !== 4);
+    
+    // Apps that count as "working on a project"
+    const workApps = ["Cursor", "Blender", "Visual Studio Code", "VS Code"];
+    
+    // Music apps that should show song details
+    const musicApps = ["YouTube Music", "Spotify", "Apple Music", "SoundCloud", "Deezer", "Tidal"];
+    
+    // Helper to check if activity is a work app
+    const isWorkApp = (activity) => 
+      workApps.some(app => activity.name.toLowerCase().includes(app.toLowerCase()));
+    
+    // Helper to check if activity is a music app
+    const isMusicApp = (activity) => 
+      musicApps.some(app => activity.name.toLowerCase().includes(app.toLowerCase())) ||
+      activity.type === 2; // Type 2 is "Listening to"
+    
+    // Helper to get display name for activity
+    const getActivityDisplay = (activity) => {
+      if (isWorkApp(activity)) {
+        return "Working on a project";
+      }
       
-      // Apps that count as "working on a project"
-      const workApps = ["Cursor", "Blender", "Visual Studio Code", "VS Code"];
+      // For music apps, show song details
+      if (isMusicApp(activity)) {
+        const song = activity.details || activity.state || activity.name;
+        return `🎵 ${song}`;
+      }
       
-      // Music apps that should show song details
-      const musicApps = ["YouTube Music", "Spotify", "Apple Music", "SoundCloud", "Deezer", "Tidal"];
-      
-      // Helper to check if activity is a work app
-      const isWorkApp = (activity) => 
-        workApps.some(app => activity.name.toLowerCase().includes(app.toLowerCase()));
-      
-      // Helper to check if activity is a music app
-      const isMusicApp = (activity) => 
-        musicApps.some(app => activity.name.toLowerCase().includes(app.toLowerCase())) ||
-        activity.type === 2; // Type 2 is "Listening to"
-      
-      // Helper to get display name for activity
-      const getActivityDisplay = (activity, forList = false) => {
-        if (isWorkApp(activity)) {
-          return "Working on a project";
-        }
-        
-        // For music apps, show song details
-        if (isMusicApp(activity)) {
-          const song = activity.details || activity.state || activity.name;
-          const artist = activity.state && activity.details ? ` by ${activity.state}` : "";
-          if (forList) {
-            return `${song}${artist}`;
-          }
-          return `Listening to ${song}${artist}`;
-        }
-        
-        const prefix = ACTIVITY_TYPES[activity.type] || "Playing";
-        return prefix ? `${prefix} ${activity.name}` : activity.name;
-      };
-      
-      if (realActivities.length > 0) {
-        if (realActivities.length === 1) {
-          // Single activity
-          activityText.textContent = getActivityDisplay(realActivities[0]);
-          if (activityList) {
-            activityList.innerHTML = "";
-            activityList.style.display = "none";
-          }
-        } else {
-          // Multiple activities - show "Busy with" and list all
-          activityText.textContent = "Busy with";
-          
-          if (activityList) {
-            activityList.innerHTML = realActivities.map((activity, index) => {
-              let displayName;
-              if (isWorkApp(activity)) {
-                displayName = "Working on a project";
-              } else if (isMusicApp(activity)) {
-                displayName = getActivityDisplay(activity, true);
-              } else {
-                displayName = activity.name;
-              }
-              return `<div class="discord-activity-item">Activity ${index + 1}: ${displayName}</div>`;
-            }).join("");
-            activityList.style.display = "block";
-          }
-        }
+      const prefix = ACTIVITY_TYPES[activity.type] || "Playing";
+      return prefix ? `${prefix} ${activity.name}` : activity.name;
+    };
+    
+    let activityText = "";
+    
+    if (realActivities.length > 0) {
+      activityText = getActivityDisplay(realActivities[0]);
+    } else {
+      // No activities
+      if (status === "offline") {
+        activityText = "Sleeping 💤";
       } else {
-        // No activities
-        if (status === "offline") {
-          activityText.textContent = "Sleeping or not on Discord";
-        } else {
-          // Online, DND, or Idle but no activity
-          activityText.textContent = "Chilling";
-        }
-        
-        if (activityList) {
-          activityList.innerHTML = "";
-          activityList.style.display = "none";
-        }
+        // Online, DND, or Idle but no activity
+        activityText = "Chilling ✨";
       }
     }
+    
+    activityTexts.forEach(el => {
+      el.textContent = activityText;
+    });
   }
   
   function fetchPresence() {
@@ -300,10 +314,9 @@ document.addEventListener("DOMContentLoaded", () => {
       .catch(err => {
         console.warn("Could not load Discord presence:", err);
         // Set fallback text on error
-        const activityText = document.querySelector(".discord-activity-text");
-        if (activityText) {
-          activityText.textContent = "Unavailable";
-        }
+        document.querySelectorAll(".discord-activity-text").forEach(el => {
+          el.textContent = "Unavailable";
+        });
       });
   }
   
@@ -422,9 +435,7 @@ document.addEventListener("DOMContentLoaded", () => {
               ${img ? `<img src="${img}" alt="${p.title.rendered}" draggable="false">` : ""}
               <h3>${p.title.rendered}</h3>
               <p>${excerpt}</p>
-              <div class="meta">
-                <span>Read more →</span>
-              </div>
+              <span>Read more →</span>
             </a>
           `;
         })

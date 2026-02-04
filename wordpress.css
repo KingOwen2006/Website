@@ -115,10 +115,15 @@
   display: block;
   width: 100% !important;
   max-width: 100% !important;
-  height: auto !important;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
   margin: 40px auto;
   border: none;
   border-radius: var(--radius);
+}
+
+.post-content img.gallery-item {
+  cursor: zoom-in;
 }
 
 .post-content a img,

@@ -13,8 +13,8 @@
   
   <!-- Open Graph / Social Media Preview -->
   <meta property="og:type" content="article">
-  <meta property="og:title" content="Post - Owen Moore">
-  <meta property="og:description" content="Read this post from Owen Moore.">
+  <meta property="og:title" content="Post - Owen">
+  <meta property="og:description" content="Read this post from Owen.">
   <meta property="og:image" content="https://kingowen.fyi/api/banner?size=1024">
   <meta property="og:url" content="https://kingowen.fyi/post">
   <meta name="twitter:card" content="summary_large_image">
@@ -29,6 +29,10 @@
 <!-- Mobile Top Nav -->
 <header class="top-nav">
   <div class="top-nav__inner">
+    <a href="https://discord.com/users/798619259206500365" target="_blank" rel="noopener noreferrer" class="top-nav__avatar">
+      <img class="discord-avatar" src="SVG/pfp.svg" alt="">
+      <span class="discord-status-dot discord-status-dot--small" data-status="offline"></span>
+    </a>
     <button class="theme-toggle" type="button" aria-label="Toggle theme">
       <img class="theme-toggle__icon" src="SVG/tooglelight.svg" data-light-src="SVG/tooglelight.svg" data-dark-src="SVG/toogledark.svg" alt="" aria-hidden="true">
     </button>
@@ -47,14 +51,14 @@
     <span>Home</span>
   </a>
   <a href="edu.html" class="active">
-    <img class="nav-icon" src="SVG/human.svg" alt="" aria-hidden="true">
+    <img class="nav-icon" src="SVG/Edu.svg" alt="" aria-hidden="true">
     <span>Education</span>
   </a>
   <a href="projects.html">
-    <img class="nav-icon discord-avatar" src="SVG/pfp.svg" alt="" aria-hidden="true">
+    <img class="nav-icon" src="SVG/human.svg" alt="" aria-hidden="true">
     <span>Personal</span>
   </a>
-  <a href="#">
+  <a href="contact.html">
     <img class="nav-icon" src="SVG/contact.svg" alt="" aria-hidden="true">
     <span>Contact</span>
   </a>
@@ -69,17 +73,30 @@
       <path d="M15 18l-6-6 6-6"/>
     </svg>
   </button>
-  <nav>
+  <!-- Profile Section -->
+  <div class="sidebar__profile">
+    <a href="https://discord.com/users/798619259206500365" target="_blank" rel="noopener noreferrer" class="sidebar__avatar">
+      <img class="discord-avatar" src="SVG/pfp.svg" alt="KingOwen">
+      <span class="discord-status-dot" data-status="offline" data-tooltip="Offline"></span>
+    </a>
+    <div class="sidebar__activity">
+      <span class="sidebar__activity-label">Currently</span>
+      <span class="sidebar__activity-text discord-activity-text">Loading...</span>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="sidebar__nav">
     <a href="index.html">
       <img class="nav-icon" src="SVG/home.svg" alt="" aria-hidden="true">
       <span>Home</span>
     </a>
     <a href="edu.html" class="active">
-      <img class="nav-icon" src="SVG/human.svg" alt="" aria-hidden="true">
+      <img class="nav-icon" src="SVG/Edu.svg" alt="" aria-hidden="true">
       <span>Education</span>
     </a>
     <a href="projects.html">
-      <img class="nav-icon discord-avatar" src="SVG/pfp.svg" alt="" aria-hidden="true">
+      <img class="nav-icon" src="SVG/human.svg" alt="" aria-hidden="true">
       <span>Personal</span>
     </a>
     <a href="#">

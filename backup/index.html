@@ -3,38 +3,77 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#e11d48">
+  <meta name="theme-color" content="#e11d48" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0f1729" media="(prefers-color-scheme: dark)">
+  <meta name="msapplication-navbutton-color" content="#e11d48">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="icon" type="image/png" href="SVG/pfp.svg" id="favicon">
+  <link rel="apple-touch-icon" href="SVG/pfp.svg" id="apple-icon">
+  
+  <!-- Open Graph / Social Media Preview -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Owen Moore - 3D Artist & Developer">
+  <meta property="og:description" content="Hi, I'm Owen! Passionate about 3D modelling and creative projects.">
+  <meta property="og:image" content="https://kingowen.fyi/api/banner?size=1024">
+  <meta property="og:image:width" content="1024">
+  <meta property="og:image:height" content="410">
+  <meta property="og:url" content="https://kingowen.fyi">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Owen Moore - 3D Artist & Developer">
+  <meta name="twitter:description" content="Hi, I'm Owen! Passionate about 3D modelling and creative projects.">
+  <meta name="twitter:image" content="https://kingowen.fyi/api/banner?size=1024">
+  <base href="/">
   <script src="site.js"></script>
   <link rel="stylesheet" href="site.css">
 </head>
 <body>
 
+<!-- Mobile Top Nav -->
 <header class="top-nav">
-  <nav>
-    <a href="index.html" class="active">
-      <img class="nav-icon" src="SVG/home.svg" alt="" aria-hidden="true">
-      <span>Home</span>
-    </a>
-    <a href="edu.html">
-      <img class="nav-icon" src="SVG/human.svg" alt="" aria-hidden="true">
-      <span>Education</span>
-    </a>
-    <a href="projects.html">
-      <img class="nav-icon discord-avatar" src="SVG/pfp.svg" alt="" aria-hidden="true">
-      <span>Personal</span>
-    </a>
-    <a href="#">
-      <img class="nav-icon" src="SVG/contact.svg" alt="" aria-hidden="true">
-      <span>Contact</span>
-    </a>
+  <div class="top-nav__inner">
     <button class="theme-toggle" type="button" aria-label="Toggle theme">
       <img class="theme-toggle__icon" src="SVG/tooglelight.svg" data-light-src="SVG/tooglelight.svg" data-dark-src="SVG/toogledark.svg" alt="" aria-hidden="true">
     </button>
-  </nav>
+    <button class="hamburger" type="button" aria-label="Open menu" aria-expanded="false">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
 </header>
+
+<!-- Mobile Nav Menu -->
+<nav class="mobile-nav" aria-label="Mobile navigation">
+  <a href="index.html" class="active">
+    <img class="nav-icon" src="SVG/home.svg" alt="" aria-hidden="true">
+    <span>Home</span>
+  </a>
+  <a href="edu.html">
+    <img class="nav-icon" src="SVG/human.svg" alt="" aria-hidden="true">
+    <span>Education</span>
+  </a>
+  <a href="projects.html">
+    <img class="nav-icon discord-avatar" src="SVG/pfp.svg" alt="" aria-hidden="true">
+    <span>Personal</span>
+  </a>
+  <a href="#">
+    <img class="nav-icon" src="SVG/contact.svg" alt="" aria-hidden="true">
+    <span>Contact</span>
+  </a>
+</nav>
 
 <div class="app">
 
-<aside class="sidebar">
+<!-- Desktop Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <button class="sidebar__toggle" type="button" aria-label="Toggle sidebar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M15 18l-6-6 6-6"/>
+    </svg>
+  </button>
   <nav>
     <a href="index.html" class="active">
       <img class="nav-icon" src="SVG/home.svg" alt="" aria-hidden="true">
@@ -54,19 +93,21 @@
     </a>
     <button class="theme-toggle" type="button" aria-label="Toggle theme">
       <img class="theme-toggle__icon" src="SVG/tooglelight.svg" data-light-src="SVG/tooglelight.svg" data-dark-src="SVG/toogledark.svg" alt="" aria-hidden="true">
+      <span>Theme</span>
     </button>
   </nav>
 </aside>
+
 <main class="ko-home">
   <section class="ko-home__grid" aria-label="Intro">
-    <div class="ko-home__pfp" aria-hidden="true">
+    <a href="https://discord.com/users/798619259206500365" target="_blank" rel="noopener noreferrer" class="ko-home__pfp" aria-label="View Discord profile">
       <img class="discord-avatar" src="SVG/pfp.svg" alt="">
-      <span class="discord-status-dot" data-status="offline" title="Offline"></span>
-    </div>
+      <span class="discord-status-dot" data-status="offline" data-tooltip="Offline"></span>
+    </a>
 
     <div class="ko-home__facts">
       <article class="ko-card ko-card--fact">
-        <div class="ko-card__label">Hey, I’m</div>
+        <div class="ko-card__label">Hey, I'm</div>
         <div class="ko-card__value">Owen Moore</div>
       </article>
 
@@ -78,6 +119,12 @@
       <article class="ko-card ko-card--fact">
         <div class="ko-card__label">Located in the</div>
         <div class="ko-card__value">UK</div>
+      </article>
+
+      <article class="ko-card ko-card--fact ko-card--activity">
+        <div class="ko-card__label">Currently</div>
+        <div class="ko-card__value discord-activity-text">Loading...</div>
+        <div class="discord-activity-list"></div>
       </article>
     </div>
   </section>
@@ -114,5 +161,4 @@
 
 <script src="wordpress.js"></script>
 </body>
-
 </html>
