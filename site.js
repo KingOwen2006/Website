@@ -8,24 +8,24 @@
     if (base) base.remove();
 
     // Rewrite clean URL links to .html files
-    const map = {
-      "/": "index.html",
-      "/edu": "edu.html",
-      "/projects": "projects.html",
-      "/blog": "blog.html",
+  const map = {
+    "/": "index.html",
+    "/edu": "edu.html",
+    "/projects": "projects.html",
+    "/blog": "blog.html",
       "/post": "post.html",
       "/contact": "contact.html"
-    };
+  };
 
-    window.addEventListener("DOMContentLoaded", () => {
-      document.querySelectorAll('a[href^="/"]').forEach(a => {
-        const href = a.getAttribute("href") || "";
-        const baseHref = href.split("#")[0].split("?")[0];
-        const replacement = map[baseHref];
-        if (!replacement) return;
-        a.setAttribute("href", replacement + href.slice(baseHref.length));
-      });
+  window.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll('a[href^="/"]').forEach(a => {
+      const href = a.getAttribute("href") || "";
+      const baseHref = href.split("#")[0].split("?")[0];
+      const replacement = map[baseHref];
+      if (!replacement) return;
+      a.setAttribute("href", replacement + href.slice(baseHref.length));
     });
+  });
   }
 })();
 
@@ -544,8 +544,8 @@ document.addEventListener("DOMContentLoaded", () => {
             <a href="${href}" class="post-card">
               ${img ? `<img src="${img}" alt="${p.title.rendered}" draggable="false">` : ""}
               <div class="post-card__content">
-                <h3>${p.title.rendered}</h3>
-                <p>${excerpt}</p>
+              <h3>${p.title.rendered}</h3>
+              <p>${excerpt}</p>
                 <div class="post-tags">${tagsHTML}</div>
                 <span class="post-card__link">Read more →</span>
               </div>

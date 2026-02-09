@@ -710,17 +710,9 @@
     const processedContent = replaceEmbeds(p.content.rendered);
     const wordCount = getWordCount(processedContent);
 
-    // Get categories from embedded terms
-    const terms = p._embedded?.["wp:term"] || [];
-    const categories = terms[0] || []; // Categories only
-    
-    // Build tags HTML
-    const tagsHTML = categories.map(cat => `<span class="post-tag post-tag--category">${cat.name}</span>`).join('');
-
     postContainer.innerHTML = `
       <h1>${p.title.rendered}</h1>
       <div class="post-meta">
-        <div class="post-tags">${tagsHTML}</div>
         <span class="word-count">${wordCount} words</span>
       </div>
       <div class="post-content">
