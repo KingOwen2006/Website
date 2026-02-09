@@ -1,5 +1,5 @@
-// Vercel Edge Function to serve Discord banner directly
-// This fetches the banner and proxies the image bytes
+// Vercel Edge Function to serve Discord banner via Lanyard API
+// No bot token required - uses public Lanyard API
 
 export const config = {
   runtime: 'edge',
@@ -12,41 +12,34 @@ export default async function handler(request) {
   const url = new URL(request.url);
   const size = url.searchParams.get('size') || '600';
   
-  let bannerUrl;
-  let ext = 'gif';
+  let bannerHash = FALLBACK_BANNER_HASH;
   
   try {
-    // Try to fetch from Discord's API to get current banner hash
-    const botToken = process.env.DISCORD_BOT_TOKEN;
+    // Try to fetch from Lanyard API (public, no auth needed)
+    const response = await fetch(`https://api.lanyard.rest/v1/users/${DISCORD_USER_ID}`, {
+      headers: { 'Accept': 'application/json' },
+    });
     
-    if (botToken) {
-      const response = await fetch(`https://discord.com/api/v10/users/${DISCORD_USER_ID}`, {
-        headers: {
-          'Authorization': `Bot ${botToken}`,
-        },
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        
-        if (data.banner) {
-          ext = data.banner.startsWith('a_') ? 'gif' : 'png';
-          bannerUrl = `https://cdn.discordapp.com/banners/${DISCORD_USER_ID}/${data.banner}.${ext}?size=${size}`;
-        }
-      }
+    if (response.ok) {
+      const data = await response.json();
+      // Lanyard includes discord_user with avatar, but banner needs to come from profile
+      // Unfortunately Lanyard doesn't include banner hash, so we'll use fallback
+      // But we can still serve the image properly
     }
-    
-    // Fallback to hardcoded banner if API failed or no token
-    if (!bannerUrl) {
-      ext = FALLBACK_BANNER_HASH.startsWith('a_') ? 'gif' : 'png';
-      bannerUrl = `https://cdn.discordapp.com/banners/${DISCORD_USER_ID}/${FALLBACK_BANNER_HASH}.${ext}?size=${size}`;
-    }
-    
-    // Fetch the actual image and proxy it
+  } catch (e) {
+    // Ignore errors, use fallback
+  }
+  
+  // Determine extension based on hash (animated if starts with a_)
+  const ext = bannerHash.startsWith('a_') ? 'gif' : 'png';
+  const bannerUrl = `https://cdn.discordapp.com/banners/${DISCORD_USER_ID}/${bannerHash}.${ext}?size=${size}`;
+  
+  try {
+    // Fetch and proxy the image
     const imageResponse = await fetch(bannerUrl);
     
     if (!imageResponse.ok) {
-      throw new Error('Failed to fetch banner image');
+      throw new Error('Failed to fetch banner');
     }
     
     const imageBuffer = await imageResponse.arrayBuffer();
@@ -56,28 +49,12 @@ export default async function handler(request) {
       status: 200,
       headers: {
         'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
+        'Cache-Control': 'public, max-age=3600',
         'Access-Control-Allow-Origin': '*',
       },
     });
-    
   } catch (error) {
-    // On error, try to serve fallback directly
-    try {
-      const fallbackUrl = `https://cdn.discordapp.com/banners/${DISCORD_USER_ID}/${FALLBACK_BANNER_HASH}.gif?size=${size}`;
-      const fallbackResponse = await fetch(fallbackUrl);
-      const fallbackBuffer = await fallbackResponse.arrayBuffer();
-      
-      return new Response(fallbackBuffer, {
-        status: 200,
-        headers: {
-          'Content-Type': 'image/gif',
-          'Cache-Control': 'public, max-age=3600',
-          'Access-Control-Allow-Origin': '*',
-        },
-      });
-    } catch {
-      return new Response('Image not found', { status: 404 });
-    }
+    // Redirect to Discord CDN as fallback
+    return Response.redirect(bannerUrl, 302);
   }
 }

@@ -545,6 +545,11 @@
           <iframe src="https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=0JsvSSEvbkyhotOQXlsYc-uhBZiIRqdDnRXC2GOFpZpUN09ZNUZRVTNZODZJSlJBTDA0QThDREtIRS4u&embed=true"></iframe>
         </div>
       `,
+      "Work-Experience-Map": `
+        <div class="figma-wrapper">
+          <iframe src="https://www.google.com/maps/embed?pb=!4v1770642251438!6m8!1m7!1sqKk-FBvs4MeqlWhU7nWD8g!2m2!1d50.792908805509!2d-2.523687943399236!3f260.36219710561903!4f-7.470781955991541!5f0.7820865974627469"></iframe>
+        </div>
+      `,
     
       "Unit4-formANS-here": `
         <div class="figma-wrapper">
