@@ -317,9 +317,7 @@
         );
         postsContainer.innerHTML = posts.map(p => {
           const img = p._embedded?.["wp:featuredmedia"]?.[0]?.source_url;
-          const href = window.location.protocol === "file:"
-            ? `${config.link}.html?slug=${p.slug}`
-            : `/${config.link}/${p.slug}`;
+          const href = `${config.link}.html?slug=${p.slug}`;
           return `
             <a href="${href}" class="post-card">
               ${img ? `<img src="${img}" alt="${p.title.rendered}">` : ""}
@@ -349,9 +347,7 @@
 
         postsContainer.innerHTML = posts.map(p => {
           const img = p._embedded?.["wp:featuredmedia"]?.[0]?.source_url;
-          const href = window.location.protocol === "file:"
-            ? `${config.link}.html?slug=${p.slug}`
-            : `/${config.link}/${p.slug}`;
+          const href = `${config.link}.html?slug=${p.slug}`;
 
           const excerpt = p.excerpt.rendered.replace(/<[^>]+>/g, "").trim();
           const tags = (p._embedded?.["wp:term"]?.[1] || []).map(t => t.name);

@@ -1,13 +1,5 @@
 {
   "rewrites": [
-    { "source": "/post/:slug*", "destination": "/post.html" }
-  ],
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "Cache-Control", "value": "no-cache" }
-      ]
-    }
+    { "source": "/post/:path*", "destination": "/post.html" }
   ]
 }
