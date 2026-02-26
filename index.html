@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KingOwen | 3D Modeller</title>
+<link id="favicon" rel="icon" type="image/png" href="https://cdn.discordapp.com/avatars/798619259206500365/0ad237bf4f0123c5be52925363b4c6cc.png?size=64">
+<link id="apple-icon" rel="apple-touch-icon" href="https://cdn.discordapp.com/avatars/798619259206500365/0ad237bf4f0123c5be52925363b4c6cc.png?size=64">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+<div class="vignette"></div>
+<div class="noise"></div>
+
+<!-- TOP NAV -->
+<nav class="top-nav" id="top-nav">
+  <div class="top-nav__links" id="nav-links">
+    <a href="#" class="top-nav__link active">About</a>
+    <a href="#posts" class="top-nav__link">Education</a>
+    <a href="#contact-section" class="top-nav__link">Contact</a>
+  </div>
+  <button class="top-nav__burger" id="nav-burger" aria-label="Menu">
+    <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+</nav>
+
+<!-- HERO -->
+<div class="hero-section">
+  <div class="col-left">
+    <div class="avatar-wrap">
+      <div class="avatar-glow"></div>
+      <div class="avatar-frame">
+        <img class="discord-avatar" src="https://cdn.discordapp.com/avatars/798619259206500365/0ad237bf4f0123c5be52925363b4c6cc.png?size=512" alt="KingOwen">
+      </div>
+      <div class="status-badge" id="status-badge">Offline</div>
+    </div>
+    <div class="greeting">Hey there, I'm</div>
+    <div class="display-name">KingOwen</div>
+    <div class="subtitle">3D Modeller & Digital Creator</div>
+    <div class="username-row">
+      <span class="uname">@kingowen2006</span>
+      <span class="guild-chip">TJG</span>
+    </div>
+  </div>
+  <div class="col-right">
+    <div class="glass-card">
+      <h3>About Me</h3>
+      <p>I'm <strong>Owen</strong>, a 19-year-old 3D modeller from the United Kingdom. I specialise in crafting high-quality 3D models, sculpts, and rendered environments. From detailed character models to immersive worlds — I thrive on turning concepts into tangible digital creations and I'm always pushing to improve my skills.</p>
+      <div class="divider"></div>
+      <div class="skills">
+        <span class="skill">Blender</span>
+        <span class="skill">3D Modelling</span>
+        <span class="skill">Name: Owen</span>
+        <span class="skill">Age: 19</span>
+        <span class="skill">Location: UK</span>
+        <span class="skill">Platform: Desktop</span>
+        <span class="skill" id="status-pill-skill">Discord: Do Not Disturb</span>
+      </div>
+    </div>
+    <div class="glass-card">
+      <div class="activity-card">
+        <div class="pulse discord-status-dot"></div>
+        <div class="activity-card__body">
+          <div class="meta">Current Activity</div>
+          <div class="discord-activity-text"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="scroll-hint">
+    <span>Scroll</span>
+    <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+  </div>
+</div>
+
+<!-- TRANSITION ZONE (empty scroll space for the ocean->field animation) -->
+<div class="transition-spacer"></div>
+
+<!-- ROAD / POSTS SECTION -->
+<div class="road-section">
+  <div class="road-section-title">
+    <h2>Education</h2>
+    <p>Units & coursework</p>
+  </div>
+  <div class="road-timeline" id="posts">
+    <div class="road-loader"><div class="spinner"></div>Loading posts...</div>
+  </div>
+</div>
+
+<!-- TRANSITION BACK TO OCEAN -->
+<div class="contact-spacer" id="contact-spacer"></div>
+
+<!-- CONTACT SECTION -->
+<div class="contact-section" id="contact-section">
+  <div class="contact-section-title">
+    <h2>Contact</h2>
+    <p>Get in touch</p>
+  </div>
+  <div class="contact-cards">
+    <a href="https://x.com/KingOwenFYI" target="_blank" rel="noopener" class="contact-card">
+      <div class="contact-card__icon contact-card__icon--x">𝕏</div>
+      <div class="contact-card__label">X / Twitter</div>
+      <div class="contact-card__value">@KingOwenFYI</div>
+    </a>
+    <a href="https://discord.com/users/798619259206500365" target="_blank" rel="noopener" class="contact-card">
+      <div class="contact-card__icon contact-card__icon--discord">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+      </div>
+      <div class="contact-card__label">Discord</div>
+      <div class="contact-card__value">KingOwen2006</div>
+    </a>
+    <a href="mailto:kingowen2006fyi@gmail.com" class="contact-card">
+      <div class="contact-card__icon contact-card__icon--email">✉</div>
+      <div class="contact-card__label">Email</div>
+      <div class="contact-card__value">kingowen2006fyi<span>@gmail.com</span></div>
+    </a>
+  </div>
+</div>
+
+<script>
+const burger = document.getElementById('nav-burger');
+const navLinks = document.getElementById('nav-links');
+burger.addEventListener('click', () => navLinks.classList.toggle('open'));
+navLinks.addEventListener('click', e => { if (e.target.classList.contains('top-nav__link')) navLinks.classList.remove('open'); });
+window.addEventListener('scroll', () => {
+  document.getElementById('top-nav').classList.toggle('scrolled', window.scrollY > 40);
+}, { passive: true });
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="scene.js"></script>
+<script src="wp-lightbox.js"></script>
+<script src="wp.js"></script>
+</body>
+</html>
