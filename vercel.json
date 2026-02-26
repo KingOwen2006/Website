@@ -1,11 +1,10 @@
 {
-  "public": ".",
   "rewrites": [
-    { "source": "/post/**", "destination": "/post.html" }
+    { "source": "/post/:slug*", "destination": "/post.html" }
   ],
   "headers": [
     {
-      "source": "**",
+      "source": "/(.*)",
       "headers": [
         { "key": "Cache-Control", "value": "no-cache" }
       ]
