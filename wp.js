@@ -1,7 +1,4 @@
 (function () {
-  /* ======================
-     THEME (ALWAYS LOADS)
-  ====================== */
   const root = document.documentElement;
   const savedTheme = localStorage.getItem("theme");
 
