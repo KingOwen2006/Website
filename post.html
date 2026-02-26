@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KingOwen | Unit</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  img{-webkit-user-drag:none;-moz-user-drag:none}
+  :root{
+    --bg:#060b14;
+    --accent:#64ffda;
+    --accent2:#48b1ff;
+    --accent3:#a78bfa;
+    --text:#e2e8f0;
+    --text-muted:#8899aa;
+    --muted:#8899aa;
+    --glass:rgba(15,25,40,.55);
+    --glass-border:rgba(100,200,255,.1);
+    --glass-blur:24px;
+    --panel:rgba(12,18,28,.85);
+    --panel-soft:rgba(15,25,40,.4);
+    --border:rgba(100,200,255,.08);
+    --radius:14px;
+  }
+  body{background:var(--bg);color:var(--text);font-family:'Sora',sans-serif;overflow-x:hidden;min-height:100vh}
+  canvas#bg{position:fixed;top:0;left:0;z-index:0}
+  .vignette{position:fixed;inset:0;pointer-events:none;z-index:1;background:radial-gradient(ellipse at center,transparent 40%,rgba(6,11,20,.85) 100%)}
+  .noise{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.03;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+  .back-bar{position:fixed;top:0;left:0;right:0;z-index:10;padding:.8rem 2rem;background:rgba(6,11,20,.7);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--glass-border);display:flex;align-items:center;gap:1rem}
+  .back-bar .back-link{color:var(--muted);text-decoration:none;font-size:.8rem;font-weight:500;letter-spacing:1px;display:flex;align-items:center;gap:.4rem;transition:color .2s}
+  .back-bar .back-link:hover{color:var(--accent)}
+  .back-link svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+
+  .page-wrap{position:relative;z-index:2;max-width:1250px;margin:0 auto;padding:5rem 2rem 4rem}
+
+  #post{min-height:60vh}
+
+  #post h1{font-family:'Space Grotesk',sans-serif;font-size:2.4rem;font-weight:800;line-height:1.2;margin-bottom:14px;background:linear-gradient(135deg,#e2f0ff,#64ffda,#48b1ff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+
+  .back-link{display:inline-block;margin-bottom:20px;color:var(--muted)}
+  .back-link:hover{color:var(--accent)}
+  .word-count{font-size:.9rem;color:var(--muted);margin-bottom:24px}
+
+  /* Links inside posts — red/accent */
+  .post-content a{color:var(--accent);text-decoration:underline}
+  .post-content a:hover{color:var(--accent2)}
+  .post-content a{word-break:break-word;overflow-wrap:anywhere}
+
+  /* Post content panel */
+  .post-content{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:40px;
+    max-width:1250px;
+    margin:20px auto 0;
+    color:var(--text);
+  }
+
+  .post-content h1{font-size:2.4rem;line-height:1.2;font-weight:800;margin-bottom:14px}
+  .post-content h2{
+    font-size:1.7rem;
+    font-weight:700;
+    margin:40px 0 12px;
+    padding-top:12px;
+    border-top:1px solid var(--border);
+  }
+  .post-content h3{font-size:1.3rem;font-weight:600;margin:28px 0 10px;color:var(--text)}
+  .post-content p{margin:12px 0;font-size:1.05rem;line-height:1.75;color:var(--text)}
+  .post-content ul,.post-content ol{margin:14px 0 14px 22px}
+  .post-content li{margin:8px 0}
+  .post-content blockquote{
+    margin:20px 0;
+    padding:16px 20px;
+    border-left:4px solid var(--accent);
+    background:var(--panel-soft);
+    color:var(--text);
+    border-radius:8px;
+  }
+  .post-content code{
+    background:var(--panel-soft);
+    padding:3px 6px;
+    border-radius:6px;
+    border:1px solid var(--border);
+    font-size:.95rem;
+    color:var(--text);
+  }
+  .post-content pre{
+    background:#0d0f17;
+    color:#e6e8ee;
+    padding:18px;
+    border-radius:14px;
+    overflow:auto;
+    margin:18px 0;
+    font-size:.95rem;
+    border:1px solid rgba(255,255,255,.06);
+  }
+
+  /* Centered images — clickable for lightbox */
+  .post-content img{
+    cursor:pointer;
+    display:block;
+    width:100%!important;
+    max-width:1000px!important;
+    height:auto!important;
+    margin:40px auto;
+    border-radius:14px;
+  }
+  .post-content a img,.post-content figure img{
+    width:100%!important;
+    max-width:1000px!important;
+    height:auto!important;
+  }
+
+  /* Image compare (Jetpack → ko-compare via JS) — click to open in lightbox */
+  .post-content .ko-compare{margin:40px auto;max-width:1000px;cursor:pointer}
+  .post-content .ko-compare__viewport{
+    position:relative;
+    width:100%;
+    aspect-ratio:16/9;
+    border-radius:14px;
+    overflow:hidden;
+    border:1px solid var(--border);
+    background:#0b0f1a;
+    user-select:none;
+    touch-action:none;
+    cursor:col-resize;
+  }
+  .post-content .ko-compare__viewport::after{
+    content:"";
+    position:absolute;
+    top:0;bottom:0;
+    left:var(--pos,50%);
+    transform:translateX(-1px);
+    width:2px;
+    background:rgba(255,255,255,.7);
+    pointer-events:none;
+  }
+  .post-content .ko-compare img,
+  .post-content .ko-compare a img,
+  .post-content figure.ko-compare img{
+    width:100%!important;
+    max-width:none!important;
+    height:100%!important;
+    margin:0!important;
+    border-radius:0!important;
+    object-fit:cover;
+    display:block;
+  }
+  .post-content .ko-compare__img--before{
+    position:absolute;
+    inset:0;
+    clip-path:inset(0 calc(100% - var(--pos,50%)) 0 0);
+  }
+  .post-content .ko-compare__img--after{
+    position:absolute;
+    inset:0;
+    clip-path:inset(0 0 0 var(--pos,50%));
+  }
+  .post-content .ko-compare__handle{
+    position:absolute;
+    top:0;
+    left:var(--pos,50%);
+    transform:translateX(-50%);
+    width:0;
+    height:100%;
+    pointer-events:none;
+  }
+  .post-content .ko-compare__handle::before{
+    content:"";
+    position:absolute;
+    top:50%;left:0;
+    transform:translate(-50%,-50%);
+    width:42px;height:42px;
+    border-radius:999px;
+    border:1px solid var(--border);
+    background:var(--panel);
+    box-shadow:0 8px 18px rgba(0,0,0,.25);
+  }
+  .post-content .ko-compare__handle::after{
+    content:"↔";
+    position:absolute;
+    top:50%;left:0;
+    transform:translate(-50%,-50%);
+    font-weight:800;
+    color:var(--accent);
+    line-height:1;
+  }
+
+  .post-content img[data-wide="true"]{max-width:1200px!important}
+  .post-content img[data-narrow="true"]{max-width:800px!important}
+
+  /* WordPress image captions */
+  .post-content .wp-element-caption{
+    margin-top:10px;
+    font-size:.9rem;
+    line-height:1.5;
+    color:var(--muted);
+    text-align:center;
+    padding:6px 10px;
+    max-width:100%;
+  }
+  .post-content figure{margin:40px auto;max-width:1000px}
+  .post-content figure>.wp-element-caption{margin-top:14px;padding-top:10px}
+  .post-content .wp-element-caption::before{content:"— ";color:var(--accent);opacity:.6}
+
+  /* Figma embeds */
+  .figma-wrapper{
+    position:relative;
+    width:100%;
+    max-width:1000px;
+    margin:40px auto;
+    border-radius:14px;
+    overflow:hidden;
+    border:1px solid var(--border);
+    background:var(--panel);
+  }
+  .figma-wrapper iframe{width:100%;min-height:700px;border:0;background:var(--panel)}
+
+  /* Video / non-Figma iframes */
+  .post-content video,.post-content iframe:not(.figma-wrapper iframe){
+    display:block;
+    width:100%;
+    max-width:1000px;
+    aspect-ratio:16/9;
+    height:auto;
+    margin:40px auto;
+    border-radius:14px;
+    overflow:hidden;
+    background:#000;
+    border:1px solid var(--border);
+  }
+
+  /* WordPress block normalization */
+  .post-content .wp-block-group,
+  .post-content .wp-block-columns,
+  .post-content .wp-block-column,
+  .post-content .wp-block-media-text,
+  .post-content .wp-block-table,
+  .post-content .wp-block-quote,
+  .post-content .wp-block-code,
+  .post-content .wp-block-preformatted{
+    background:transparent;
+    color:var(--text);
+    border-color:var(--border);
+  }
+
+  /* WordPress tables */
+  .post-content .wp-block-table{
+    margin:28px 0;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    border:1px solid var(--border);
+    border-radius:12px;
+    background:var(--panel);
+  }
+  .post-content .wp-block-table table{width:100%;border-collapse:collapse;min-width:600px}
+  .post-content .wp-block-table thead th{
+    background:var(--accent);
+    color:#fff;
+    font-weight:700;
+    border-bottom:1px solid var(--border);
+  }
+  .post-content .wp-block-table th,.post-content .wp-block-table td{
+    padding:12px 14px;
+    border-right:1px solid var(--border);
+    border-bottom:1px solid var(--border);
+    text-align:left;
+    vertical-align:top;
+    color:var(--text);
+    background:transparent;
+  }
+  .post-content .wp-block-table tr:last-child td{border-bottom:0}
+  .post-content .wp-block-table th:last-child,.post-content .wp-block-table td:last-child{border-right:0}
+  .post-content .wp-block-table tbody tr:nth-child(even) td{background:rgba(0,0,0,.03)}
+
+  .post-content table,.post-content th,.post-content td{border-color:var(--border);color:var(--text)}
+
+  /* WordPress image rows (flex/grid) */
+  .post-content .wp-block-group.is-layout-flex{
+    display:flex;
+    gap:24px;
+    align-items:flex-start;
+    margin:40px 0;
+  }
+  .post-content .wp-block-group.is-nowrap.is-layout-flex{flex-wrap:nowrap}
+  .post-content .wp-block-group.is-layout-flex>.wp-block-image{flex:0 0 45%;margin:0}
+  .post-content .wp-block-group.is-layout-flex>:not(.wp-block-image){flex:1 1 55%}
+  .post-content .wp-block-group.is-layout-flex>.wp-block-image img,
+  .post-content .wp-block-group.is-layout-flex>.wp-block-image img.size-large{
+    width:100%!important;
+    max-width:none!important;
+    max-height:420px;
+    height:auto!important;
+    object-fit:contain;
+    display:block;
+    margin:0!important;
+    border-radius:14px;
+  }
+
+  .post-content .wp-block-group.is-layout-grid{
+    display:grid;
+    grid-template-columns:45% 1fr;
+    gap:24px;
+    align-items:start;
+    margin:40px 0;
+  }
+  .post-content .wp-block-group.is-layout-grid>.wp-block-image img,
+  .post-content .wp-block-group.is-layout-grid>.wp-block-image img.size-large{
+    width:100%!important;
+    max-width:none!important;
+    max-height:420px;
+    height:auto!important;
+    object-fit:contain;
+    display:block;
+    border-radius:14px;
+  }
+
+  /* WordPress gallery */
+  .post-content .wp-block-gallery{
+    display:grid;
+    gap:16px;
+    margin:40px auto;
+    max-width:1000px;
+  }
+  .post-content .wp-block-gallery.columns-2{grid-template-columns:repeat(2,1fr)}
+  .post-content .wp-block-gallery.columns-3{grid-template-columns:repeat(3,1fr)}
+  .post-content .wp-block-gallery .wp-block-image{margin:0}
+  .post-content .wp-block-gallery .wp-block-image img{
+    width:100%!important;
+    height:auto!important;
+    object-fit:cover;
+    border-radius:12px;
+  }
+
+  /* Loader */
+  .ko-wp-inline-loader{text-align:center;padding:4rem 2rem}
+  .ko-wp-inline-loader__text{color:var(--text-muted);font-size:.85rem;letter-spacing:1px}
+  .ko-wp-inline-loader__bar{width:120px;height:2px;margin:1rem auto 0;background:rgba(100,255,218,.1);border-radius:2px;overflow:hidden;position:relative}
+  .ko-wp-inline-loader__bar::after{content:'';position:absolute;inset:0;width:40%;background:var(--accent);border-radius:2px;animation:loadslide 1.2s ease-in-out infinite}
+  @keyframes loadslide{0%{transform:translateX(-100%)}100%{transform:translateX(350%)}}
+
+  @media(max-width:768px){
+    .post-content{padding:24px 20px}
+    .post-content .ko-compare{margin:28px auto}
+    .post-content .ko-compare__handle::before{width:38px;height:38px}
+    .post-content .wp-element-caption{font-size:.85rem;line-height:1.6;padding:8px 12px;text-align:left}
+    .post-content figure{margin:28px auto}
+    .post-content figure>.wp-element-caption{margin-top:10px;padding-top:8px}
+    .post-content .wp-block-group.is-layout-flex,
+    .post-content .wp-block-group.is-layout-grid{grid-template-columns:1fr;display:block}
+    .post-content .wp-block-gallery.columns-2,.post-content .wp-block-gallery.columns-3{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div class="vignette"></div>
+<div class="noise"></div>
+
+<div class="back-bar">
+  <a href="index.html" class="back-link">
+    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    Back
+  </a>
+</div>
+
+<div class="page-wrap">
+  <div id="post"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x060b14, .015);
+const camera = new THREE.PerspectiveCamera(58, innerWidth / innerHeight, 0.1, 600);
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg'), antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.setClearColor(0x060b14);
+camera.position.set(0, 5, 18);
+camera.lookAt(0, 0, 0);
+
+const planeW = 120, segW = 70;
+const geo = new THREE.PlaneGeometry(planeW, planeW, segW, segW);
+geo.rotateX(-Math.PI / 2);
+const mat = new THREE.MeshBasicMaterial({ color: 0x48b1ff, wireframe: true, transparent: true, opacity: .04 });
+const plane = new THREE.Mesh(geo, mat);
+plane.position.y = -3;
+scene.add(plane);
+
+const pGeo = new THREE.BufferGeometry();
+const pCount = 300;
+const pPos = new Float32Array(pCount * 3);
+for (let i = 0; i < pCount; i++) {
+  pPos[i * 3] = (Math.random() - .5) * 60;
+  pPos[i * 3 + 1] = Math.random() * 15 - 3;
+  pPos[i * 3 + 2] = (Math.random() - .5) * 60;
+}
+pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+const pMat = new THREE.PointsMaterial({ color: 0x64ffda, size: .06, transparent: true, opacity: .2, depthWrite: false });
+scene.add(new THREE.Points(pGeo, pMat));
+
+let t = 0;
+window.addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
+
+function animate() {
+  requestAnimationFrame(animate);
+  t += .008;
+  const p = plane.geometry.attributes.position;
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), z = p.getZ(i);
+    p.setY(i, Math.sin(x * .1 + t) * Math.cos(z * .1 + t) * .4);
+  }
+  p.needsUpdate = true;
+  renderer.render(scene, camera);
+}
+animate();
+</script>
+<script src="wp-lightbox.js"></script>
+<script src="wp.js"></script>
+</body>
+</html>
