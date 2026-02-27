@@ -25,6 +25,7 @@ const planeW = 120, segW = 90;
 const waveGeo1 = new THREE.PlaneGeometry(planeW, planeW, segW, segW);
 waveGeo1.rotateX(-Math.PI / 2);
 const waveMat1 = new THREE.MeshBasicMaterial({ color: oceanColor, wireframe: true, transparent: true, opacity: .06 });
+const waveMat1Solid = new THREE.MeshBasicMaterial({ color: oceanColor, wireframe: false, transparent: true, opacity: .5 });
 const wavePlane1 = new THREE.Mesh(waveGeo1, waveMat1);
 wavePlane1.position.y = -3;
 scene.add(wavePlane1);
@@ -32,6 +33,7 @@ scene.add(wavePlane1);
 const waveGeo2 = new THREE.PlaneGeometry(planeW, planeW, segW, segW);
 waveGeo2.rotateX(-Math.PI / 2);
 const waveMat2 = new THREE.MeshBasicMaterial({ color: oceanColor2, wireframe: true, transparent: true, opacity: .03 });
+const waveMat2Solid = new THREE.MeshBasicMaterial({ color: oceanColor2, wireframe: false, transparent: true, opacity: .4 });
 const wavePlane2 = new THREE.Mesh(waveGeo2, waveMat2);
 wavePlane2.position.y = -3.8;
 scene.add(wavePlane2);
@@ -80,6 +82,7 @@ for (let i = 0; i < 20; i++) {
   const color = palette[Math.floor(Math.random() * palette.length)];
   const baseOpacity = .1 + Math.random() * .12;
   const mat = new THREE.MeshBasicMaterial({ color, wireframe: true, transparent: true, opacity: baseOpacity });
+  const matSolid = new THREE.MeshBasicMaterial({ color, wireframe: false, transparent: true, opacity: 0.55 });
   const mesh = new THREE.Mesh(geo, mat);
   mesh.position.set((Math.random() - .5) * 35, (Math.random() - .5) * 15 + 2, (Math.random() - .5) * 20 - 5);
   mesh.scale.setScalar(.4 + Math.random() * 1.8);
@@ -90,6 +93,8 @@ for (let i = 0; i < 20; i++) {
     baseY: mesh.position.y,
     baseOpacity
   };
+  mesh.userData.matWire = mat;
+  mesh.userData.matSolid = matSolid;
   scene.add(mesh);
   shapes.push(mesh);
 }
@@ -130,6 +135,8 @@ scene.add(particles);
 let mouseX = 0, mouseY = 0, t = 0;
 let scrollProgress = 0;
 let contactProgress = 0;
+let lastTheme = '';
+let lastViewMode = '';
 
 function lerp(a, b, t) { return a + (b - a) * t; }
 function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
@@ -199,38 +206,88 @@ function animate() {
   p2.needsUpdate = true;
 
   /* Color transition: ocean blue → field green → ocean blue */
-  waveMat1.color.copy(oceanColor).lerp(fieldColor, fieldness);
-  waveMat2.color.copy(oceanColor2).lerp(fieldColor2, fieldness);
-  waveMat1.opacity = lerp(.06, .09, fieldness);
-  waveMat2.opacity = lerp(.03, .06, fieldness);
+  const c1 = oceanColor.clone().lerp(fieldColor, fieldness);
+  const c2 = oceanColor2.clone().lerp(fieldColor2, fieldness);
+  waveMat1.color.copy(c1);
+  waveMat2.color.copy(c2);
+  waveMat1Solid.color.copy(c1);
+  waveMat2Solid.color.copy(c2);
+  const isLight = (document.documentElement.getAttribute('data-theme') || 'dark') === 'light';
+  waveMat1.opacity = isLight ? lerp(.18, .25, fieldness) : lerp(.06, .09, fieldness);
+  waveMat2.opacity = isLight ? lerp(.12, .18, fieldness) : lerp(.03, .06, fieldness);
+  waveMat1Solid.opacity = isLight ? lerp(.6, .7, fieldness) : lerp(.5, .6, fieldness);
+  waveMat2Solid.opacity = isLight ? lerp(.5, .6, fieldness) : lerp(.4, .5, fieldness);
 
-  /* Road fades in (stays visible through road section, fades for contact) */
-  roadMat.opacity = fieldness * .4;
-  edgeMatL.opacity = fieldness * .15;
-  roadEdgeR.material.opacity = fieldness * .15;
-  dashes.forEach(d => { d.material.opacity = fieldness * .25; });
+  /* Road ONLY in education — completely hidden otherwise */
+  const isSolidMode = document.documentElement.getAttribute('data-viewmode') === 'solid';
+  const roadAlpha = clamp((fieldness - 0.6) / 0.3, 0, 1);
+  const roadVisible = roadAlpha > 0.001;
+  road.visible = roadVisible;
+  roadEdgeL.visible = roadVisible;
+  roadEdgeR.visible = roadVisible;
+  dashes.forEach(d => { d.visible = roadVisible; });
+  if (roadVisible) {
+    roadMat.opacity = roadAlpha * .4;
+    edgeMatL.opacity = roadAlpha * .15;
+    roadEdgeR.material.opacity = roadAlpha * .15;
+    dashes.forEach(d => { d.material.opacity = roadAlpha * .25; });
+  }
 
-  /* Shapes fade out */
+  /* Shapes: in solid mode force solid materials every frame, hide edge outlines */
   shapes.forEach(s => {
+    if (isSolidMode && s.material !== s.userData.matSolid) s.material = s.userData.matSolid;
+    else if (!isSolidMode && s.material !== s.userData.matWire) s.material = s.userData.matWire;
     s.rotation.x += s.userData.rotSpeed.x;
     s.rotation.y += s.userData.rotSpeed.y;
     s.rotation.z += s.userData.rotSpeed.z;
     s.position.y = s.userData.baseY + Math.sin(t * s.userData.floatSpeed) * s.userData.floatAmp * inv;
-    s.material.opacity = s.userData.baseOpacity * inv;
+    const shapeOp = isSolidMode ? (isLight ? 0.7 : 0.55) : (isLight ? s.userData.baseOpacity * 3 : s.userData.baseOpacity);
+    s.material.opacity = shapeOp * inv;
   });
   edgeShapes.forEach(s => {
+    s.visible = !isSolidMode;
     s.rotation.x += s.userData.rotSpeed.x;
     s.rotation.y += s.userData.rotSpeed.y;
-    s.material.opacity = s.userData.baseOpacity * inv;
+    if (!isSolidMode) s.material.opacity = (isLight ? s.userData.baseOpacity * 2.5 : s.userData.baseOpacity) * inv;
   });
 
-  /* Fog density shifts — lighter in top-down view */
-  scene.fog.density = lerp(.012, .004, fieldness);
+  /* Fog density shifts — lighter in top-down view; less fog in light theme */
+  scene.fog.density = isLight ? lerp(.006, .002, fieldness) : lerp(.012, .004, fieldness);
+
+  /* In solid mode hide particles; in light wireframe boost them */
+  pMat.opacity = isSolidMode ? 0 : (isLight ? .55 : .35);
+  particles.visible = !isSolidMode;
+
+  /* Adapt clear color and fog to theme */
+  const curTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+  if (curTheme !== lastTheme || (isSolidMode ? 'solid' : 'wire') !== lastViewMode) {
+    lastTheme = curTheme;
+    lastViewMode = isSolidMode ? 'solid' : 'wire';
+    const clearHex = isLight ? 0xeaf0f6 : 0x060b14;
+    renderer.setClearColor(clearHex);
+    scene.fog.color.setHex(clearHex);
+  }
 
   particles.rotation.y += .00015;
   renderer.render(scene, camera);
 }
 animate();
+
+window.applySceneViewMode = function (mode) {
+  const isSolid = mode === "solid";
+  wavePlane1.material = isSolid ? waveMat1Solid : waveMat1;
+  wavePlane2.material = isSolid ? waveMat2Solid : waveMat2;
+  shapes.forEach((s) => {
+    s.material = isSolid ? s.userData.matSolid : s.userData.matWire;
+  });
+  edgeShapes.forEach((s) => {
+    s.material.opacity = isSolid ? 0 : s.userData.baseOpacity;
+  });
+};
+try {
+  const stored = localStorage.getItem("ko-settings-viewmode");
+  if (stored) window.applySceneViewMode(stored);
+} catch (_) {}
 
 /* ---- Scroll-triggered card reveal ---- */
 const observer = new IntersectionObserver(entries => {

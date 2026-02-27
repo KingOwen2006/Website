@@ -19,23 +19,67 @@
 <!-- TOP NAV -->
 <nav class="top-nav" id="top-nav">
   <div class="top-nav__links" id="nav-links">
-    <a href="#" class="top-nav__link active">About</a>
+    <a href="#about" class="top-nav__link active">About</a>
     <a href="#posts" class="top-nav__link">Education</a>
     <a href="#contact-section" class="top-nav__link">Contact</a>
   </div>
+  <button class="top-nav__settings" id="nav-settings" aria-label="Settings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+  </button>
   <button class="top-nav__burger" id="nav-burger" aria-label="Menu">
     <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
   </button>
 </nav>
 
+<!-- SETTINGS POPUP -->
+<div class="settings-popup" id="settings-popup">
+  <div class="settings-popup__backdrop" id="settings-backdrop"></div>
+  <div class="settings-popup__panel">
+    <h3 class="settings-popup__title">Settings</h3>
+    <div class="settings-group">
+      <label class="settings-label">Theme</label>
+      <div class="settings-options">
+        <button class="settings-option" data-setting="theme" data-value="auto">Auto</button>
+        <button class="settings-option active" data-setting="theme" data-value="dark">Dark</button>
+        <button class="settings-option" data-setting="theme" data-value="light">Light</button>
+      </div>
+    </div>
+    <div class="settings-group">
+      <label class="settings-label">Accent colour</label>
+      <div class="settings-options settings-accent">
+        <button class="settings-accent-btn active" data-accent="default" title="Default" style="--swatch:#64ffda"></button>
+        <button class="settings-accent-btn" data-accent="blue" title="Blue" style="--swatch:#48b1ff"></button>
+        <button class="settings-accent-btn" data-accent="purple" title="Purple" style="--swatch:#a78bfa"></button>
+        <button class="settings-accent-btn" data-accent="green" title="Green" style="--swatch:#3fb950"></button>
+        <button class="settings-accent-btn" data-accent="coral" title="Coral" style="--swatch:#ff6b6b"></button>
+        <button class="settings-accent-btn" data-accent="amber" title="Amber" style="--swatch:#f59e0b"></button>
+      </div>
+    </div>
+    <div class="settings-group">
+      <label class="settings-label">View mode</label>
+      <div class="settings-options">
+        <button class="settings-option active" data-setting="viewmode" data-value="wireframe">Wireframe</button>
+        <button class="settings-option" data-setting="viewmode" data-value="solid">Solid</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV (mobile only) -->
+<nav class="bottom-nav" id="bottom-nav">
+  <a href="#about" class="bottom-nav__link">About</a>
+  <a href="#posts" class="bottom-nav__link">Education</a>
+  <a href="#contact-section" class="bottom-nav__link">Contact</a>
+</nav>
+
 <!-- HERO -->
-<div class="hero-section">
+<div class="hero-section" id="about">
   <div class="col-left">
     <div class="avatar-wrap">
       <div class="avatar-glow"></div>
-      <div class="avatar-frame">
+      <a href="https://discord.com/users/798619259206500365" target="_blank" rel="noopener" class="avatar-frame avatar-frame--link">
         <img class="discord-avatar" src="https://cdn.discordapp.com/avatars/798619259206500365/0ad237bf4f0123c5be52925363b4c6cc.png?size=512" alt="KingOwen">
-      </div>
+      </a>
       <div class="status-badge" id="status-badge">Offline</div>
     </div>
     <div class="greeting">Hey there, I'm</div>
@@ -43,7 +87,7 @@
     <div class="subtitle">3D Modeller & Digital Creator</div>
     <div class="username-row">
       <span class="uname">@kingowen2006</span>
-      <span class="guild-chip">TJG</span>
+      <a href="https://discord.gg/X6qsHwR9Sj" target="_blank" rel="noopener" class="guild-chip">TJG</a>
     </div>
   </div>
   <div class="col-right">
@@ -81,7 +125,7 @@
 <div class="transition-spacer"></div>
 
 <!-- ROAD / POSTS SECTION -->
-<div class="road-section">
+<div class="road-section" id="education">
   <div class="road-section-title">
     <h2>Education</h2>
     <p>Units & coursework</p>
@@ -121,14 +165,37 @@
   </div>
 </div>
 
+<script src="settings.js"></script>
 <script>
 const burger = document.getElementById('nav-burger');
 const navLinks = document.getElementById('nav-links');
+const topNav = document.getElementById('top-nav');
 burger.addEventListener('click', () => navLinks.classList.toggle('open'));
 navLinks.addEventListener('click', e => { if (e.target.classList.contains('top-nav__link')) navLinks.classList.remove('open'); });
+
 window.addEventListener('scroll', () => {
-  document.getElementById('top-nav').classList.toggle('scrolled', window.scrollY > 40);
+  topNav.classList.toggle('scrolled', window.scrollY > 40);
 }, { passive: true });
+
+function updateActiveNav() {
+  const about = document.getElementById('about');
+  const education = document.getElementById('education');
+  const contact = document.getElementById('contact-section');
+  const viewportCenter = window.scrollY + window.innerHeight * 0.5;
+  let active = 'about';
+  if (education && contact) {
+    if (viewportCenter < education.offsetTop) active = 'about';
+    else if (viewportCenter < contact.offsetTop) active = 'education';
+    else active = 'contact';
+  }
+
+  const hrefMap = { about: '#about', education: '#posts', contact: '#contact-section' };
+  document.querySelectorAll('.top-nav__link, .bottom-nav__link').forEach(link => {
+    link.classList.toggle('active', link.getAttribute('href') === hrefMap[active]);
+  });
+}
+updateActiveNav();
+window.addEventListener('scroll', updateActiveNav, { passive: true });
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="scene.js"></script>

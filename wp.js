@@ -164,17 +164,25 @@
   /* ======================
      EMBED REPLACEMENTS
   ====================== */
+  function embedBlock(iframeSrc, linkText) {
+    const figmaUrl = iframeSrc.replace("embed.figma.com", "www.figma.com").split("?")[0];
+    const href = iframeSrc.includes("figma.com") ? figmaUrl : iframeSrc.replace("&embed=true", "");
+    return `<div class="figma-wrapper">
+      <iframe src="${iframeSrc}"></iframe>
+      <a href="${href}" target="_blank" rel="noopener" class="embed-mobile-link">${linkText}</a>
+    </div>`;
+  }
   function replaceEmbeds(content) {
     const replacements = {
-      "Unit1-moodboard1-here": `<div class="figma-wrapper"><iframe src="https://embed.figma.com/board/F0BfcSQpK4EtYVEtlb9lwV/Mood-Board?node-id=0-1&embed-host=share"></iframe></div>`,
-      "Unit1-moodboard2-here": `<div class="figma-wrapper"><iframe src="https://embed.figma.com/board/nj3rvRhnhGHPoojzJFonxh/Cannon-Board?embed-host=share"></iframe></div>`,
-      "Unit1-form-here": `<div class="figma-wrapper"><iframe src="https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=0JsvSSEvbkyhotOQXlsYc-uhBZiIRqdDnRXC2GOFpZpUOFRVVUhTMUswUzBEWTBVTjQzQzY5NVJWWS4u&embed=true"></iframe></div>`,
-      "Unit1-formANS-here": `<div class="figma-wrapper"><iframe src="https://forms.cloud.microsoft/Pages/AnalysisPage.aspx?AnalyzerToken=GWhIwVOBfSGiYbBrbwU8McqYnS87Sl6e&id=0JsvSSEvbkyhotOQXlsYc-uhBZiIRqdDnRXC2GOFpZpUOFRVVUhTMUswUzBEWTBVTjQzQzY5NVJWWS4u"></iframe></div>`,
-      "Unit2-form-here": `<div class="figma-wrapper"><iframe src="https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=0JsvSSEvbkyhotOQXlsYc-uhBZiIRqdDnRXC2GOFpZpUNFVHSVU4VzRCMlVNTTExOUFONTNYRjBJMC4u&embed=true"></iframe></div>`,
-      "Unit2-formANS-here": `<div class="figma-wrapper"><iframe src="https://forms.cloud.microsoft/Pages/AnalysisPage.aspx?AnalyzerToken=NbUyeN4dPXxMzyc26vZW5IeiKhlXnoAO&id=0JsvSSEvbkyhotOQXlsYc-uhBZiIRqdDnRXC2GOFpZpUNFVHSVU4VzRCMlVNTTExOUFONTNYRjBJMC4u"></iframe></div>`,
-      "Unit4-moodboard-here": `<div class="figma-wrapper"><iframe src="https://embed.figma.com/board/vC87CfHAXm2Hl2MSUYLsQa/Twine-Mood-board?node-id=0-1&embed-host=share"></iframe></div>`,
-      "Unit4-form-here": `<div class="figma-wrapper"><iframe src="https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=0JsvSSEvbkyhotOQXlsYc-uhBZiIRqdDnRXC2GOFpZpUN09ZNUZRVTNZODZJSlJBTDA0QThDREtIRS4u&embed=true"></iframe></div>`,
-      "Unit4-formANS-here": `<div class="figma-wrapper"><iframe src="https://forms.cloud.microsoft/Pages/AnalysisPage.aspx?AnalyzerToken=IqfQOSxrfkVAFynsgvV5N4Dns5EQYF1f&id=0JsvSSEvbkyhotOQXlsYc-uhBZiIRqdDnRXC2GOFpZpUN09ZNUZRVTNZODZJSlJBTDA0QThDREtIRS4u"></iframe></div>`
+      "Unit1-moodboard1-here": embedBlock("https://embed.figma.com/board/F0BfcSQpK4EtYVEtlb9lwV/Mood-Board?node-id=0-1&embed-host=share", "Open Mood Board in Figma"),
+      "Unit1-moodboard2-here": embedBlock("https://embed.figma.com/board/nj3rvRhnhGHPoojzJFonxh/Cannon-Board?embed-host=share", "Open Cannon Board in Figma"),
+      "Unit1-form-here": embedBlock("https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=0JsvSSEvbkyhotOQXlsYc-uhBZiIRqdDnRXC2GOFpZpUOFRVVUhTMUswUzBEWTBVTjQzQzY5NVJWWS4u&embed=true", "Open Form"),
+      "Unit1-formANS-here": embedBlock("https://forms.cloud.microsoft/Pages/AnalysisPage.aspx?AnalyzerToken=GWhIwVOBfSGiYbBrbwU8McqYnS87Sl6e&id=0JsvSSEvbkyhotOQXlsYc-uhBZiIRqdDnRXC2GOFpZpUOFRVVUhTMUswUzBEWTBVTjQzQzY5NVJWWS4u", "Open Form Analysis"),
+      "Unit2-form-here": embedBlock("https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=0JsvSSEvbkyhotOQXlsYc-uhBZiIRqdDnRXC2GOFpZpUNFVHSVU4VzRCMlVNTTExOUFONTNYRjBJMC4u&embed=true", "Open Form"),
+      "Unit2-formANS-here": embedBlock("https://forms.cloud.microsoft/Pages/AnalysisPage.aspx?AnalyzerToken=NbUyeN4dPXxMzyc26vZW5IeiKhlXnoAO&id=0JsvSSEvbkyhotOQXlsYc-uhBZiIRqdDnRXC2GOFpZpUNFVHSVU4VzRCMlVNTTExOUFONTNYRjBJMC4u", "Open Form Analysis"),
+      "Unit4-moodboard-here": embedBlock("https://embed.figma.com/board/vC87CfHAXm2Hl2MSUYLsQa/Twine-Mood-board?node-id=0-1&embed-host=share", "Open Twine Mood Board in Figma"),
+      "Unit4-form-here": embedBlock("https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=0JsvSSEvbkyhotOQXlsYc-uhBZiIRqdDnRXC2GOFpZpUN09ZNUZRVTNZODZJSlJBTDA0QThDREtIRS4u&embed=true", "Open Form"),
+      "Unit4-formANS-here": embedBlock("https://forms.cloud.microsoft/Pages/AnalysisPage.aspx?AnalyzerToken=IqfQOSxrfkVAFynsgvV5N4Dns5EQYF1f&id=0JsvSSEvbkyhotOQXlsYc-uhBZiIRqdDnRXC2GOFpZpUN09ZNUZRVTNZODZJSlJBTDA0QThDREtIRS4u", "Open Form Analysis")
     };
     for (const key in replacements) {
       content = content.replaceAll(key, replacements[key]);
