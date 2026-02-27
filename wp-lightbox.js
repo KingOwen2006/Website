@@ -156,6 +156,7 @@
     });
 
     scope.querySelectorAll("iframe[src*='figma.com']").forEach((iframe) => {
+      if (window.innerWidth <= 1023) return;
       const wrapper = iframe.closest(".figma-wrapper") || iframe.parentElement || iframe;
       galleryItems.push({ type: "figma", element: wrapper, src: iframe.src });
     });
@@ -235,7 +236,9 @@
 
       const embedWrapper = e.target.closest(".figma-wrapper, .ko-lightbox-embed-wrap");
       if (embedWrapper && embedWrapper.closest(".post-content")) {
+        if (e.target.closest(".embed-mobile-link")) return;
         const iframe = embedWrapper.querySelector("iframe");
+        if (iframe && window.innerWidth <= 1023) return;
         if (iframe && (iframe.src.includes("figma.com") || iframe.src.includes("youtube") || iframe.src.includes("youtu.be") || iframe.src.includes("google.com/maps"))) {
           const type = iframe.src.includes("figma.com") ? "figma" : iframe.src.includes("maps") ? "maps" : "youtube";
           e.preventDefault();
@@ -288,7 +291,10 @@
       addExpandBtn(wrap, wrap);
       iframe.replaceWith(wrap);
     });
-    scope.querySelectorAll(".figma-wrapper").forEach((wrap) => addExpandBtn(wrap, wrap));
+    scope.querySelectorAll(".figma-wrapper").forEach((wrap) => {
+      if (window.innerWidth <= 1023) return;
+      addExpandBtn(wrap, wrap);
+    });
   }
 
   function onReady(fn) {
