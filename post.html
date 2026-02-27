@@ -485,8 +485,9 @@ camera.lookAt(0, 0, 0);
 const planeW = 120, segW = 70;
 const geo = new THREE.PlaneGeometry(planeW, planeW, segW, segW);
 geo.rotateX(-Math.PI / 2);
-const mat = new THREE.MeshBasicMaterial({ color: 0x48b1ff, wireframe: true, transparent: true, opacity: .04 });
-const plane = new THREE.Mesh(geo, mat);
+const matWire = new THREE.MeshBasicMaterial({ color: 0x48b1ff, wireframe: true, transparent: true, opacity: .04 });
+const matSolid = new THREE.MeshBasicMaterial({ color: 0x48b1ff, wireframe: false, transparent: true, opacity: .5 });
+const plane = new THREE.Mesh(geo, matWire);
 plane.position.y = -3;
 scene.add(plane);
 
@@ -500,14 +501,38 @@ for (let i = 0; i < pCount; i++) {
 }
 pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
 const pMat = new THREE.PointsMaterial({ color: 0x64ffda, size: .06, transparent: true, opacity: .2, depthWrite: false });
-scene.add(new THREE.Points(pGeo, pMat));
+const particles = new THREE.Points(pGeo, pMat);
+scene.add(particles);
 
-let t = 0;
+let t = 0, lastT = '', lastV = '';
 window.addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
+
+window.applySceneViewMode = function(mode) {
+  plane.material = mode === 'solid' ? matSolid : matWire;
+};
+try { const sv = localStorage.getItem('ko-settings-viewmode'); if (sv) window.applySceneViewMode(sv); } catch(_) {}
 
 function animate() {
   requestAnimationFrame(animate);
   t += .008;
+  const isLight = (document.documentElement.getAttribute('data-theme') || 'dark') === 'light';
+  const isSolid = (document.documentElement.getAttribute('data-viewmode') || 'wireframe') === 'solid';
+
+  const curT = isLight ? 'l' : 'd', curV = isSolid ? 's' : 'w';
+  if (curT !== lastT || curV !== lastV) {
+    lastT = curT; lastV = curV;
+    const hex = isLight ? 0xeaf0f6 : 0x060b14;
+    renderer.setClearColor(hex);
+    scene.fog.color.setHex(hex);
+    plane.material = isSolid ? matSolid : matWire;
+  }
+
+  matWire.opacity = isLight ? .18 : .04;
+  matSolid.opacity = isLight ? .6 : .5;
+  scene.fog.density = isLight ? .006 : .015;
+  pMat.opacity = isSolid ? 0 : (isLight ? .4 : .2);
+  particles.visible = !isSolid;
+
   const p = plane.geometry.attributes.position;
   for (let i = 0; i < p.count; i++) {
     const x = p.getX(i), z = p.getZ(i);
