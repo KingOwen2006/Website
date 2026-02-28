@@ -254,6 +254,7 @@
       const embedWrapper = e.target.closest(".figma-wrapper, .ko-lightbox-embed-wrap");
       if (embedWrapper && embedWrapper.closest(".post-content")) {
         if (e.target.closest(".embed-mobile-link")) return;
+        if (!e.target.closest(".ko-lightbox-expand-btn")) return;
         const glbViewer = embedWrapper.querySelector(".glb-viewer[data-src]");
         if (glbViewer && window.innerWidth > 1023) {
           e.preventDefault();
@@ -291,7 +292,7 @@
     btn.className = "ko-lightbox-expand-btn";
     btn.setAttribute("aria-label", "Expand");
     btn.innerHTML = "⛶";
-    btn.style.cssText = "position:absolute;top:8px;right:8px;width:36px;height:36px;border:none;background:rgba(0,0,0,.6);color:#fff;border-radius:8px;cursor:pointer;font-size:1.2rem;display:flex;align-items:center;justify-content:center;z-index:2;transition:background .2s";
+    btn.style.cssText = "position:absolute;top:12px;right:12px;width:36px;height:36px;border:none;background:rgba(0,0,0,.6);color:#fff;border-radius:8px;cursor:pointer;font-size:1.2rem;display:flex;align-items:center;justify-content:center;z-index:2;transition:background .2s";
     btn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
