@@ -149,21 +149,6 @@
     resize();
     setMode(getMode());
 
-    let pointerDown = null;
-    container.addEventListener("pointerdown", (e) => {
-      if (e.target.closest(".glb-viewer__settings-btn, .glb-viewer__mode-menu")) return;
-      pointerDown = { x: e.clientX, y: e.clientY };
-    }, true);
-    container.addEventListener("pointerup", (e) => {
-      if (!pointerDown || e.target.closest(".glb-viewer__settings-btn, .glb-viewer__mode-menu")) return;
-      const dx = e.clientX - pointerDown.x, dy = e.clientY - pointerDown.y;
-      if (Math.hypot(dx, dy) < 8 && window.koLightbox && window.koLightbox.openModelFullscreen) {
-        window.koLightbox.openModelFullscreen(container);
-      }
-      pointerDown = null;
-    }, true);
-    container.addEventListener("pointercancel", () => { pointerDown = null; }, true);
-
     if (typeof THREE.OrbitControls !== "undefined") {
       controls = new THREE.OrbitControls(camera, canvas);
       controls.enableDamping = true;

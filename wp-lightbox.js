@@ -334,13 +334,5 @@
 
   onReady(() => initLightbox());
 
-  window.koLightbox = {
-    init: initLightbox,
-    wrapEmbeds: wrapEmbedsForLightbox,
-    openModelFullscreen: function (glbViewer) {
-      const wrapper = glbViewer.closest(".figma-wrapper") || glbViewer;
-      const src = glbViewer.dataset.src || "";
-      if (src && window.innerWidth > 1023) openLightbox({ type: "model", element: wrapper, src: src });
-    }
-  };
+  window.koLightbox = { init: initLightbox, wrapEmbeds: wrapEmbedsForLightbox };
 })();
