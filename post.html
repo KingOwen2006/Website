@@ -276,13 +276,23 @@
   .figma-wrapper iframe{width:100%;min-height:700px;border:0;background:var(--panel)}
   .figma-wrapper .embed-mobile-link{display:none;padding:1.5rem 2rem;background:var(--panel-soft);color:var(--accent);text-decoration:none;font-weight:600;font-size:1rem;text-align:center;border-radius:14px;border:1px dashed var(--accent);transition:background .2s,color .2s;align-items:center;justify-content:center;min-height:120px}
   .figma-wrapper .embed-mobile-link:hover{background:rgba(100,255,218,.1);color:var(--accent2)}
-  /* 3D model embeds (model-viewer) */
-  .model-viewer-wrapper model-viewer{width:100%;min-height:500px;display:block;--poster-color:transparent}
+  /* 3D model embeds (GLB viewer) */
+  .model-viewer-wrapper .glb-viewer{position:relative;width:100%;min-height:500px;background:var(--panel);display:block}
+  .model-viewer-wrapper .glb-viewer__canvas{width:100%;height:100%;min-height:500px;display:block}
+  .glb-viewer__settings-btn{position:absolute;top:12px;right:52px;width:40px;height:40px;border:none;border-radius:10px;background:rgba(12,18,28,.9);color:var(--accent);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;transition:background .2s,color .2s;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+  .glb-viewer__settings-btn:hover{background:rgba(100,255,218,.15);color:var(--accent2)}
+  .glb-viewer__settings-btn svg{width:20px;height:20px}
+  .glb-viewer__mode-menu{position:absolute;top:56px;right:52px;background:rgba(12,18,28,.95);border:1px solid var(--border);border-radius:10px;padding:6px;z-index:3;opacity:0;visibility:hidden;transform:translateY(-8px);transition:opacity .2s,visibility .2s,transform .2s;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+  .glb-viewer__mode-menu.open{opacity:1;visibility:visible;transform:translateY(0)}
+  .glb-viewer__mode-menu button{display:block;width:100%;padding:10px 16px;border:none;border-radius:8px;background:transparent;color:var(--text-muted);font-size:.9rem;font-weight:500;cursor:pointer;text-align:left;transition:background .2s,color .2s}
+  .glb-viewer__mode-menu button:hover{background:rgba(100,255,218,.08);color:var(--accent)}
+  .glb-viewer__mode-menu button.active{background:rgba(100,255,218,.12);color:var(--accent)}
   @media(max-width:1023px){
     .figma-wrapper iframe{display:none!important}
     .figma-wrapper .embed-mobile-link{display:flex!important}
     .figma-wrapper .ko-lightbox-expand-btn{display:none!important}
-    .model-viewer-wrapper model-viewer{min-height:400px}
+    .model-viewer-wrapper .glb-viewer,.model-viewer-wrapper .glb-viewer__canvas{min-height:400px}
+    .model-viewer-wrapper .glb-viewer__settings-btn,.model-viewer-wrapper .glb-viewer__mode-menu{right:12px}
   }
 
   /* Video / non-Figma iframes */
@@ -420,7 +430,7 @@
     .post-content .wp-block-gallery.columns-2,.post-content .wp-block-gallery.columns-3{grid-template-columns:1fr}
   }
 </style>
-<script type="module" src="https://unpkg.com/@google/model-viewer@3.4.0/dist/model-viewer.min.js"></script>
+
 </head>
 <body>
 <canvas id="bg"></canvas>
@@ -475,6 +485,8 @@
 
 <script src="settings.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script>
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x060b14, .015);
@@ -547,6 +559,7 @@ function animate() {
 }
 animate();
 </script>
+<script src="glb-viewer.js"></script>
 <script src="wp-lightbox.js"></script>
 <script src="wp.js"></script>
 </body>

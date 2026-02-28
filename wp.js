@@ -176,7 +176,9 @@
   }
   function modelEmbedBlock(modelSrc, altText, linkText) {
     return `<div class="figma-wrapper model-viewer-wrapper" data-ko-embed="model">
-      <model-viewer src="${modelSrc}" alt="${altText}" auto-rotate camera-controls shadow-intensity="1" style="width:100%;min-height:500px;background:var(--panel);"></model-viewer>
+      <div class="glb-viewer" data-glb-viewer data-src="${modelSrc}">
+        <canvas class="glb-viewer__canvas"></canvas>
+      </div>
       <a href="${modelSrc}" target="_blank" rel="noopener" download class="embed-mobile-link">${linkText}</a>
     </div>`;
   }
@@ -301,6 +303,7 @@
     enhanceImageCompare(postContainer);
     rehydrateFigma();
     if (window.koLightbox) window.koLightbox.wrapEmbeds(postContainer);
+    if (window.initGlbViewers) window.initGlbViewers(postContainer);
   }
 
   function loadPostBySlug(slug) {

@@ -166,9 +166,9 @@
       galleryItems.push({ type: "maps", element: wrapper, src: iframe.src });
     });
 
-    scope.querySelectorAll(".model-viewer-wrapper model-viewer").forEach((mv) => {
-      const wrapper = mv.closest(".model-viewer-wrapper");
-      if (wrapper && window.innerWidth > 1023) galleryItems.push({ type: "model", element: wrapper, src: mv.getAttribute("src") || "" });
+    scope.querySelectorAll(".model-viewer-wrapper .glb-viewer[data-src]").forEach((el) => {
+      const wrapper = el.closest(".model-viewer-wrapper");
+      if (wrapper && window.innerWidth > 1023) galleryItems.push({ type: "model", element: wrapper, src: el.dataset.src || "" });
     });
 
     galleryItems.sort((a, b) => {
@@ -203,14 +203,16 @@
       lightboxContent.appendChild(iframe);
       lightbox.classList.add("is-embed");
     } else if (item.type === "model") {
-      const mv = document.createElement("model-viewer");
-      mv.setAttribute("src", item.src);
-      mv.setAttribute("alt", "3D Model");
-      mv.setAttribute("auto-rotate", "");
-      mv.setAttribute("camera-controls", "");
-      mv.setAttribute("shadow-intensity", "1");
-      mv.style.cssText = "width:95vw;height:85vh;min-width:320px;min-height:400px;background:#0b0f1a;border-radius:14px";
-      lightboxContent.appendChild(mv);
+      const wrap = document.createElement("div");
+      wrap.className = "glb-viewer";
+      wrap.dataset.glbViewer = "";
+      wrap.dataset.src = item.src;
+      wrap.style.cssText = "width:95vw;height:85vh;min-width:320px;min-height:400px;background:#0b0f1a;border-radius:14px";
+      const canvas = document.createElement("canvas");
+      canvas.className = "glb-viewer__canvas";
+      wrap.appendChild(canvas);
+      lightboxContent.appendChild(wrap);
+      if (window.initGlbViewers) window.initGlbViewers(lightboxContent);
       lightbox.classList.add("is-embed");
     } else {
       lightboxImg.src = item.element.src;
@@ -252,11 +254,11 @@
       const embedWrapper = e.target.closest(".figma-wrapper, .ko-lightbox-embed-wrap");
       if (embedWrapper && embedWrapper.closest(".post-content")) {
         if (e.target.closest(".embed-mobile-link")) return;
-        const modelViewer = embedWrapper.querySelector("model-viewer");
-        if (modelViewer && window.innerWidth > 1023) {
+        const glbViewer = embedWrapper.querySelector(".glb-viewer[data-src]");
+        if (glbViewer && window.innerWidth > 1023) {
           e.preventDefault();
           e.stopPropagation();
-          openLightbox({ type: "model", element: embedWrapper, src: modelViewer.getAttribute("src") || "" });
+          openLightbox({ type: "model", element: embedWrapper, src: glbViewer.dataset.src || "" });
           return;
         }
         const iframe = embedWrapper.querySelector("iframe");
@@ -293,6 +295,11 @@
     btn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
+      const glbViewer = targetForOpen.querySelector(".glb-viewer[data-src]");
+      if (glbViewer) {
+        openLightbox({ type: "model", element: targetForOpen, src: glbViewer.dataset.src || "" });
+        return;
+      }
       const iframe = targetForOpen.querySelector("iframe");
       const src = iframe?.src;
       const type = src?.includes("figma.com") ? "figma" : src?.includes("maps") ? "maps" : "youtube";
