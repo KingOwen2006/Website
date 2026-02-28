@@ -21,6 +21,7 @@
   <div class="top-nav__links" id="nav-links">
     <a href="#about" class="top-nav__link active">About</a>
     <a href="#posts" class="top-nav__link">Education</a>
+    <a href="#projects" class="top-nav__link">Projects</a>
     <a href="#contact-section" class="top-nav__link">Contact</a>
   </div>
   <button class="top-nav__settings" id="nav-settings" aria-label="Settings">
@@ -69,6 +70,7 @@
 <nav class="bottom-nav" id="bottom-nav">
   <a href="#about" class="bottom-nav__link">About</a>
   <a href="#posts" class="bottom-nav__link">Education</a>
+  <a href="#projects" class="bottom-nav__link">Projects</a>
   <a href="#contact-section" class="bottom-nav__link">Contact</a>
 </nav>
 
@@ -135,8 +137,28 @@
   </div>
 </div>
 
+<!-- PROJECTS SECTION -->
+<div class="road-section" id="projects">
+  <div class="road-section-title">
+    <h2>Projects</h2>
+    <p>Featured work & updates</p>
+  </div>
+  <div class="projects-grid">
+    <div class="projects-col">
+      <div class="road-timeline road-timeline--compact" id="projects-posts">
+        <div class="road-loader"><div class="spinner"></div>Loading projects...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- TRANSITION BACK TO OCEAN -->
 <div class="contact-spacer" id="contact-spacer"></div>
+
+<!-- BACK TO TOP (visible in contact section) -->
+<button class="back-to-top" id="back-to-top" aria-label="Back to top">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+</button>
 
 <!-- CONTACT SECTION -->
 <div class="contact-section" id="contact-section">
@@ -177,19 +199,54 @@ window.addEventListener('scroll', () => {
   topNav.classList.toggle('scrolled', window.scrollY > 40);
 }, { passive: true });
 
+/* Smooth scroll for nav links */
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  anchor.addEventListener('click', function(e) {
+    const href = this.getAttribute('href');
+    if (href === '#') return;
+    const target = document.querySelector(href);
+    if (target) {
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
+
+/* Back to top: show when in contact section, smooth scroll to about */
+const backToTop = document.getElementById('back-to-top');
+function updateBackToTop() {
+  const contact = document.getElementById('contact-section');
+  const about = document.getElementById('about');
+  if (!contact || !about) return;
+  const contactRect = contact.getBoundingClientRect();
+  const inContact = contactRect.top < window.innerHeight * 0.6;
+  backToTop.classList.toggle('visible', inContact);
+}
+updateBackToTop();
+window.addEventListener('scroll', updateBackToTop, { passive: true });
+backToTop.addEventListener('click', () => {
+  document.getElementById('about').scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
 function updateActiveNav() {
   const about = document.getElementById('about');
   const education = document.getElementById('education');
+  const projects = document.getElementById('projects');
   const contact = document.getElementById('contact-section');
   const viewportCenter = window.scrollY + window.innerHeight * 0.5;
   let active = 'about';
-  if (education && contact) {
+  if (education && projects && contact) {
+    if (viewportCenter < education.offsetTop) active = 'about';
+    else if (viewportCenter < projects.offsetTop) active = 'education';
+    else if (viewportCenter < contact.offsetTop) active = 'projects';
+    else active = 'contact';
+  } else if (education && contact) {
     if (viewportCenter < education.offsetTop) active = 'about';
     else if (viewportCenter < contact.offsetTop) active = 'education';
     else active = 'contact';
   }
 
-  const hrefMap = { about: '#about', education: '#posts', contact: '#contact-section' };
+  const hrefMap = { about: '#about', education: '#posts', projects: '#projects', contact: '#contact-section' };
   document.querySelectorAll('.top-nav__link, .bottom-nav__link').forEach(link => {
     link.classList.toggle('active', link.getAttribute('href') === hrefMap[active]);
   });

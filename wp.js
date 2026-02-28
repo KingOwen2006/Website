@@ -137,12 +137,14 @@
   }
 
   const API_BASE = config.api;
+  const INDEX_PROJECTS_API = "https://public-api.wordpress.com/wp/v2/sites/kingowenblog.wordpress.com";
 
   /* ======================
      DOM
   ====================== */
   const postContainer = document.getElementById("post");
   const postsContainer = document.getElementById("posts");
+  const projectsPostsContainer = document.getElementById("projects-posts");
 
   const params = new URLSearchParams(window.location.search);
   const postId = params.get("id");
@@ -172,8 +174,15 @@
       <a href="${href}" target="_blank" rel="noopener" class="embed-mobile-link">${linkText}</a>
     </div>`;
   }
+  function modelEmbedBlock(modelSrc, altText, linkText) {
+    return `<div class="figma-wrapper model-viewer-wrapper" data-ko-embed="model">
+      <model-viewer src="${modelSrc}" alt="${altText}" auto-rotate camera-controls shadow-intensity="1" style="width:100%;min-height:500px;background:var(--panel);"></model-viewer>
+      <a href="${modelSrc}" target="_blank" rel="noopener" download class="embed-mobile-link">${linkText}</a>
+    </div>`;
+  }
   function replaceEmbeds(content) {
     const replacements = {
+      "Interactive-Ship-Here": modelEmbedBlock("Models/Unit3ShipDone.glb", "Unit 3 Ship Model", "View / Download Ship Model"),
       "Unit1-moodboard1-here": embedBlock("https://embed.figma.com/board/F0BfcSQpK4EtYVEtlb9lwV/Mood-Board?node-id=0-1&embed-host=share", "Open Mood Board in Figma"),
       "Unit1-moodboard2-here": embedBlock("https://embed.figma.com/board/nj3rvRhnhGHPoojzJFonxh/Cannon-Board?embed-host=share", "Open Cannon Board in Figma"),
       "Unit1-form-here": embedBlock("https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=0JsvSSEvbkyhotOQXlsYc-uhBZiIRqdDnRXC2GOFpZpUOFRVVUhTMUswUzBEWTBVTjQzQzY5NVJWWS4u&embed=true", "Open Form"),
@@ -343,19 +352,19 @@
   /* ======================
      ROAD LAYOUT (index page — alternating left/right)
   ====================== */
-  function loadRoadPosts() {
-    if (!postsContainer) return;
+  function loadRoadPostsInto(container, apiBase, linkPage) {
+    if (!container) return;
 
-    fetch(`${API_BASE}/posts?_embed&per_page=100`)
+    fetch(`${apiBase}/posts?_embed&per_page=100`)
       .then(res => { if (!res.ok) throw new Error("Posts not found"); return res.json(); })
       .then(posts => {
         posts.sort((a, b) =>
           a.title.rendered.localeCompare(b.title.rendered, undefined, { numeric: true, sensitivity: "base" })
         );
 
-        postsContainer.innerHTML = posts.map(p => {
+        container.innerHTML = posts.map(p => {
           const img = p._embedded?.["wp:featuredmedia"]?.[0]?.source_url;
-          const href = `${config.link}.html?slug=${p.slug}`;
+          const href = `${linkPage}.html?slug=${p.slug}`;
 
           const excerpt = p.excerpt.rendered.replace(/<[^>]+>/g, "").trim();
           const tags = (p._embedded?.["wp:term"]?.[1] || []).map(t => t.name);
@@ -377,7 +386,7 @@
           `;
         }).join("");
 
-        postsContainer.querySelectorAll(".road-post").forEach(el => {
+        container.querySelectorAll(".road-post").forEach(el => {
           if (typeof IntersectionObserver !== "undefined" && window._roadObserver) {
             window._roadObserver.observe(el);
           } else {
@@ -386,7 +395,7 @@
         });
       })
       .catch(() => {
-        postsContainer.innerHTML = `<p style="text-align:center;color:#8899aa;">Failed to load posts.</p>`;
+        container.innerHTML = `<p style="text-align:center;color:#8899aa;">Failed to load posts.</p>`;
       });
   }
 
@@ -408,6 +417,12 @@
           entries.forEach(e => { if (e.isIntersecting) e.target.classList.add("visible"); });
         }, { threshold: .15 })
       : null;
-    loadRoadPosts();
+    // Education feed (kingowenfyi)
+    loadRoadPostsInto(postsContainer, API_BASE, config.link);
+
+    // Projects feed (kingowenblog) — homepage only
+    if (projectsPostsContainer) {
+      loadRoadPostsInto(projectsPostsContainer, INDEX_PROJECTS_API, "blog");
+    }
   }
 })();

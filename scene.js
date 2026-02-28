@@ -1,5 +1,5 @@
 /* ============================================
-   THREE.JS — Ocean → Field + Road transition
+   THREE.JS — Beach POV → Ocean → Field + Road
    ============================================ */
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x060b14, .012);
@@ -37,6 +37,14 @@ const waveMat2Solid = new THREE.MeshBasicMaterial({ color: oceanColor2, wirefram
 const wavePlane2 = new THREE.Mesh(waveGeo2, waveMat2);
 wavePlane2.position.y = -3.8;
 scene.add(wavePlane2);
+
+/* ---- Beach / sand (foreground, ocean POV) ---- */
+const sandGeo = new THREE.PlaneGeometry(55, 28, 1, 1);
+sandGeo.rotateX(-Math.PI / 2);
+const sandMat = new THREE.MeshBasicMaterial({ color: 0xd4b896, transparent: true, opacity: 0 });
+const sandPlane = new THREE.Mesh(sandGeo, sandMat);
+sandPlane.position.set(0, -2.92, 16);
+scene.add(sandPlane);
 
 /* ---- Road strip (hidden initially) ---- */
 const roadGeo = new THREE.PlaneGeometry(6, 300, 1, 1);
@@ -99,6 +107,41 @@ for (let i = 0; i < 20; i++) {
   shapes.push(mesh);
 }
 
+/* ---- Stars (dark mode + contact section only, with subtle light) ---- */
+const starGeo = new THREE.BufferGeometry();
+const starCount = 180;
+const starPos = new Float32Array(starCount * 3);
+const starCol = new Float32Array(starCount * 3);
+for (let i = 0; i < starCount; i++) {
+  starPos[i * 3] = (Math.random() - .5) * 80;
+  starPos[i * 3 + 1] = Math.random() * 35 + 8;
+  starPos[i * 3 + 2] = (Math.random() - .5) * 80;
+  const b = 0.85 + Math.random() * 0.15;
+  starCol[i * 3] = b; starCol[i * 3 + 1] = b; starCol[i * 3 + 2] = b + Math.random() * 0.1;
+}
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+starGeo.setAttribute('color', new THREE.BufferAttribute(starCol, 3));
+const starMat = new THREE.PointsMaterial({ size: 0.15, vertexColors: true, transparent: true, opacity: 0.9, depthWrite: false, blending: THREE.AdditiveBlending });
+const stars = new THREE.Points(starGeo, starMat);
+stars.visible = false;
+scene.add(stars);
+
+/* ---- Ocean foam plane (dark white, dark mode + solid only) ---- */
+const foamGeo = new THREE.PlaneGeometry(planeW, planeW, segW, segW);
+foamGeo.rotateX(-Math.PI / 2);
+const foamMat = new THREE.MeshBasicMaterial({ color: 0xb8b8b8, transparent: true, opacity: 0, wireframe: false, depthWrite: false });
+const foamPlane = new THREE.Mesh(foamGeo, foamMat);
+foamPlane.position.y = -2.85;
+scene.add(foamPlane);
+
+/* ---- Shore waves (wash on/off the sand, contact section only) ---- */
+const shoreWaveGeo = new THREE.PlaneGeometry(50, 5, 40, 4);
+shoreWaveGeo.rotateX(-Math.PI / 2);
+const shoreWaveMat = new THREE.MeshBasicMaterial({ color: 0x48b1ff, transparent: true, opacity: 0, depthWrite: false });
+const shoreWave = new THREE.Mesh(shoreWaveGeo, shoreWaveMat);
+shoreWave.position.set(0, -2.93, 10);
+scene.add(shoreWave);
+
 const edgeShapes = [];
 for (let i = 0; i < 6; i++) {
   const geo = geos[Math.floor(Math.random() * geos.length)];
@@ -131,9 +174,169 @@ const pMat = new THREE.PointsMaterial({ size: .07, vertexColors: true, transpare
 const particles = new THREE.Points(pGeo, pMat);
 scene.add(particles);
 
+/* ---- Projects “airport lounge” scene (projects section only) ---- */
+const projAccentA = new THREE.Color(0x7dd3fc);   // window grid / glass
+const projAccentB = new THREE.Color(0xfbbf24);   // warm interior strips
+const projAccentW = new THREE.Color(0xe2e8f0);   // soft white
+const projFogDark = new THREE.Color(0x05070f);
+const projFogDefaultDark = new THREE.Color(0x060b14);
+const projFogStarsDark = new THREE.Color(0x0a121c);
+const projFogTmp = new THREE.Color();
+
+const projectsGroup = new THREE.Group();
+projectsGroup.visible = false;
+scene.add(projectsGroup);
+
+const LOUNGE_FLOOR_Y = -2.945;
+
+// Glossy floor base
+const loungeFloorGeo = new THREE.PlaneGeometry(160, 300, 1, 1);
+loungeFloorGeo.rotateX(-Math.PI / 2);
+const loungeFloorMatWire = new THREE.MeshBasicMaterial({ color: 0x0b1222, wireframe: true, transparent: true, opacity: 0, depthWrite: false });
+const loungeFloorMatSolid = new THREE.MeshBasicMaterial({ color: 0x070b12, wireframe: false, transparent: true, opacity: 0, depthWrite: false });
+const loungeFloor = new THREE.Mesh(loungeFloorGeo, loungeFloorMatWire);
+loungeFloor.position.set(0, LOUNGE_FLOOR_Y, -110);
+loungeFloor.userData.matWire = loungeFloorMatWire;
+loungeFloor.userData.matSolid = loungeFloorMatSolid;
+projectsGroup.add(loungeFloor);
+
+// Fake “shine” layer (subtle gradient)
+const sheenGeo = new THREE.PlaneGeometry(160, 300, 1, 2);
+sheenGeo.rotateX(-Math.PI / 2);
+const sheenCols = new Float32Array(6 * 3);
+for (let i = 0; i < 6; i++) {
+  const v = i % 2 === 0 ? 0.12 : 0.06;
+  sheenCols[i * 3] = v;
+  sheenCols[i * 3 + 1] = v;
+  sheenCols[i * 3 + 2] = v + 0.02;
+}
+sheenGeo.setAttribute("color", new THREE.BufferAttribute(sheenCols, 3));
+const sheenMat = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
+const floorSheen = new THREE.Mesh(sheenGeo, sheenMat);
+floorSheen.position.set(0, LOUNGE_FLOOR_Y + 0.01, -110);
+projectsGroup.add(floorSheen);
+
+// Floor tile grid lines
+const tileGrid = new THREE.GridHelper(180, 44, projAccentW.getHex(), 0x223047);
+tileGrid.position.set(0, LOUNGE_FLOOR_Y + 0.012, -110);
+tileGrid.rotation.y = Math.PI / 4;
+projectsGroup.add(tileGrid);
+const tileMats = Array.isArray(tileGrid.material) ? tileGrid.material : [tileGrid.material];
+tileMats.forEach(m => { m.transparent = true; m.opacity = 0; m.depthWrite = false; m.blending = THREE.AdditiveBlending; });
+
+// Big window wall (frame + grid)
+const windowGroup = new THREE.Group();
+windowGroup.position.set(0, 10, -58);
+projectsGroup.add(windowGroup);
+
+const windowFrameGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(130, 44, 2));
+const windowFrameMat = new THREE.LineBasicMaterial({ color: projAccentA, transparent: true, opacity: 0, blending: THREE.AdditiveBlending });
+const windowFrame = new THREE.LineSegments(windowFrameGeo, windowFrameMat);
+windowGroup.add(windowFrame);
+
+const gridLinesGeoPoints = [];
+const gridCols = 7;
+const gridRows = 4;
+const W = 128, H = 42;
+for (let i = 1; i < gridCols; i++) {
+  const x = -W / 2 + (W / gridCols) * i;
+  gridLinesGeoPoints.push(new THREE.Vector3(x, -H / 2, 0), new THREE.Vector3(x, H / 2, 0));
+}
+for (let j = 1; j < gridRows; j++) {
+  const y = -H / 2 + (H / gridRows) * j;
+  gridLinesGeoPoints.push(new THREE.Vector3(-W / 2, y, 0), new THREE.Vector3(W / 2, y, 0));
+}
+const windowGridGeo = new THREE.BufferGeometry().setFromPoints(gridLinesGeoPoints);
+const windowGridMat = new THREE.LineBasicMaterial({ color: projAccentW, transparent: true, opacity: 0, blending: THREE.AdditiveBlending });
+const windowGrid = new THREE.LineSegments(windowGridGeo, windowGridMat);
+windowGroup.add(windowGrid);
+
+// Outside “sky” gradient plane + sun glow
+const outsideGeo = new THREE.PlaneGeometry(220, 120, 1, 3);
+const outsideCols = new Float32Array(8 * 3);
+for (let i = 0; i < 8; i++) {
+  const t0 = (i % 2) / 1;
+  const br = 0.10 + 0.18 * t0;
+  outsideCols[i * 3] = br;
+  outsideCols[i * 3 + 1] = br + 0.03;
+  outsideCols[i * 3 + 2] = br + 0.08;
+}
+outsideGeo.setAttribute("color", new THREE.BufferAttribute(outsideCols, 3));
+const outsideMat = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0, depthWrite: false });
+const outsidePlane = new THREE.Mesh(outsideGeo, outsideMat);
+outsidePlane.position.set(0, 0, -2.2);
+windowGroup.add(outsidePlane);
+
+const sunGeo = new THREE.SphereGeometry(2.4, 18, 18);
+const sunMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
+const sun = new THREE.Mesh(sunGeo, sunMat);
+sun.position.set(34, 14, -2.15);
+windowGroup.add(sun);
+
+const sunGlowGeo = new THREE.PlaneGeometry(18, 18, 1, 1);
+const sunGlowMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
+const sunGlow = new THREE.Mesh(sunGlowGeo, sunGlowMat);
+sunGlow.position.set(34, 14, -2.14);
+windowGroup.add(sunGlow);
+
+// Warm strip lights on ceiling
+const stripGeo = new THREE.PlaneGeometry(34, 1.6, 1, 1);
+stripGeo.rotateX(Math.PI / 2);
+const stripMat = new THREE.MeshBasicMaterial({ color: projAccentB, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
+const strips = [];
+for (let i = 0; i < 6; i++) {
+  const s = new THREE.Mesh(stripGeo, stripMat);
+  s.position.set(0, 20, -38 - i * 32);
+  s.rotation.z = (i % 2 ? 0.12 : -0.12);
+  strips.push(s);
+  projectsGroup.add(s);
+}
+
+// Airplanes (outside the windows)
+const planeMatWire = new THREE.MeshBasicMaterial({ color: projAccentW, wireframe: true, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
+const planeMatSolid = new THREE.MeshBasicMaterial({ color: projAccentW, wireframe: false, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
+
+function makeAirplane(material) {
+  const g = new THREE.Group();
+  const fuselage = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.7, 10.5, 10, 1), material);
+  fuselage.rotation.z = Math.PI / 2;
+  g.add(fuselage);
+  const nose = new THREE.Mesh(new THREE.ConeGeometry(0.7, 2.2, 10, 1), material);
+  nose.rotation.z = Math.PI / 2;
+  nose.position.x = 6.2;
+  g.add(nose);
+  const wing = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.08, 8.5), material);
+  wing.position.set(0.5, 0.05, 0);
+  g.add(wing);
+  const tailWing = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.06, 3.2), material);
+  tailWing.position.set(-4.8, 0.25, 0);
+  g.add(tailWing);
+  const fin = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.2, 0.8), material);
+  fin.position.set(-5.4, 0.75, 0);
+  g.add(fin);
+  return g;
+}
+
+const airplanes = [];
+for (let i = 0; i < 7; i++) {
+  const a = makeAirplane(planeMatWire);
+  a.rotation.y = Math.PI * (0.90 + Math.random() * 0.10);
+  const size = 0.55 + Math.random() * 0.9;
+  a.scale.setScalar(size);
+  a.userData = {
+    phase: Math.random() * Math.PI * 2,
+    speed: 0.12 + Math.random() * 0.18,
+    y: 12 + Math.random() * 9,
+    z: -82 - Math.random() * 18,
+    bank: (Math.random() - 0.5) * 0.14
+  };
+  a.position.set(-90 - Math.random() * 70, a.userData.y, a.userData.z);
+  airplanes.push(a);
+  projectsGroup.add(a);
+}
+
 /* ---- Scroll + animation ---- */
 let mouseX = 0, mouseY = 0, t = 0;
-let scrollProgress = 0;
 let contactProgress = 0;
 let lastTheme = '';
 let lastViewMode = '';
@@ -159,8 +362,6 @@ function animate() {
   t += .01;
 
   const wh = innerHeight;
-  const raw = clamp((window.scrollY - wh * .5) / (wh * .8), 0, 1);
-  scrollProgress = easeInOut(raw);
 
   const contactSpacer = document.getElementById('contact-spacer');
   if (contactSpacer) {
@@ -169,30 +370,60 @@ function animate() {
     contactProgress = easeInOut(cRaw);
   }
 
-  const fieldness = scrollProgress * (1 - contactProgress);
-  const inv = 1 - fieldness;
+  const inContactSection = contactProgress > 0.2;
 
-  /* Camera transition — follows fieldness so it returns to ocean for contact */
-  const cx = lerp(CAM_START.x, CAM_END.x, fieldness) + mouseX * 1.5 * inv;
-  const cy = lerp(CAM_START.y, CAM_END.y, fieldness) - mouseY * .5 * inv;
-  const cz = lerp(CAM_START.z, CAM_END.z, fieldness);
+  const focusFor = (el) => {
+    if (!el) return 0;
+    const r = el.getBoundingClientRect();
+    const center = r.top + r.height * 0.5;
+    const dist = Math.abs(center - wh * 0.5);
+    return easeInOut(clamp(1 - dist / (wh * 0.9), 0, 1));
+  };
+
+  const educationFocus = focusFor(document.getElementById('education')) * (1 - contactProgress);
+  const projectsFocus = focusFor(document.getElementById('projects')) * (1 - contactProgress);
+
+  const landness = clamp(Math.max(educationFocus, projectsFocus), 0, 1);
+  const inv = 1 - landness;
+  const mixDen = educationFocus + projectsFocus + 1e-6;
+  const projectsMix = clamp(projectsFocus / mixDen, 0, 1) * landness;
+  const educationMix = (1 - clamp(projectsFocus / mixDen, 0, 1)) * landness;
+
+  /* Camera transition — About → Education/Projects → Contact */
+  // Projects camera: low lounge (like reference)
+  const CAM_PROJECTS = { x: 0, y: 2.6, z: 34, lx: 0, ly: 7.5, lz: -58 };
+  const camTo = {
+    x: lerp(CAM_END.x, CAM_PROJECTS.x, projectsMix),
+    y: lerp(CAM_END.y, CAM_PROJECTS.y, projectsMix),
+    z: lerp(CAM_END.z, CAM_PROJECTS.z, projectsMix),
+    lx: lerp(CAM_END.lx, CAM_PROJECTS.lx, projectsMix),
+    ly: lerp(CAM_END.ly, CAM_PROJECTS.ly, projectsMix),
+    lz: lerp(CAM_END.lz, CAM_PROJECTS.lz, projectsMix)
+  };
+
+  const cx = lerp(CAM_START.x, camTo.x, landness) + mouseX * 1.5 * inv;
+  const cy = lerp(CAM_START.y, camTo.y, landness) - mouseY * .5 * inv;
+  const cz = lerp(CAM_START.z, camTo.z, landness);
   camera.position.x += (cx - camera.position.x) * .06;
   camera.position.y += (cy - camera.position.y) * .06;
   camera.position.z += (cz - camera.position.z) * .06;
 
   lookTarget.set(
-    lerp(CAM_START.lx, CAM_END.lx, fieldness),
-    lerp(CAM_START.ly, CAM_END.ly, fieldness),
-    lerp(CAM_START.lz, CAM_END.lz, fieldness)
+    lerp(CAM_START.lx, camTo.lx, landness),
+    lerp(CAM_START.ly, camTo.ly, landness),
+    lerp(CAM_START.lz, camTo.lz, landness)
   );
   camera.lookAt(lookTarget);
 
-  /* Wave amplitude fades with scroll */
+  /* Wave amplitude fades with scroll; fade to flat at beach (z > 4) so ocean doesn't overlap sand */
   const waveAmp = inv;
+  const BEACH_EDGE_Z = 0;
+  const BEACH_FADE_Z = 5;
   const p1 = wavePlane1.geometry.attributes.position;
   for (let i = 0; i < p1.count; i++) {
     const x = p1.getX(i), z = p1.getZ(i);
-    const wave = (Math.sin(x * .12 + t) * Math.cos(z * .12 + t) * .7 + Math.sin(x * .06 - t * .4) * .4) * waveAmp;
+    const beachFade = z > BEACH_EDGE_Z ? Math.max(0, 1 - (z - BEACH_EDGE_Z) / (BEACH_FADE_Z - BEACH_EDGE_Z)) : 1;
+    const wave = (Math.sin(x * .12 + t) * Math.cos(z * .12 + t) * .7 + Math.sin(x * .06 - t * .4) * .4) * waveAmp * beachFade;
     p1.setY(i, wave);
   }
   p1.needsUpdate = true;
@@ -200,27 +431,54 @@ function animate() {
   const p2 = wavePlane2.geometry.attributes.position;
   for (let i = 0; i < p2.count; i++) {
     const x = p2.getX(i), z = p2.getZ(i);
-    const wave = (Math.sin(x * .1 + t * 1.1) * Math.cos(z * .1 + t * .7) * .5) * waveAmp;
+    const beachFade = z > BEACH_EDGE_Z ? Math.max(0, 1 - (z - BEACH_EDGE_Z) / (BEACH_FADE_Z - BEACH_EDGE_Z)) : 1;
+    const wave = (Math.sin(x * .1 + t * 1.1) * Math.cos(z * .1 + t * .7) * .5) * waveAmp * beachFade;
     p2.setY(i, wave);
   }
   p2.needsUpdate = true;
 
-  /* Color transition: ocean blue → field green → ocean blue */
-  const c1 = oceanColor.clone().lerp(fieldColor, fieldness);
-  const c2 = oceanColor2.clone().lerp(fieldColor2, fieldness);
+  const isLight = (document.documentElement.getAttribute('data-theme') || 'dark') === 'light';
+
+  /* Color transition: About (ocean) → Education (field) → Projects (portal space) */
+  const projIntensity = projectsMix;
+  const c1 = oceanColor.clone().lerp(fieldColor, educationMix).lerp(projAccentB, projIntensity);
+  const c2 = oceanColor2.clone().lerp(fieldColor2, educationMix).lerp(projAccentA, projIntensity);
   waveMat1.color.copy(c1);
   waveMat2.color.copy(c2);
   waveMat1Solid.color.copy(c1);
   waveMat2Solid.color.copy(c2);
-  const isLight = (document.documentElement.getAttribute('data-theme') || 'dark') === 'light';
-  waveMat1.opacity = isLight ? lerp(.18, .25, fieldness) : lerp(.06, .09, fieldness);
-  waveMat2.opacity = isLight ? lerp(.12, .18, fieldness) : lerp(.03, .06, fieldness);
-  waveMat1Solid.opacity = isLight ? lerp(.6, .7, fieldness) : lerp(.5, .6, fieldness);
-  waveMat2Solid.opacity = isLight ? lerp(.5, .6, fieldness) : lerp(.4, .5, fieldness);
+  const waveScale = 1 - projIntensity * 0.92;
+  waveMat1.opacity = (isLight ? lerp(.18, .25, landness) : lerp(.06, .09, landness)) * waveScale;
+  waveMat2.opacity = (isLight ? lerp(.12, .18, landness) : lerp(.03, .06, landness)) * waveScale;
+  waveMat1Solid.opacity = (isLight ? lerp(.6, .7, landness) : lerp(.5, .6, landness)) * waveScale;
+  waveMat2Solid.opacity = (isLight ? lerp(.5, .6, landness) : lerp(.4, .5, landness)) * waveScale;
+
+  /* Beach sand: visible in contact section only, not on home (about) page */
+  sandPlane.visible = inv > 0.1 && contactProgress > 0.2;
+  if (sandPlane.visible) {
+    sandMat.color.setHex(isLight ? 0xe8d5b8 : 0xd4b896);
+    sandMat.opacity = inv * (isLight ? 0.9 : 0.75);
+  }
+
+  /* Shore waves: wash on/off the sand at water's edge (contact section only) */
+  const showShoreWaves = inv > 0.1 && contactProgress > 0.2;
+  shoreWave.visible = showShoreWaves;
+  if (showShoreWaves) {
+    const washCycle = Math.sin(t * 0.4) * 0.5 + 0.5;
+    const swPos = shoreWave.geometry.attributes.position;
+    for (let i = 0; i < swPos.count; i++) {
+      const x = swPos.getX(i), z = swPos.getZ(i);
+      const wave = Math.sin(x * 0.5 + t * 1.2) * Math.cos(z * 0.8 + t * 0.9) * 0.25 * washCycle;
+      swPos.setY(i, wave);
+    }
+    swPos.needsUpdate = true;
+    shoreWaveMat.color.copy(c1);
+    shoreWaveMat.opacity = inv * (0.35 + washCycle * 0.25) * (isLight ? 0.6 : 0.5);
+  }
 
   /* Road ONLY in education — completely hidden otherwise */
   const isSolidMode = document.documentElement.getAttribute('data-viewmode') === 'solid';
-  const roadAlpha = clamp((fieldness - 0.6) / 0.3, 0, 1);
+  const roadAlpha = clamp((educationFocus - 0.25) / 0.55, 0, 1);
   const roadVisible = roadAlpha > 0.001;
   road.visible = roadVisible;
   roadEdgeL.visible = roadVisible;
@@ -233,32 +491,108 @@ function animate() {
     dashes.forEach(d => { d.material.opacity = roadAlpha * .25; });
   }
 
-  /* Shapes: in solid mode force solid materials every frame, hide edge outlines */
+  /* Projects “airport lounge”: projects-only environment */
+  projectsGroup.visible = projIntensity > 0.02 && !inContactSection;
+  if (projectsGroup.visible) {
+    const baseOp = (isLight ? 0.35 : 0.55) * projIntensity;
+
+    // Lounge materials
+    loungeFloor.material = isSolidMode ? loungeFloor.userData.matSolid : loungeFloor.userData.matWire;
+    loungeFloor.material.opacity = baseOp * (isLight ? 0.55 : 0.72);
+    sheenMat.opacity = baseOp * (isLight ? 0.10 : 0.18);
+    tileMats.forEach(m => { m.opacity = baseOp * (isLight ? 0.14 : 0.22); });
+
+    windowFrameMat.opacity = baseOp * (isLight ? 0.26 : 0.36);
+    windowGridMat.opacity = baseOp * (isLight ? 0.18 : 0.28);
+    outsideMat.opacity = baseOp * (isLight ? 0.22 : 0.24);
+    sunMat.opacity = baseOp * (isLight ? 0.30 : 0.22);
+    sunGlowMat.opacity = baseOp * (isLight ? 0.10 : 0.06);
+    stripMat.opacity = baseOp * (isLight ? 0.20 : 0.32);
+
+    // Airplanes outside the windows
+    const planeOp = baseOp * (isLight ? 0.35 : 0.55);
+    planeMatWire.opacity = planeOp;
+    planeMatSolid.opacity = planeOp;
+    airplanes.forEach((p) => {
+      p.traverse(obj => { if (obj && obj.isMesh) obj.material = isSolidMode ? planeMatSolid : planeMatWire; });
+      const fly = (t * (p.userData.speed + projIntensity * 0.06) + p.userData.phase) % 1;
+      p.position.x = lerp(-110, 110, fly);
+      p.position.y = p.userData.y + Math.sin(t * 0.65 + p.userData.phase) * 0.7;
+      p.position.z = p.userData.z + Math.sin(t * 0.35 + p.userData.phase) * 2.4;
+      p.rotation.z = p.userData.bank + Math.sin(t * 0.55 + p.userData.phase) * 0.06;
+      p.rotation.x = Math.sin(t * 0.4 + p.userData.phase) * 0.04;
+    });
+
+    // Subtle parallax: strip lights drift a touch for “transport”
+    strips.forEach((s, i) => {
+      s.position.z = (-30 - i * 26) + Math.sin(t * 0.25 + i) * 0.6;
+    });
+  } else {
+    loungeFloorMatWire.opacity = 0; loungeFloorMatSolid.opacity = 0;
+    windowFrameMat.opacity = 0;
+    windowGridMat.opacity = 0;
+    outsideMat.opacity = 0;
+    sunMat.opacity = 0;
+    sunGlowMat.opacity = 0;
+    stripMat.opacity = 0;
+    sheenMat.opacity = 0;
+    tileMats.forEach(m => { m.opacity = 0; });
+    planeMatWire.opacity = 0;
+    planeMatSolid.opacity = 0;
+  }
+
+  /* Shapes: hidden in contact section; in solid mode force solid materials, hide edge outlines */
+  const hideInContact = 1 - contactProgress;
   shapes.forEach(s => {
     if (isSolidMode && s.material !== s.userData.matSolid) s.material = s.userData.matSolid;
     else if (!isSolidMode && s.material !== s.userData.matWire) s.material = s.userData.matWire;
-    s.rotation.x += s.userData.rotSpeed.x;
-    s.rotation.y += s.userData.rotSpeed.y;
-    s.rotation.z += s.userData.rotSpeed.z;
-    s.position.y = s.userData.baseY + Math.sin(t * s.userData.floatSpeed) * s.userData.floatAmp * inv;
-    const shapeOp = isSolidMode ? (isLight ? 0.7 : 0.55) : (isLight ? s.userData.baseOpacity * 3 : s.userData.baseOpacity);
-    s.material.opacity = shapeOp * inv;
+    s.visible = !inContactSection && projIntensity < 0.15;
+    if (s.visible) {
+      s.rotation.x += s.userData.rotSpeed.x;
+      s.rotation.y += s.userData.rotSpeed.y;
+      s.rotation.z += s.userData.rotSpeed.z;
+      s.position.y = s.userData.baseY + Math.sin(t * s.userData.floatSpeed) * s.userData.floatAmp * inv;
+      const shapeOp = isSolidMode ? (isLight ? 0.7 : 0.55) : (isLight ? s.userData.baseOpacity * 3 : s.userData.baseOpacity);
+      s.material.opacity = shapeOp * inv * hideInContact;
+    }
   });
   edgeShapes.forEach(s => {
-    s.visible = !isSolidMode;
-    s.rotation.x += s.userData.rotSpeed.x;
-    s.rotation.y += s.userData.rotSpeed.y;
-    if (!isSolidMode) s.material.opacity = (isLight ? s.userData.baseOpacity * 2.5 : s.userData.baseOpacity) * inv;
+    s.visible = !isSolidMode && !inContactSection && projIntensity < 0.15;
+    if (s.visible) {
+      s.rotation.x += s.userData.rotSpeed.x;
+      s.rotation.y += s.userData.rotSpeed.y;
+      s.material.opacity = (isLight ? s.userData.baseOpacity * 2.5 : s.userData.baseOpacity) * inv * hideInContact;
+    }
   });
 
   /* Fog density shifts — lighter in top-down view; less fog in light theme */
-  scene.fog.density = isLight ? lerp(.006, .002, fieldness) : lerp(.012, .004, fieldness);
+  scene.fog.density = isLight ? lerp(.006, .002, landness) : lerp(.012, .004, landness);
 
-  /* In solid mode hide particles; in light wireframe boost them */
+  /* Stars: dark mode + contact section only; additive blending brightens the scene */
+  const showStars = !isLight && inContactSection && inv > 0.1;
+  stars.visible = showStars;
+  if (showStars) starMat.opacity = 0.85 * contactProgress;
+
+  /* Ocean foam: dark white, dark mode + solid + contact section only */
+  const showFoam = !isLight && isSolidMode && inContactSection && inv > 0.1;
+  foamPlane.visible = showFoam;
+  if (showFoam) {
+    const fp = foamPlane.geometry.attributes.position;
+    for (let i = 0; i < fp.count; i++) {
+      const x = fp.getX(i), z = fp.getZ(i);
+      const beachFade = z > BEACH_EDGE_Z ? Math.max(0, 1 - (z - BEACH_EDGE_Z) / (BEACH_FADE_Z - BEACH_EDGE_Z)) : 1;
+      const wave = (Math.sin(x * .12 + t) * Math.cos(z * .12 + t) * .7 + Math.sin(x * .06 - t * .4) * .4) * waveAmp * beachFade;
+      fp.setY(i, wave);
+    }
+    fp.needsUpdate = true;
+    foamMat.opacity = 0.25 * inv;
+  }
+
+  /* In solid mode hide particles; in contact section hide particles too */
   pMat.opacity = isSolidMode ? 0 : (isLight ? .55 : .35);
-  particles.visible = !isSolidMode;
+  particles.visible = !isSolidMode && !inContactSection;
 
-  /* Adapt clear color and fog to theme */
+  /* Adapt clear color and fog to theme; stars add subtle brightness in dark mode contact */
   const curTheme = document.documentElement.getAttribute('data-theme') || 'dark';
   if (curTheme !== lastTheme || (isSolidMode ? 'solid' : 'wire') !== lastViewMode) {
     lastTheme = curTheme;
@@ -266,6 +600,11 @@ function animate() {
     const clearHex = isLight ? 0xeaf0f6 : 0x060b14;
     renderer.setClearColor(clearHex);
     scene.fog.color.setHex(clearHex);
+  }
+  if (!isLight) {
+    projFogTmp.copy(showStars ? projFogStarsDark : projFogDefaultDark);
+    if (!showStars && projIntensity > 0.001) projFogTmp.lerp(projFogDark, projIntensity * 0.65);
+    scene.fog.color.copy(projFogTmp);
   }
 
   particles.rotation.y += .00015;

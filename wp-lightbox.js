@@ -166,6 +166,11 @@
       galleryItems.push({ type: "maps", element: wrapper, src: iframe.src });
     });
 
+    scope.querySelectorAll(".model-viewer-wrapper model-viewer").forEach((mv) => {
+      const wrapper = mv.closest(".model-viewer-wrapper");
+      if (wrapper && window.innerWidth > 1023) galleryItems.push({ type: "model", element: wrapper, src: mv.getAttribute("src") || "" });
+    });
+
     galleryItems.sort((a, b) => {
       const elA = a.element;
       const elB = b.element;
@@ -196,6 +201,16 @@
       iframe.setAttribute("allowfullscreen", "true");
       iframe.setAttribute("allow", "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture");
       lightboxContent.appendChild(iframe);
+      lightbox.classList.add("is-embed");
+    } else if (item.type === "model") {
+      const mv = document.createElement("model-viewer");
+      mv.setAttribute("src", item.src);
+      mv.setAttribute("alt", "3D Model");
+      mv.setAttribute("auto-rotate", "");
+      mv.setAttribute("camera-controls", "");
+      mv.setAttribute("shadow-intensity", "1");
+      mv.style.cssText = "width:95vw;height:85vh;min-width:320px;min-height:400px;background:#0b0f1a;border-radius:14px";
+      lightboxContent.appendChild(mv);
       lightbox.classList.add("is-embed");
     } else {
       lightboxImg.src = item.element.src;
@@ -237,6 +252,13 @@
       const embedWrapper = e.target.closest(".figma-wrapper, .ko-lightbox-embed-wrap");
       if (embedWrapper && embedWrapper.closest(".post-content")) {
         if (e.target.closest(".embed-mobile-link")) return;
+        const modelViewer = embedWrapper.querySelector("model-viewer");
+        if (modelViewer && window.innerWidth > 1023) {
+          e.preventDefault();
+          e.stopPropagation();
+          openLightbox({ type: "model", element: embedWrapper, src: modelViewer.getAttribute("src") || "" });
+          return;
+        }
         const iframe = embedWrapper.querySelector("iframe");
         if (iframe && window.innerWidth <= 1023) return;
         if (iframe && (iframe.src.includes("figma.com") || iframe.src.includes("youtube") || iframe.src.includes("youtu.be") || iframe.src.includes("google.com/maps"))) {
