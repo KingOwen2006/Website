@@ -52,14 +52,26 @@
       if (!geo) return;
 
       if (mode === MODES.wireframe) {
-        const mat = new THREE.MeshBasicMaterial({
-          color: 0x64ffda,
-          wireframe: true,
-          transparent: true,
-          opacity: 0.9
-        });
-        obj.material = mat;
-      } else if (mode === MODES.clay) {
+        if (obj.userData.wireframeLines) {
+          obj.visible = false;
+          obj.userData.wireframeLines.visible = true;
+          return;
+        }
+        obj.visible = false;
+        const edgesGeo = new THREE.EdgesGeometry(geo, 1); /* 1° = hide coplanar (quad diagonals) */
+        const lineMat = new THREE.LineBasicMaterial({ color: 0x64ffda });
+        const lines = new THREE.LineSegments(edgesGeo, lineMat);
+        obj.add(lines);
+        obj.userData.wireframeLines = lines;
+      } else {
+        if (obj.userData.wireframeLines) {
+          obj.remove(obj.userData.wireframeLines);
+          obj.userData.wireframeLines.geometry.dispose();
+          obj.userData.wireframeLines.material.dispose();
+          obj.userData.wireframeLines = null;
+        }
+        obj.visible = true;
+        if (mode === MODES.clay) {
         const orig = obj.userData.originalMaterial;
         const baseColor = (orig && orig.color) ? orig.color.getHex() : (obj.userData.originalColor !== undefined)
           ? obj.userData.originalColor
@@ -70,9 +82,10 @@
           flatShading: true,
           transparent: false
         });
-      } else {
-        if (obj.userData.originalMaterial) {
-          obj.material = obj.userData.originalMaterial;
+        } else {
+          if (obj.userData.originalMaterial) {
+            obj.material = obj.userData.originalMaterial;
+          }
         }
       }
     });
@@ -99,14 +112,19 @@
     if (renderer.outputColorSpace !== undefined) renderer.outputColorSpace = THREE.SRGBColorSpace;
     else if (renderer.outputEncoding !== undefined) renderer.outputEncoding = THREE.sRGBEncoding;
 
-    const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+    const ambient = new THREE.AmbientLight(0xa0b0c0, 0.35);
     scene.add(ambient);
-    const dir = new THREE.DirectionalLight(0xffffff, 0.8);
-    dir.position.set(5, 8, 5);
-    scene.add(dir);
-    const fill = new THREE.DirectionalLight(0x64ffda, 0.2);
-    fill.position.set(-3, 2, -2);
+    const hemi = new THREE.HemisphereLight(0xe8f0ff, 0x506080, 0.4);
+    scene.add(hemi);
+    const key = new THREE.DirectionalLight(0xfff5e6, 0.9);
+    key.position.set(5, 7, 6);
+    scene.add(key);
+    const fill = new THREE.DirectionalLight(0xc8dcff, 0.4);
+    fill.position.set(-4, 3, -3);
     scene.add(fill);
+    const rim = new THREE.DirectionalLight(0xffffff, 0.45);
+    rim.position.set(0, 4, -8);
+    scene.add(rim);
 
     let model = null;
     let controls = null;
@@ -130,6 +148,21 @@
     const getMode = createSettingsButton(container, setMode);
     resize();
     setMode(getMode());
+
+    let pointerDown = null;
+    container.addEventListener("pointerdown", (e) => {
+      if (e.target.closest(".glb-viewer__settings-btn, .glb-viewer__mode-menu")) return;
+      pointerDown = { x: e.clientX, y: e.clientY };
+    }, true);
+    container.addEventListener("pointerup", (e) => {
+      if (!pointerDown || e.target.closest(".glb-viewer__settings-btn, .glb-viewer__mode-menu")) return;
+      const dx = e.clientX - pointerDown.x, dy = e.clientY - pointerDown.y;
+      if (Math.hypot(dx, dy) < 8 && window.koLightbox && window.koLightbox.openModelFullscreen) {
+        window.koLightbox.openModelFullscreen(container);
+      }
+      pointerDown = null;
+    }, true);
+    container.addEventListener("pointercancel", () => { pointerDown = null; }, true);
 
     if (typeof THREE.OrbitControls !== "undefined") {
       controls = new THREE.OrbitControls(camera, canvas);
