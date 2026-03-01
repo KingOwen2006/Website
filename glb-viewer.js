@@ -52,8 +52,6 @@
     };
   }
 
-  const OCEAN_HDRI_URL = "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/secluded_beach_1k.hdr";
-
   function openAROverlay(src, fetchUrl, encrypted, filename) {
     if (typeof customElements !== "undefined" && customElements.get("model-viewer") === undefined) {
       customElements.whenDefined("model-viewer").then(() => openAROverlay(src, fetchUrl, encrypted, filename));
@@ -102,8 +100,8 @@
 
     function applyEnvironment(env) {
       if (env === "ocean") {
-        mv.setAttribute("environment-image", OCEAN_HDRI_URL);
-        mv.setAttribute("skybox-image", OCEAN_HDRI_URL);
+        mv.removeAttribute("environment-image");
+        mv.removeAttribute("skybox-image");
         mv.style.background = "linear-gradient(180deg, #48b1ff 0%, #1a6b3a 50%, #0a3d5c 100%)";
       } else {
         mv.removeAttribute("environment-image");
