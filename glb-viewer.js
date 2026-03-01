@@ -207,7 +207,8 @@
     });
   }
 
-  const OCEAN_WATER_LEVEL = 20;  // Raise this (e.g. -1 or 0) to make the ocean higher
+  const OCEAN_WATER_LEVEL = -1.8;   // Ocean surface height
+  const SHIP_WATER_LEVEL = -1.8;    // Where the ship's bottom sits on the water
 
   function createOceanEnvironment(scene) {
     const oceanGroup = new THREE.Group();
@@ -345,7 +346,7 @@
         if (enabled) {
           const box = new THREE.Box3().setFromObject(model);
           const minY = box.min.y;
-          model.userData.baseY = OCEAN_WATER_LEVEL - minY;
+          model.userData.baseY = SHIP_WATER_LEVEL - minY;
           model.position.y = model.userData.baseY;
         } else {
           model.userData.baseY = 0;
@@ -425,7 +426,7 @@
       model.userData.minY = minY;
       model.userData.floatOffset = 0;
       if (envEnabled && info?.environment === "ocean") {
-        model.position.y = OCEAN_WATER_LEVEL - minY;
+        model.position.y = SHIP_WATER_LEVEL - minY;
         model.userData.baseY = model.position.y;
       }
       scene.add(model);
