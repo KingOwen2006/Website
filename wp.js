@@ -13,6 +13,12 @@
     projects: "data/projects-posts.json"
   };
 
+  let modelsConfig = { models: {} };
+  const modelsConfigPromise = fetch(resolveUrl(CFG.modelsConfig || "models-config.json"))
+    .then((r) => (r.ok ? r.json() : {}))
+    .then((c) => { modelsConfig = c; return c; })
+    .catch(() => ({}));
+
   function resolveUrl(path) {
     try {
       return new URL(path, window.location.href).href;
@@ -237,11 +243,17 @@
   }
 
   function modelEmbedBlock(modelSrc, altText, linkText) {
+    const filename = modelSrc.split("/").pop() || modelSrc;
+    const entry = modelsConfig.models?.[filename];
+    const downloadable = entry ? (entry.downloadable !== false && !entry.encrypted) : true;
+    const downloadHtml = downloadable
+      ? `<a href="${modelSrc}" target="_blank" rel="noopener" download class="embed-mobile-link">${linkText}</a>`
+      : "";
     return `<div class="figma-wrapper model-viewer-wrapper" data-ko-embed="model">
       <div class="glb-viewer" data-glb-viewer data-src="${modelSrc}">
         <canvas class="glb-viewer__canvas"></canvas>
       </div>
-      <a href="${modelSrc}" target="_blank" rel="noopener" download class="embed-mobile-link">${linkText}</a>
+      ${downloadHtml}
     </div>`;
   }
 
@@ -376,16 +388,22 @@
 
   function loadPostBySlug(slug) {
     showWpLoaderIn(postContainer, "Loading…");
-    fetchPostBySlugWithFallback(API_BASE, LOCAL_PATH, slug)
-      .then(renderPost)
+    Promise.all([
+      fetchPostBySlugWithFallback(API_BASE, LOCAL_PATH, slug),
+      modelsConfigPromise
+    ])
+      .then(([p]) => renderPost(p))
       .catch(() => showError(postContainer, "Failed to load post.", offlineHint))
       .finally(() => hideWpLoaderIn(postContainer));
   }
 
   function loadPostById(id) {
     showWpLoaderIn(postContainer, "Loading…");
-    fetchPostByIdWithFallback(API_BASE, LOCAL_PATH, id)
-      .then(renderPost)
+    Promise.all([
+      fetchPostByIdWithFallback(API_BASE, LOCAL_PATH, id),
+      modelsConfigPromise
+    ])
+      .then(([p]) => renderPost(p))
       .catch(() => showError(postContainer, "Failed to load post.", offlineHint))
       .finally(() => hideWpLoaderIn(postContainer));
   }

@@ -22,5 +22,8 @@ window.KO_WP_CONFIG = {
   localData: {
     edu: "data/edu-posts.json",
     projects: "data/projects-posts.json"
-  }
+  },
+
+  /* Models config path (download permissions + encryption) */
+  modelsConfig: "models-config.json"
 };

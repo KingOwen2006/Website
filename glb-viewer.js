@@ -1,11 +1,56 @@
 /* ============================================
    GLB Viewer — clay / solid / wireframe modes
+   Supports encrypted .glb.enc files for secure delivery.
    ============================================ */
 (function () {
   if (typeof THREE === "undefined") return;
 
   const MODES = { clay: "clay", solid: "solid", wireframe: "wireframe" };
   const STORAGE_KEY = "ko-glb-viewer-mode";
+
+  let modelsConfig = { models: {}, encryptionKey: "" };
+  let modelsConfigPromise = null;
+
+  function loadModelsConfig() {
+    if (modelsConfigPromise) return modelsConfigPromise;
+    const path = (window.KO_WP_CONFIG && window.KO_WP_CONFIG.modelsConfig) || "models-config.json";
+    const url = path.startsWith("http") ? path : new URL(path, window.location.href).href;
+    modelsConfigPromise = fetch(url)
+      .then((r) => (r.ok ? r.json() : {}))
+      .then((c) => { modelsConfig = c; return c; })
+      .catch(() => ({}));
+    return modelsConfigPromise;
+  }
+
+  function xorDecrypt(buffer, key) {
+    const keyBytes = new TextEncoder().encode(key);
+    const out = new Uint8Array(buffer.byteLength);
+    const view = new Uint8Array(buffer);
+    for (let i = 0; i < view.length; i++) {
+      out[i] = view[i] ^ keyBytes[i % keyBytes.length];
+    }
+    return out.buffer;
+  }
+
+  function getModelInfo(src) {
+    const filename = src.split("/").pop() || src;
+    const baseName = filename.replace(/\.enc$/, "").replace(/\.glb$/, "");
+    for (const [key, opts] of Object.entries(modelsConfig.models || {})) {
+      const k = key.replace(/\.enc$/, "").replace(/\.glb$/, "");
+      if (key === filename || key === baseName + ".glb" || k === baseName) return opts;
+    }
+    return null;
+  }
+
+  function resolveModelSrc(src) {
+    const info = getModelInfo(src);
+    const encrypted = info && info.encrypted;
+    const base = src.replace(/\.enc$/, "").replace(/\.glb$/, "");
+    return {
+      fetchUrl: encrypted ? base + ".glb.enc" : (src.endsWith(".glb") ? src : base + ".glb"),
+      encrypted: !!encrypted
+    };
+  }
 
   function createSettingsButton(container, onModeChange) {
     const btn = document.createElement("button");
@@ -90,6 +135,8 @@
     const canvas = container.querySelector(".glb-viewer__canvas");
     if (!canvas || !src) return;
 
+    const { fetchUrl, encrypted } = resolveModelSrc(src);
+
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0c121c);
     const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
@@ -147,24 +194,34 @@
       return;
     }
 
-    loader.load(
-      src,
-      (gltf) => {
-        model = gltf.scene;
-        const box = new THREE.Box3().setFromObject(model);
-        const center = box.getCenter(new THREE.Vector3());
-        const size = box.getSize(new THREE.Vector3());
-        model.position.sub(center);
-        const maxDim = Math.max(size.x, size.y, size.z);
-        const scale = 3 / maxDim;
-        model.scale.setScalar(scale);
-        scene.add(model);
-        storeOriginalMaterials(model);
-        setMode(getMode());
-      },
-      undefined,
-      (e) => console.error("GLB load error:", e)
-    );
+    function onModelLoaded(gltf) {
+      model = gltf.scene;
+      const box = new THREE.Box3().setFromObject(model);
+      const center = box.getCenter(new THREE.Vector3());
+      const size = box.getSize(new THREE.Vector3());
+      model.position.sub(center);
+      const maxDim = Math.max(size.x, size.y, size.z);
+      const scale = 3 / maxDim;
+      model.scale.setScalar(scale);
+      scene.add(model);
+      storeOriginalMaterials(model);
+      setMode(getMode());
+    }
+
+    function onLoadError(e) {
+      console.error("GLB load error:", e);
+    }
+
+    if (encrypted) {
+      const key = modelsConfig.encryptionKey || "default-key-change-me";
+      fetch(fetchUrl)
+        .then((r) => { if (!r.ok) throw new Error("Fetch failed"); return r.arrayBuffer(); })
+        .then((buf) => xorDecrypt(buf, key))
+        .then((decrypted) => loader.parse(decrypted, "", onModelLoaded, onLoadError))
+        .catch(onLoadError);
+    } else {
+      loader.load(fetchUrl, onModelLoaded, undefined, onLoadError);
+    }
 
     const animate = () => {
       requestAnimationFrame(animate);
@@ -182,15 +239,20 @@
 
   function initAll(scope) {
     scope = scope || document;
-    scope.querySelectorAll("[data-glb-viewer]").forEach((el) => {
-      if (el.dataset.glbViewerInit) return;
-      el.dataset.glbViewerInit = "1";
-      const src = el.dataset.src || el.querySelector("[data-src]")?.dataset?.src;
-      if (src) initViewer(el, src);
+    const els = scope.querySelectorAll("[data-glb-viewer]");
+    if (!els.length) return;
+    loadModelsConfig().then(() => {
+      els.forEach((el) => {
+        if (el.dataset.glbViewerInit) return;
+        el.dataset.glbViewerInit = "1";
+        const src = el.dataset.src || el.querySelector("[data-src]")?.dataset?.src;
+        if (src) initViewer(el, src);
+      });
     });
   }
 
   window.initGlbViewers = initAll;
+  window.koModelsConfig = () => modelsConfig;
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", () => initAll());
   } else {
