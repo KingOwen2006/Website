@@ -52,6 +52,55 @@
     };
   }
 
+  function openAROverlay(src, fetchUrl, encrypted) {
+    if (typeof customElements !== "undefined" && customElements.get("model-viewer") === undefined) {
+      customElements.whenDefined("model-viewer").then(() => openAROverlay(src, fetchUrl, encrypted));
+      return;
+    }
+    const overlay = document.createElement("div");
+    overlay.className = "glb-viewer-ar-overlay";
+    overlay.innerHTML = `
+      <button class="glb-viewer-ar-overlay__close" aria-label="Close">×</button>
+      <model-viewer ar ar-modes="webxr scene-viewer quick-look" camera-controls touch-action="pan-y" style="width:100%;max-width:500px;height:60vh;background:#0c121c;border-radius:14px;"></model-viewer>
+      <p class="glb-viewer-ar-overlay__hint">Tap "View in your space" to place the model in the real world</p>
+    `;
+    const mv = overlay.querySelector("model-viewer");
+    const closeBtn = overlay.querySelector(".glb-viewer-ar-overlay__close");
+
+    function close() {
+      overlay.remove();
+      document.body.style.overflow = "";
+      if (mv.src && mv.src.startsWith("blob:")) URL.revokeObjectURL(mv.src);
+    }
+
+    closeBtn.addEventListener("click", close);
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
+
+    function setModelUrl(url) {
+      mv.src = url;
+    }
+
+    if (encrypted) {
+      const key = modelsConfig.encryptionKey || "default-key-change-me";
+      fetch(fetchUrl)
+        .then((r) => { if (!r.ok) throw new Error("Fetch failed"); return r.arrayBuffer(); })
+        .then((buf) => xorDecrypt(buf, key))
+        .then((decrypted) => {
+          const blob = new Blob([decrypted], { type: "model/gltf-binary" });
+          setModelUrl(URL.createObjectURL(blob));
+        })
+        .catch((err) => {
+          console.error("AR load error:", err);
+          close();
+        });
+    } else {
+      setModelUrl(new URL(fetchUrl, window.location.href).href);
+    }
+
+    document.body.appendChild(overlay);
+    document.body.style.overflow = "hidden";
+  }
+
   function createSettingsButton(container, onModeChange) {
     const btn = document.createElement("button");
     btn.className = "glb-viewer__settings-btn";
@@ -180,6 +229,9 @@
 
     const info = getModelInfo(src);
     const downloadable = info && info.downloadable !== false && !info.encrypted;
+    const settingsBtn = container.querySelector(".glb-viewer__settings-btn");
+    let insertBeforeEl = settingsBtn;
+
     if (downloadable) {
       const downloadBtn = document.createElement("a");
       downloadBtn.className = "glb-viewer__download-btn";
@@ -188,11 +240,23 @@
       downloadBtn.setAttribute("aria-label", "Download");
       downloadBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
       downloadBtn.style.display = window.innerWidth > 1023 ? "" : "none";
-      container.insertBefore(downloadBtn, container.querySelector(".glb-viewer__settings-btn"));
+      container.insertBefore(downloadBtn, settingsBtn);
+      insertBeforeEl = downloadBtn;
       window.addEventListener("resize", () => {
         downloadBtn.style.display = window.innerWidth > 1023 ? "" : "none";
       });
     }
+
+    const arBtn = document.createElement("button");
+    arBtn.className = "glb-viewer__ar-btn";
+    arBtn.setAttribute("aria-label", "View in AR");
+    arBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 8V6a2 2 0 0 1 2-2h2"/><path d="M20 8V6a2 2 0 0 0-2-2h-2"/><path d="M4 16v2a2 2 0 0 0 2 2h2"/><path d="M20 16v2a2 2 0 0 1-2 2h-2"/><path d="M12 2v4"/><path d="M12 18v4"/><path d="M2 12h4"/><path d="M18 12h4"/></svg>`;
+    container.insertBefore(arBtn, insertBeforeEl);
+    arBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openAROverlay(src, fetchUrl, encrypted);
+    });
 
     if (typeof THREE.OrbitControls !== "undefined") {
       controls = new THREE.OrbitControls(camera, canvas);
