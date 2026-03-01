@@ -5,7 +5,7 @@
 (function () {
   if (typeof THREE === "undefined") return;
 
-  const MODES = { clay: "clay", solid: "solid", wireframe: "wireframe" };
+  const MODES = { clay: "clay", solid: "solid", wireframe: "wireframe", environment: "environment" };
   const STORAGE_KEY = "ko-glb-viewer-mode";
 
   let modelsConfig = { models: {}, encryptionKey: "" };
@@ -52,37 +52,15 @@
     };
   }
 
-  function openAROverlay(src, fetchUrl, encrypted, filename) {
+  function openAROverlay(src, fetchUrl, encrypted) {
     if (typeof customElements !== "undefined" && customElements.get("model-viewer") === undefined) {
-      customElements.whenDefined("model-viewer").then(() => openAROverlay(src, fetchUrl, encrypted, filename));
+      customElements.whenDefined("model-viewer").then(() => openAROverlay(src, fetchUrl, encrypted));
       return;
     }
-    const isShip = filename && (filename === "Unit3ShipDone.glb" || filename === "Unit3ShipDone.glb.enc");
-    const shipInfo = isShip ? getModelInfo(src) : null;
-    const arEnvs = shipInfo?.arEnvironments || [];
-    const defaultEnv = shipInfo?.arDefaultEnvironment || "default";
-    const hasEnvOption = isShip && arEnvs.length > 1;
-
     const overlay = document.createElement("div");
     overlay.className = "glb-viewer-ar-overlay";
-    let envHtml = "";
-    if (hasEnvOption) {
-      envHtml = `
-        <div class="glb-viewer-ar-env">
-          <label class="glb-viewer-ar-env__label">Environment</label>
-          <div class="glb-viewer-ar-env__options">
-            ${arEnvs.map((env) => `
-              <button class="glb-viewer-ar-env__btn ${env === defaultEnv ? "active" : ""}" data-env="${env}">
-                ${env === "ocean" ? "Ocean" : "Default"}
-              </button>
-            `).join("")}
-          </div>
-        </div>
-      `;
-    }
     overlay.innerHTML = `
       <button class="glb-viewer-ar-overlay__close" aria-label="Close">×</button>
-      ${envHtml}
       <model-viewer ar ar-modes="webxr scene-viewer quick-look" camera-controls touch-action="pan-y" style="width:100%;max-width:500px;height:60vh;background:#0c121c;border-radius:14px;"></model-viewer>
       <p class="glb-viewer-ar-overlay__hint">Tap "View in your space" to place the model in the real world</p>
     `;
@@ -97,30 +75,6 @@
 
     closeBtn.addEventListener("click", close);
     overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
-
-    function applyEnvironment(env) {
-      if (env === "ocean") {
-        mv.removeAttribute("environment-image");
-        mv.removeAttribute("skybox-image");
-        mv.style.background = "linear-gradient(180deg, #48b1ff 0%, #1a6b3a 50%, #0a3d5c 100%)";
-      } else {
-        mv.removeAttribute("environment-image");
-        mv.removeAttribute("skybox-image");
-        mv.style.background = "#0c121c";
-      }
-    }
-
-    if (hasEnvOption) {
-      overlay.querySelectorAll(".glb-viewer-ar-env__btn").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          const env = btn.dataset.env;
-          overlay.querySelectorAll(".glb-viewer-ar-env__btn").forEach((b) => b.classList.toggle("active", b.dataset.env === env));
-          applyEnvironment(env);
-        });
-      });
-      applyEnvironment(defaultEnv);
-    }
 
     function setModelUrl(url) {
       mv.src = url;
@@ -147,7 +101,47 @@
     document.body.style.overflow = "hidden";
   }
 
-  function createSettingsButton(container, onModeChange) {
+  function createOceanEnvironment() {
+    const group = new THREE.Group();
+    const planeW = 50;
+    const segW = 50;
+    const oceanColor = new THREE.Color(0x48b1ff);
+    const oceanColor2 = new THREE.Color(0x64ffda);
+
+    const waveGeo1 = new THREE.PlaneGeometry(planeW, planeW, segW, segW);
+    waveGeo1.rotateX(-Math.PI / 2);
+    const waveMat1 = new THREE.MeshBasicMaterial({ color: oceanColor, wireframe: false, transparent: true, opacity: 0.6 });
+    const wavePlane1 = new THREE.Mesh(waveGeo1, waveMat1);
+    wavePlane1.position.y = -2.5;
+    group.add(wavePlane1);
+
+    const waveGeo2 = new THREE.PlaneGeometry(planeW, planeW, segW, segW);
+    waveGeo2.rotateX(-Math.PI / 2);
+    const waveMat2 = new THREE.MeshBasicMaterial({ color: oceanColor2, wireframe: false, transparent: true, opacity: 0.35 });
+    const wavePlane2 = new THREE.Mesh(waveGeo2, waveMat2);
+    wavePlane2.position.y = -2.8;
+    group.add(wavePlane2);
+
+    group.userData.wavePlanes = [wavePlane1, wavePlane2];
+    return group;
+  }
+
+  function animateOcean(oceanGroup, t) {
+    const planes = oceanGroup.userData.wavePlanes;
+    if (!planes) return;
+    planes.forEach((plane) => {
+      const pos = plane.geometry.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i);
+        const z = pos.getZ(i);
+        const wave = (Math.sin(x * 0.15 + t) * Math.cos(z * 0.15 + t) * 0.5 + Math.sin(x * 0.08 - t * 0.5) * 0.25);
+        pos.setY(i, wave);
+      }
+      pos.needsUpdate = true;
+    });
+  }
+
+  function createSettingsButton(container, onModeChange, hasEnvironment) {
     const btn = document.createElement("button");
     btn.className = "glb-viewer__settings-btn";
     btn.setAttribute("aria-label", "View mode");
@@ -156,14 +150,18 @@
 
     const menu = document.createElement("div");
     menu.className = "glb-viewer__mode-menu";
-    menu.innerHTML = `
+    let menuHtml = `
       <button data-mode="clay">Clay</button>
       <button data-mode="solid">Solid</button>
       <button data-mode="wireframe">Wireframe</button>
     `;
-    container.appendChild(menu);
+    if (hasEnvironment) {
+      menuHtml += `<button data-mode="environment">Environment</button>`;
+    }
+    menu.innerHTML = menuHtml;
 
     let currentMode = (localStorage && localStorage.getItem(STORAGE_KEY)) || "solid";
+    if (currentMode === "environment" && !hasEnvironment) currentMode = "solid";
     menu.querySelectorAll("button").forEach((b) => {
       b.classList.toggle("active", b.dataset.mode === currentMode);
       b.addEventListener("click", (e) => {
@@ -265,15 +263,37 @@
       renderer.setSize(w, h);
     };
 
+    const info = getModelInfo(src);
+    const hasEnvironment = !!(info && info.environment);
+
+    let environmentActive = false;
+    let oceanGroup = null;
+    let oceanT = 0;
+
     const setMode = (mode) => {
-      if (model) applyMode(model, mode);
+      if (mode === MODES.environment && hasEnvironment) {
+        if (!oceanGroup) {
+          oceanGroup = createOceanEnvironment();
+          scene.add(oceanGroup);
+        }
+        oceanGroup.visible = true;
+        scene.background = new THREE.Color(0x0a1628);
+        scene.fog = new THREE.FogExp2(0x0a1628, 0.015);
+        environmentActive = true;
+        if (model) applyMode(model, "solid");
+      } else {
+        environmentActive = false;
+        if (oceanGroup) oceanGroup.visible = false;
+        scene.background = new THREE.Color(0x0c121c);
+        scene.fog = null;
+        if (model) applyMode(model, mode);
+      }
     };
 
-    const getMode = createSettingsButton(container, setMode);
+    const getMode = createSettingsButton(container, setMode, hasEnvironment);
     resize();
     setMode(getMode());
 
-    const info = getModelInfo(src);
     const downloadable = info && info.downloadable !== false && !info.encrypted;
     const settingsBtn = container.querySelector(".glb-viewer__settings-btn");
     let insertBeforeEl = settingsBtn;
@@ -301,8 +321,7 @@
     arBtn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
-      const filename = src.split("/").pop() || src;
-      openAROverlay(src, fetchUrl, encrypted, filename);
+      openAROverlay(src, fetchUrl, encrypted);
     });
 
     if (typeof THREE.OrbitControls !== "undefined") {
@@ -352,6 +371,8 @@
 
     const animate = () => {
       requestAnimationFrame(animate);
+      oceanT += 0.02;
+      if (environmentActive && oceanGroup) animateOcean(oceanGroup, oceanT);
       if (controls) controls.update();
       renderer.render(scene, camera);
     };

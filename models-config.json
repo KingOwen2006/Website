@@ -5,8 +5,7 @@
     "Unit3ShipDone.glb": {
       "downloadable": true,
       "encrypted": false,
-      "arEnvironments": ["default", "ocean"],
-      "arDefaultEnvironment": "ocean"
+      "environment": "ocean"
     }
   }
 }
