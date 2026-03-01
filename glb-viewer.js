@@ -132,6 +132,12 @@
     const envStorageKey = ENV_STORAGE_KEY + "-" + (modelInfo?.environment || "");
     let envEnabled = hasEnvironment && localStorage && localStorage.getItem(envStorageKey) === "1";
 
+    function updateEnvButtonState() {
+      if (!hasEnvironment) return;
+      const envBtn = menu.querySelector(".glb-viewer__env-option");
+      envBtn.classList.toggle("active", envEnabled);
+    }
+
     menu.querySelectorAll("button[data-mode]").forEach((b) => {
       b.classList.toggle("active", b.dataset.mode === currentMode);
       b.addEventListener("click", (e) => {
@@ -140,15 +146,22 @@
         menu.querySelectorAll("button[data-mode]").forEach((x) => x.classList.toggle("active", x.dataset.mode === currentMode));
         if (localStorage) localStorage.setItem(STORAGE_KEY, currentMode);
         onModeChange(currentMode);
+        updateEnvButtonState();
         menu.classList.remove("open");
       });
     });
 
     if (hasEnvironment) {
       const envBtn = menu.querySelector(".glb-viewer__env-option");
-      envBtn.classList.toggle("active", envEnabled);
+      updateEnvButtonState();
       envBtn.addEventListener("click", (e) => {
         e.stopPropagation();
+        if (currentMode !== "solid") {
+          currentMode = "solid";
+          menu.querySelectorAll("button[data-mode]").forEach((x) => x.classList.toggle("active", x.dataset.mode === "solid"));
+          if (localStorage) localStorage.setItem(STORAGE_KEY, "solid");
+          onModeChange("solid");
+        }
         envEnabled = !envEnabled;
         envBtn.classList.toggle("active", envEnabled);
         if (localStorage) localStorage.setItem(envStorageKey, envEnabled ? "1" : "0");
@@ -166,23 +179,35 @@
     return { getMode: () => currentMode, getEnvEnabled: () => envEnabled };
   }
 
+  const EDGES_THRESHOLD = 1;  // Degrees: only show edges where face angle exceeds this (Blender-style quads)
+
   function applyMode(model, mode) {
     model.traverse((obj) => {
       if (!obj.isMesh) return;
       const geo = obj.geometry;
       if (!geo) return;
 
+      if (obj.userData.wireframeLines) {
+        obj.remove(obj.userData.wireframeLines);
+        obj.userData.wireframeLines = null;
+      }
+
       if (mode === MODES.wireframe) {
-        if (obj.userData.edgesLineSegments) {
-          obj.remove(obj.userData.edgesLineSegments);
-          obj.userData.edgesLineSegments = null;
-        }
-        const edgesGeo = new THREE.EdgesGeometry(geo, 15);
-        const edgesMat = new THREE.LineBasicMaterial({ color: 0x64ffda, transparent: true, opacity: 0.9 });
-        const edges = new THREE.LineSegments(edgesGeo, edgesMat);
-        obj.add(edges);
-        obj.userData.edgesLineSegments = edges;
-        obj.material = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false });
+        const edgesGeo = new THREE.EdgesGeometry(geo, EDGES_THRESHOLD);
+        const lineMat = new THREE.LineBasicMaterial({
+          color: 0x64ffda,
+          transparent: true,
+          opacity: 0.9
+        });
+        const lines = new THREE.LineSegments(edgesGeo, lineMat);
+        obj.userData.wireframeLines = lines;
+        obj.add(lines);
+        obj.material = new THREE.MeshBasicMaterial({
+          color: 0x64ffda,
+          transparent: true,
+          opacity: 0,
+          depthWrite: false
+        });
       } else if (mode === MODES.clay) {
         const orig = obj.userData.originalMaterial;
         const baseColor = (orig && orig.color) ? orig.color.getHex() : (obj.userData.originalColor !== undefined)
@@ -195,11 +220,6 @@
           transparent: false
         });
       } else {
-        if (obj.userData.edgesLineSegments) {
-          obj.remove(obj.userData.edgesLineSegments);
-          obj.userData.edgesLineSegments = null;
-        }
-        obj.visible = true;
         if (obj.userData.originalMaterial) {
           obj.material = obj.userData.originalMaterial;
         }
@@ -335,10 +355,6 @@
       renderer.setSize(w, h);
     };
 
-    const setMode = (mode) => {
-      if (model) applyMode(model, mode);
-    };
-
     const info = getModelInfo(src);
     let envEnabled = false;
     let oceanGroup = null;
@@ -366,6 +382,11 @@
 
     oceanGroup = createOceanEnvironment(scene);
     scene.add(oceanGroup);
+
+    const setMode = (mode) => {
+      if (model) applyMode(model, mode);
+      if (mode !== MODES.solid) setEnvironment(false);
+    };
 
     const settingsRet = createSettingsButton(container, setMode, info, setEnvironment);
     const getMode = settingsRet.getMode;
