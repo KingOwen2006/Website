@@ -130,7 +130,7 @@
 
     let currentMode = (localStorage && localStorage.getItem(STORAGE_KEY)) || "solid";
     const envStorageKey = ENV_STORAGE_KEY + "-" + (modelInfo?.environment || "");
-    let envEnabled = hasEnvironment && (!localStorage || localStorage.getItem(envStorageKey) !== "0");
+    let envEnabled = hasEnvironment && localStorage && localStorage.getItem(envStorageKey) === "1";
 
     menu.querySelectorAll("button[data-mode]").forEach((b) => {
       b.classList.toggle("active", b.dataset.mode === currentMode);
@@ -173,13 +173,16 @@
       if (!geo) return;
 
       if (mode === MODES.wireframe) {
-        const mat = new THREE.MeshBasicMaterial({
-          color: 0x64ffda,
-          wireframe: true,
-          transparent: true,
-          opacity: 0.9
-        });
-        obj.material = mat;
+        if (obj.userData.edgesLineSegments) {
+          obj.remove(obj.userData.edgesLineSegments);
+          obj.userData.edgesLineSegments = null;
+        }
+        const edgesGeo = new THREE.EdgesGeometry(geo, 15);
+        const edgesMat = new THREE.LineBasicMaterial({ color: 0x64ffda, transparent: true, opacity: 0.9 });
+        const edges = new THREE.LineSegments(edgesGeo, edgesMat);
+        obj.add(edges);
+        obj.userData.edgesLineSegments = edges;
+        obj.material = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false });
       } else if (mode === MODES.clay) {
         const orig = obj.userData.originalMaterial;
         const baseColor = (orig && orig.color) ? orig.color.getHex() : (obj.userData.originalColor !== undefined)
@@ -192,6 +195,11 @@
           transparent: false
         });
       } else {
+        if (obj.userData.edgesLineSegments) {
+          obj.remove(obj.userData.edgesLineSegments);
+          obj.userData.edgesLineSegments = null;
+        }
+        obj.visible = true;
         if (obj.userData.originalMaterial) {
           obj.material = obj.userData.originalMaterial;
         }
