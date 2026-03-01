@@ -259,7 +259,7 @@
 
   function replaceEmbeds(content) {
     const replacements = {
-      "Interactive-Ship-Here": modelEmbedBlock("Models/Unit3ShipDone.glb", "Unit 3 Ship Model", "View / Download Ship Model"),
+      "Interactive-Ship-Here": modelEmbedBlock("Models/Unit3ShipDone.glb", "Unit 3 Ship Model", "Download"),
       "Unit1-moodboard1-here": embedBlock("https://embed.figma.com/board/F0BfcSQpK4EtYVEtlb9lwV/Mood-Board?node-id=0-1&embed-host=share", "Open Mood Board in Figma"),
       "Unit1-moodboard2-here": embedBlock("https://embed.figma.com/board/nj3rvRhnhGHPoojzJFonxh/Cannon-Board?embed-host=share", "Open Cannon Board in Figma"),
       "Unit1-form-here": embedBlock("https://forms.cloud.microsoft.com/Pages/ResponsePage.aspx?id=0JsvSSEvbkyhotOQXlsYc-uhBZiIRqdDnRXC2GOFpZpUOFRVVUhTMUswUzBEWTBVTjQzQzY5NVJWWS4u&embed=true", "Open Form"),

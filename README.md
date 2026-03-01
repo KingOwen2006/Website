@@ -13,6 +13,7 @@ Models are configured in `models-config.json`:
 2. Set `encrypted: true` for each model in `models-config.json`.
 3. Run: `node scripts/encrypt-models.js`
 4. This creates `.glb.enc` files. The viewer fetches these and decrypts them in memory.
+5. Also run node scripts/encrypt-models.js
 
 **Security note:** The decryption key is in the client. This prevents casual right-click/download and direct URL copying, but a determined user could extract it. For stronger protection, use a server-side proxy.
 
