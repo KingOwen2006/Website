@@ -207,7 +207,7 @@
     });
   }
 
-  const OCEAN_WATER_LEVEL = -1.8;  // Raise this (e.g. -1 or 0) to make the ocean higher
+  const OCEAN_WATER_LEVEL = 20;  // Raise this (e.g. -1 or 0) to make the ocean higher
 
   function createOceanEnvironment(scene) {
     const oceanGroup = new THREE.Group();
