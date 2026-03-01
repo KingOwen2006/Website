@@ -3,8 +3,8 @@
   "modelsDir": "Models",
   "models": {
     "Unit3ShipDone.glb": {
-  "downloadable": false,
-  "encrypted": true
+  "downloadable": true,
+  "encrypted": false
 }
   }
 }
