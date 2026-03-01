@@ -27,9 +27,7 @@
       }
       try {
         const session = await navigator.xr.requestSession("immersive-ar", {
-          requiredFeatures: ["hit-test"],
-          optionalFeatures: ["dom-overlay"],
-          domOverlay: { root: document.body }
+          optionalFeatures: ["hit-test"]
         });
         onSessionStart(session);
       } catch (err) {
@@ -216,18 +214,38 @@
   };
 
   function startARSession(session, shipModel, overlay, close) {
+    overlay.style.display = "none";
+    overlay.style.pointerEvents = "none";
+    document.body.style.overflow = "";
+
     const canvas = document.createElement("canvas");
-    canvas.style.cssText = "position:fixed;inset:0;width:100%;height:100%;display:block";
-    overlay.insertBefore(canvas, overlay.firstChild.nextSibling);
+    canvas.style.cssText = "position:fixed;inset:0;width:100%;height:100%;display:block;z-index:10000";
+    document.body.appendChild(canvas);
 
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x1a5a8a, 0.06);
     const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 100);
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      alpha: true
+    });
     renderer.setPixelRatio(devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x000000, 0);
     renderer.xr.enabled = true;
-    renderer.xr.setSession(session);
+
+    const gl = renderer.getContext();
+    if (gl.makeXRCompatible) {
+      gl.makeXRCompatible().then(() => {
+        renderer.xr.setSession(session);
+      }).catch((err) => {
+        console.error("XR compatible failed:", err);
+        renderer.xr.setSession(session);
+      });
+    } else {
+      renderer.xr.setSession(session);
+    }
 
     const light = new THREE.HemisphereLight(0xffffff, 0x4488cc, 1);
     light.position.set(0.5, 1, 0.25);
@@ -262,6 +280,8 @@
     scene.add(controller);
 
     session.addEventListener("end", () => {
+      canvas.remove();
+      window.removeEventListener("resize", onWindowResize);
       close();
     });
 
@@ -284,11 +304,7 @@
           return session.requestHitTestSource({ space: refSpace });
         }).then((source) => {
           hitTestSource = source;
-        }).catch(console.error);
-        session.addEventListener("end", () => {
-          hitTestSourceRequested = false;
-          hitTestSource = null;
-        });
+        }).catch(() => {});
         hitTestSourceRequested = true;
       }
 
