@@ -52,256 +52,109 @@
     };
   }
 
-  const SHIP_MODEL_ID = "Unit3ShipDone";
-
-  function isShipModel(src) {
-    return src && (src.includes(SHIP_MODEL_ID) || src.includes("Unit3ShipDone"));
-  }
-
-  function createOceanEnvironment(container, modelUrl, onReady) {
-    const canvas = document.createElement("canvas");
-    canvas.className = "glb-viewer-ar-ocean-canvas";
-    canvas.style.cssText = "width:100%;max-width:500px;height:60vh;background:#0a1628;border-radius:14px;display:block";
-    container.appendChild(canvas);
-
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a1628);
-    scene.fog = new THREE.FogExp2(0x48b1ff, 0.04);
-    const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
-    camera.position.set(4, 2.5, 6);
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-    if (renderer.outputColorSpace !== undefined) renderer.outputColorSpace = THREE.SRGBColorSpace;
-    else if (renderer.outputEncoding !== undefined) renderer.outputEncoding = THREE.sRGBEncoding;
-
-    const ambient = new THREE.AmbientLight(0x64a8d4, 0.5);
-    scene.add(ambient);
-    const dir = new THREE.DirectionalLight(0xffffff, 0.9);
-    dir.position.set(5, 10, 5);
-    scene.add(dir);
-    const fill = new THREE.DirectionalLight(0x48b1ff, 0.4);
-    fill.position.set(-3, 2, -2);
-    scene.add(fill);
-
-    const oceanGeo = new THREE.PlaneGeometry(40, 40, 80, 80);
-    oceanGeo.rotateX(-Math.PI / 2);
-    const oceanMat = new THREE.MeshPhongMaterial({
-      color: 0x1a5a8a,
-      transparent: true,
-      opacity: 0.92,
-      shininess: 80,
-      specular: 0x4488cc,
-      flatShading: false
-    });
-    const ocean = new THREE.Mesh(oceanGeo, oceanMat);
-    ocean.position.y = -1.5;
-    scene.add(ocean);
-
-    let shipModel = null;
-    let controls = null;
-    let animId = 0;
-    const loader = typeof THREE.GLTFLoader !== "undefined" ? new THREE.GLTFLoader() : null;
-
-    function loadShip() {
-      if (!loader) return;
-      loader.load(modelUrl, (gltf) => {
-        shipModel = gltf.scene;
-        const box = new THREE.Box3().setFromObject(shipModel);
-        const center = box.getCenter(new THREE.Vector3());
-        const size = box.getSize(new THREE.Vector3());
-        shipModel.position.sub(center);
-        const maxDim = Math.max(size.x, size.y, size.z);
-        const scale = 2.5 / maxDim;
-        shipModel.scale.setScalar(scale);
-        shipModel.position.y = -1.5 + (size.y * scale) * 0.5;
-        scene.add(shipModel);
-        onReady && onReady();
-      }, undefined, (e) => console.error("Ocean env load error:", e));
-    }
-
-    loadShip();
-
-    if (typeof THREE.OrbitControls !== "undefined") {
-      controls = new THREE.OrbitControls(camera, canvas);
-      controls.enableDamping = true;
-      controls.dampingFactor = 0.05;
-      controls.minDistance = 2;
-      controls.maxDistance = 15;
-    }
-
-    const resize = () => {
-      const rect = container.getBoundingClientRect();
-      if (rect.width <= 0 || rect.height <= 0) return;
-      camera.aspect = rect.width / rect.height;
-      camera.updateProjectionMatrix();
-      renderer.setSize(rect.width, rect.height);
-    };
-    resize();
-    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(resize) : null;
-    if (ro) ro.observe(container);
-
-    const posAttr = oceanGeo.attributes.position;
-    let t = 0;
-
-    function animate() {
-      animId = requestAnimationFrame(animate);
-      t += 0.012;
-      for (let i = 0; i < posAttr.count; i++) {
-        const x = posAttr.getX(i), z = posAttr.getZ(i);
-        const wave = Math.sin(x * 0.15 + t) * Math.cos(z * 0.15 + t * 0.8) * 0.15
-          + Math.sin(x * 0.08 - t * 0.5) * 0.08;
-        posAttr.setY(i, wave);
-      }
-      posAttr.needsUpdate = true;
-      oceanGeo.computeVertexNormals();
-      if (controls) controls.update();
-      renderer.render(scene, camera);
-    }
-    animate();
-
-    return {
-      dispose: () => {
-        cancelAnimationFrame(animId);
-        if (ro) ro.disconnect();
-        renderer.dispose();
-        oceanGeo.dispose();
-        oceanMat.dispose();
-        canvas.remove();
-      }
-    };
+  function hasEnvironmentOptions(src) {
+    const info = getModelInfo(src);
+    const envs = info && info.arEnvironments;
+    return Array.isArray(envs) && envs.length > 0;
   }
 
   function openAROverlay(src, fetchUrl, encrypted) {
+    const showEnvSelector = hasEnvironmentOptions(src) && typeof window.openAROceanOverlay === "function";
+
     if (typeof customElements !== "undefined" && customElements.get("model-viewer") === undefined) {
       customElements.whenDefined("model-viewer").then(() => openAROverlay(src, fetchUrl, encrypted));
       return;
     }
-    const hasShipEnv = isShipModel(src);
+
+    const envOptions = showEnvSelector ? getModelInfo(src).arEnvironments : ["default"];
+    const envLabels = { default: "Default", ocean: "Ocean" };
+
     const overlay = document.createElement("div");
     overlay.className = "glb-viewer-ar-overlay";
     overlay.innerHTML = `
       <button class="glb-viewer-ar-overlay__close" aria-label="Close">×</button>
-      ${hasShipEnv ? `
+      ${showEnvSelector ? `
         <div class="glb-viewer-ar-env-selector">
-          <label>Environment</label>
-          <select class="glb-viewer-ar-env-select" disabled>
-            <option value="default">Default</option>
-            <option value="ocean">Ocean</option>
+          <label class="glb-viewer-ar-env-label">Environment</label>
+          <select class="glb-viewer-ar-env-select" id="ar-env-select">
+            ${envOptions.map((e) => `<option value="${e}">${envLabels[e] || e}</option>`).join("")}
           </select>
         </div>
       ` : ""}
-      <div class="glb-viewer-ar-content">
+      <div class="glb-viewer-ar-content glb-viewer-ar-content--default">
         <model-viewer ar ar-modes="webxr scene-viewer quick-look" camera-controls touch-action="pan-y" style="width:100%;max-width:500px;height:60vh;background:#0c121c;border-radius:14px;"></model-viewer>
+        <p class="glb-viewer-ar-overlay__hint">Tap "View in your space" to place the model in the real world</p>
       </div>
-      <p class="glb-viewer-ar-overlay__hint">Tap "View in your space" to place the model in the real world</p>
     `;
     const mv = overlay.querySelector("model-viewer");
-    const contentWrap = overlay.querySelector(".glb-viewer-ar-content");
     const closeBtn = overlay.querySelector(".glb-viewer-ar-overlay__close");
-    const envSelect = overlay.querySelector(".glb-viewer-ar-env-select");
-    let oceanEnv = null;
-    let modelBlobUrl = null;
+    const envSelect = overlay.querySelector("#ar-env-select");
+    const contentDefault = overlay.querySelector(".glb-viewer-ar-content--default");
 
     function close() {
-      if (oceanEnv) oceanEnv.dispose();
       overlay.remove();
       document.body.style.overflow = "";
-      if (modelBlobUrl) URL.revokeObjectURL(modelBlobUrl);
-      if (mv.src && mv.src.startsWith("blob:")) URL.revokeObjectURL(mv.src);
+      if (mv && mv.src && mv.src.startsWith("blob:")) URL.revokeObjectURL(mv.src);
     }
 
     closeBtn.addEventListener("click", close);
     overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
 
     function setModelUrl(url) {
-      mv.src = url;
+      if (mv) mv.src = url;
     }
 
-    function showModelViewer() {
-      if (oceanEnv) {
-        oceanEnv.dispose();
-        oceanEnv = null;
-      }
-      contentWrap.innerHTML = "";
-      const m = document.createElement("model-viewer");
-      m.setAttribute("ar", "");
-      m.setAttribute("ar-modes", "webxr scene-viewer quick-look");
-      m.setAttribute("camera-controls", "");
-      m.setAttribute("touch-action", "pan-y");
-      m.style.cssText = "width:100%;max-width:500px;height:60vh;background:#0c121c;border-radius:14px";
-      m.src = modelBlobUrl || (mv && mv.src) || "";
-      contentWrap.appendChild(m);
-    }
-
-    function showOceanEnv() {
-      contentWrap.innerHTML = "";
-      const url = modelBlobUrl || new URL(fetchUrl, window.location.href).href;
-      oceanEnv = createOceanEnvironment(contentWrap, url, () => {});
-      const arBtn = document.createElement("button");
-      arBtn.className = "glb-viewer-ar-ocean-ar-btn";
-      arBtn.textContent = "View in your space";
-      arBtn.addEventListener("click", () => {
-        const m = document.createElement("model-viewer");
-        m.setAttribute("ar", "");
-        m.setAttribute("ar-modes", "webxr scene-viewer quick-look");
-        m.style.cssText = "position:fixed;width:1px;height:1px;opacity:0;pointer-events:none";
-        m.src = modelBlobUrl || url;
-        document.body.appendChild(m);
-        m.addEventListener("load", () => { try { m.activateAR(); } catch (_) {} }, { once: true });
-        setTimeout(() => m.remove(), 5000);
-      });
-      contentWrap.appendChild(arBtn);
-    }
-
-    function applyEnv() {
-      const env = envSelect ? envSelect.value : "default";
-      if (env === "ocean" && hasShipEnv) {
-        showOceanEnv();
+    function switchToOcean() {
+      contentDefault.style.display = "none";
+      const baseUrl = new URL(fetchUrl, window.location.href).href;
+      if (encrypted) {
+        const key = modelsConfig.encryptionKey || "default-key-change-me";
+        fetch(fetchUrl)
+          .then((r) => { if (!r.ok) throw new Error("Fetch failed"); return r.arrayBuffer(); })
+          .then((buf) => xorDecrypt(buf, key))
+          .then((decrypted) => window.openAROceanOverlay(null, decrypted, true))
+          .catch((err) => console.error("AR Ocean load error:", err));
       } else {
-        if (oceanEnv) {
-          oceanEnv.dispose();
-          oceanEnv = null;
-        }
-        showModelViewer();
+        window.openAROceanOverlay(baseUrl, null, false);
       }
+      close();
     }
 
     if (envSelect) {
-      envSelect.addEventListener("change", applyEnv);
+      envSelect.addEventListener("change", (e) => {
+        if (e.target.value === "ocean") {
+          switchToOcean();
+        }
+      });
     }
 
-    function onModelReady(url) {
-      modelBlobUrl = url;
-      setModelUrl(url);
-      if (envSelect) envSelect.disabled = false;
-      if (envSelect && envSelect.value === "ocean") {
-        showOceanEnv();
+    function loadModel() {
+      if (encrypted) {
+        const key = modelsConfig.encryptionKey || "default-key-change-me";
+        fetch(fetchUrl)
+          .then((r) => { if (!r.ok) throw new Error("Fetch failed"); return r.arrayBuffer(); })
+          .then((buf) => xorDecrypt(buf, key))
+          .then((decrypted) => {
+            const blob = new Blob([decrypted], { type: "model/gltf-binary" });
+            setModelUrl(URL.createObjectURL(blob));
+          })
+          .catch((err) => {
+            console.error("AR load error:", err);
+            close();
+          });
       } else {
-        applyEnv();
+        setModelUrl(new URL(fetchUrl, window.location.href).href);
       }
-    }
-
-    if (encrypted) {
-      const key = modelsConfig.encryptionKey || "default-key-change-me";
-      fetch(fetchUrl)
-        .then((r) => { if (!r.ok) throw new Error("Fetch failed"); return r.arrayBuffer(); })
-        .then((buf) => xorDecrypt(buf, key))
-        .then((decrypted) => {
-          const blob = new Blob([decrypted], { type: "model/gltf-binary" });
-          const url = URL.createObjectURL(blob);
-          onModelReady(url);
-        })
-        .catch((err) => {
-          console.error("AR load error:", err);
-          close();
-        });
-    } else {
-      const url = new URL(fetchUrl, window.location.href).href;
-      onModelReady(url);
     }
 
     document.body.appendChild(overlay);
     document.body.style.overflow = "hidden";
+
+    if (envSelect && envSelect.value === "ocean") {
+      switchToOcean();
+    } else {
+      loadModel();
+    }
   }
 
   function createSettingsButton(container, onModeChange) {

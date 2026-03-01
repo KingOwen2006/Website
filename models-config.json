@@ -2,9 +2,10 @@
   "encryptionKey": "change-this-secret-key-in-production",
   "modelsDir": "Models",
   "models": {
-    "Unit3ShipDone.glb": {
-  "downloadable": true,
-  "encrypted": false
-}
+"Unit3ShipDone.glb": {
+      "downloadable": true,
+      "encrypted": false,
+      "arEnvironments": ["default", "ocean"]
+    }
   }
 }
