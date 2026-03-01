@@ -207,6 +207,8 @@
     });
   }
 
+  const OCEAN_WATER_LEVEL = -1.8;  // Raise this (e.g. -1 or 0) to make the ocean higher
+
   function createOceanEnvironment(scene) {
     const oceanGroup = new THREE.Group();
     const planeW = 50;
@@ -223,7 +225,7 @@
       opacity: 0.65
     });
     const wavePlane1 = new THREE.Mesh(waveGeo1, waveMat1);
-    wavePlane1.position.y = -1.8;
+    wavePlane1.position.y = OCEAN_WATER_LEVEL;
     wavePlane1.userData.geo = waveGeo1;
     oceanGroup.add(wavePlane1);
 
@@ -236,7 +238,7 @@
       opacity: 0.45
     });
     const wavePlane2 = new THREE.Mesh(waveGeo2, waveMat2);
-    wavePlane2.position.y = -2;
+    wavePlane2.position.y = OCEAN_WATER_LEVEL - 0.2;
     wavePlane2.userData.geo = waveGeo2;
     oceanGroup.add(wavePlane2);
 
@@ -250,7 +252,7 @@
       depthWrite: false
     });
     const foamPlane = new THREE.Mesh(foamGeo, foamMat);
-    foamPlane.position.y = -1.75;
+    foamPlane.position.y = OCEAN_WATER_LEVEL + 0.05;
     foamPlane.userData.geo = foamGeo;
     oceanGroup.add(foamPlane);
 
@@ -343,8 +345,7 @@
         if (enabled) {
           const box = new THREE.Box3().setFromObject(model);
           const minY = box.min.y;
-          const waterLevel = -1.8;
-          model.userData.baseY = waterLevel - minY;
+          model.userData.baseY = OCEAN_WATER_LEVEL - minY;
           model.position.y = model.userData.baseY;
         } else {
           model.userData.baseY = 0;
@@ -424,8 +425,7 @@
       model.userData.minY = minY;
       model.userData.floatOffset = 0;
       if (envEnabled && info?.environment === "ocean") {
-        const waterLevel = -1.8;
-        model.position.y = waterLevel - minY;
+        model.position.y = OCEAN_WATER_LEVEL - minY;
         model.userData.baseY = model.position.y;
       }
       scene.add(model);
