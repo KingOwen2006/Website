@@ -52,109 +52,101 @@
     };
   }
 
-  function hasEnvironmentOptions(src) {
-    const info = getModelInfo(src);
-    const envs = info && info.arEnvironments;
-    return Array.isArray(envs) && envs.length > 0;
-  }
+  const OCEAN_HDRI_URL = "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/secluded_beach_1k.hdr";
 
-  function openAROverlay(src, fetchUrl, encrypted) {
-    const showEnvSelector = hasEnvironmentOptions(src) && typeof window.openAROceanOverlay === "function";
-
+  function openAROverlay(src, fetchUrl, encrypted, filename) {
     if (typeof customElements !== "undefined" && customElements.get("model-viewer") === undefined) {
-      customElements.whenDefined("model-viewer").then(() => openAROverlay(src, fetchUrl, encrypted));
+      customElements.whenDefined("model-viewer").then(() => openAROverlay(src, fetchUrl, encrypted, filename));
       return;
     }
-
-    const envOptions = showEnvSelector ? getModelInfo(src).arEnvironments : ["default"];
-    const envLabels = { default: "Default", ocean: "Ocean" };
+    const isShip = filename && (filename === "Unit3ShipDone.glb" || filename === "Unit3ShipDone.glb.enc");
+    const shipInfo = isShip ? getModelInfo(src) : null;
+    const arEnvs = shipInfo?.arEnvironments || [];
+    const defaultEnv = shipInfo?.arDefaultEnvironment || "default";
+    const hasEnvOption = isShip && arEnvs.length > 1;
 
     const overlay = document.createElement("div");
     overlay.className = "glb-viewer-ar-overlay";
+    let envHtml = "";
+    if (hasEnvOption) {
+      envHtml = `
+        <div class="glb-viewer-ar-env">
+          <label class="glb-viewer-ar-env__label">Environment</label>
+          <div class="glb-viewer-ar-env__options">
+            ${arEnvs.map((env) => `
+              <button class="glb-viewer-ar-env__btn ${env === defaultEnv ? "active" : ""}" data-env="${env}">
+                ${env === "ocean" ? "Ocean" : "Default"}
+              </button>
+            `).join("")}
+          </div>
+        </div>
+      `;
+    }
     overlay.innerHTML = `
       <button class="glb-viewer-ar-overlay__close" aria-label="Close">×</button>
-      ${showEnvSelector ? `
-        <div class="glb-viewer-ar-env-selector">
-          <label class="glb-viewer-ar-env-label">Environment</label>
-          <select class="glb-viewer-ar-env-select" id="ar-env-select">
-            ${envOptions.map((e) => `<option value="${e}">${envLabels[e] || e}</option>`).join("")}
-          </select>
-        </div>
-      ` : ""}
-      <div class="glb-viewer-ar-content glb-viewer-ar-content--default">
-        <model-viewer ar ar-modes="webxr scene-viewer quick-look" camera-controls touch-action="pan-y" style="width:100%;max-width:500px;height:60vh;background:#0c121c;border-radius:14px;"></model-viewer>
-        <p class="glb-viewer-ar-overlay__hint">Tap "View in your space" to place the model in the real world</p>
-      </div>
+      ${envHtml}
+      <model-viewer ar ar-modes="webxr scene-viewer quick-look" camera-controls touch-action="pan-y" style="width:100%;max-width:500px;height:60vh;background:#0c121c;border-radius:14px;"></model-viewer>
+      <p class="glb-viewer-ar-overlay__hint">Tap "View in your space" to place the model in the real world</p>
     `;
     const mv = overlay.querySelector("model-viewer");
     const closeBtn = overlay.querySelector(".glb-viewer-ar-overlay__close");
-    const envSelect = overlay.querySelector("#ar-env-select");
-    const contentDefault = overlay.querySelector(".glb-viewer-ar-content--default");
 
     function close() {
       overlay.remove();
       document.body.style.overflow = "";
-      if (mv && mv.src && mv.src.startsWith("blob:")) URL.revokeObjectURL(mv.src);
+      if (mv.src && mv.src.startsWith("blob:")) URL.revokeObjectURL(mv.src);
     }
 
     closeBtn.addEventListener("click", close);
     overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
 
-    function setModelUrl(url) {
-      if (mv) mv.src = url;
-    }
-
-    function switchToOcean() {
-      contentDefault.style.display = "none";
-      const baseUrl = new URL(fetchUrl, window.location.href).href;
-      if (encrypted) {
-        const key = modelsConfig.encryptionKey || "default-key-change-me";
-        fetch(fetchUrl)
-          .then((r) => { if (!r.ok) throw new Error("Fetch failed"); return r.arrayBuffer(); })
-          .then((buf) => xorDecrypt(buf, key))
-          .then((decrypted) => window.openAROceanOverlay(null, decrypted, true))
-          .catch((err) => console.error("AR Ocean load error:", err));
+    function applyEnvironment(env) {
+      if (env === "ocean") {
+        mv.setAttribute("environment-image", OCEAN_HDRI_URL);
+        mv.setAttribute("skybox-image", OCEAN_HDRI_URL);
+        mv.style.background = "linear-gradient(180deg, #48b1ff 0%, #1a6b3a 50%, #0a3d5c 100%)";
       } else {
-        window.openAROceanOverlay(baseUrl, null, false);
+        mv.removeAttribute("environment-image");
+        mv.removeAttribute("skybox-image");
+        mv.style.background = "#0c121c";
       }
-      close();
     }
 
-    if (envSelect) {
-      envSelect.addEventListener("change", (e) => {
-        if (e.target.value === "ocean") {
-          switchToOcean();
-        }
+    if (hasEnvOption) {
+      overlay.querySelectorAll(".glb-viewer-ar-env__btn").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const env = btn.dataset.env;
+          overlay.querySelectorAll(".glb-viewer-ar-env__btn").forEach((b) => b.classList.toggle("active", b.dataset.env === env));
+          applyEnvironment(env);
+        });
       });
+      applyEnvironment(defaultEnv);
     }
 
-    function loadModel() {
-      if (encrypted) {
-        const key = modelsConfig.encryptionKey || "default-key-change-me";
-        fetch(fetchUrl)
-          .then((r) => { if (!r.ok) throw new Error("Fetch failed"); return r.arrayBuffer(); })
-          .then((buf) => xorDecrypt(buf, key))
-          .then((decrypted) => {
-            const blob = new Blob([decrypted], { type: "model/gltf-binary" });
-            setModelUrl(URL.createObjectURL(blob));
-          })
-          .catch((err) => {
-            console.error("AR load error:", err);
-            close();
-          });
-      } else {
-        setModelUrl(new URL(fetchUrl, window.location.href).href);
-      }
+    function setModelUrl(url) {
+      mv.src = url;
+    }
+
+    if (encrypted) {
+      const key = modelsConfig.encryptionKey || "default-key-change-me";
+      fetch(fetchUrl)
+        .then((r) => { if (!r.ok) throw new Error("Fetch failed"); return r.arrayBuffer(); })
+        .then((buf) => xorDecrypt(buf, key))
+        .then((decrypted) => {
+          const blob = new Blob([decrypted], { type: "model/gltf-binary" });
+          setModelUrl(URL.createObjectURL(blob));
+        })
+        .catch((err) => {
+          console.error("AR load error:", err);
+          close();
+        });
+    } else {
+      setModelUrl(new URL(fetchUrl, window.location.href).href);
     }
 
     document.body.appendChild(overlay);
     document.body.style.overflow = "hidden";
-
-    if (envSelect && envSelect.value === "ocean") {
-      switchToOcean();
-    } else {
-      loadModel();
-    }
   }
 
   function createSettingsButton(container, onModeChange) {
@@ -311,7 +303,8 @@
     arBtn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
-      openAROverlay(src, fetchUrl, encrypted);
+      const filename = src.split("/").pop() || src;
+      openAROverlay(src, fetchUrl, encrypted, filename);
     });
 
     if (typeof THREE.OrbitControls !== "undefined") {
