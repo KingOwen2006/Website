@@ -207,7 +207,7 @@
     });
   }
 
-  const OCEAN_WATER_LEVEL = 0;   // Ocean surface height
+  const OCEAN_WATER_LEVEL = -0.5;   // Ocean surface height
   const SHIP_WATER_LEVEL = -1.8;    // Where the ship's bottom sits on the water
 
   function createOceanEnvironment(scene) {
