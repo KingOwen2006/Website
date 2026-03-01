@@ -5,8 +5,9 @@
 (function () {
   if (typeof THREE === "undefined") return;
 
-  const MODES = { clay: "clay", solid: "solid", wireframe: "wireframe", environment: "environment" };
+  const MODES = { clay: "clay", solid: "solid", wireframe: "wireframe" };
   const STORAGE_KEY = "ko-glb-viewer-mode";
+  const ENV_STORAGE_KEY = "ko-glb-viewer-environment";
 
   let modelsConfig = { models: {}, encryptionKey: "" };
   let modelsConfigPromise = null;
@@ -101,47 +102,7 @@
     document.body.style.overflow = "hidden";
   }
 
-  function createOceanEnvironment() {
-    const group = new THREE.Group();
-    const planeW = 50;
-    const segW = 50;
-    const oceanColor = new THREE.Color(0x48b1ff);
-    const oceanColor2 = new THREE.Color(0x64ffda);
-
-    const waveGeo1 = new THREE.PlaneGeometry(planeW, planeW, segW, segW);
-    waveGeo1.rotateX(-Math.PI / 2);
-    const waveMat1 = new THREE.MeshBasicMaterial({ color: oceanColor, wireframe: false, transparent: true, opacity: 0.6 });
-    const wavePlane1 = new THREE.Mesh(waveGeo1, waveMat1);
-    wavePlane1.position.y = -2.5;
-    group.add(wavePlane1);
-
-    const waveGeo2 = new THREE.PlaneGeometry(planeW, planeW, segW, segW);
-    waveGeo2.rotateX(-Math.PI / 2);
-    const waveMat2 = new THREE.MeshBasicMaterial({ color: oceanColor2, wireframe: false, transparent: true, opacity: 0.35 });
-    const wavePlane2 = new THREE.Mesh(waveGeo2, waveMat2);
-    wavePlane2.position.y = -2.8;
-    group.add(wavePlane2);
-
-    group.userData.wavePlanes = [wavePlane1, wavePlane2];
-    return group;
-  }
-
-  function animateOcean(oceanGroup, t) {
-    const planes = oceanGroup.userData.wavePlanes;
-    if (!planes) return;
-    planes.forEach((plane) => {
-      const pos = plane.geometry.attributes.position;
-      for (let i = 0; i < pos.count; i++) {
-        const x = pos.getX(i);
-        const z = pos.getZ(i);
-        const wave = (Math.sin(x * 0.15 + t) * Math.cos(z * 0.15 + t) * 0.5 + Math.sin(x * 0.08 - t * 0.5) * 0.25);
-        pos.setY(i, wave);
-      }
-      pos.needsUpdate = true;
-    });
-  }
-
-  function createSettingsButton(container, onModeChange, hasEnvironment) {
+  function createSettingsButton(container, onModeChange, modelInfo, onEnvironmentChange) {
     const btn = document.createElement("button");
     btn.className = "glb-viewer__settings-btn";
     btn.setAttribute("aria-label", "View mode");
@@ -150,29 +111,51 @@
 
     const menu = document.createElement("div");
     menu.className = "glb-viewer__mode-menu";
-    let menuHtml = `
+    menu.innerHTML = `
       <button data-mode="clay">Clay</button>
       <button data-mode="solid">Solid</button>
       <button data-mode="wireframe">Wireframe</button>
     `;
+
+    const hasEnvironment = modelInfo && modelInfo.environment;
     if (hasEnvironment) {
-      menuHtml += `<button data-mode="environment">Environment</button>`;
+      const envBtn = document.createElement("button");
+      envBtn.className = "glb-viewer__env-option";
+      envBtn.dataset.type = "environment";
+      envBtn.dataset.env = modelInfo.environment;
+      envBtn.textContent = "Environment";
+      menu.appendChild(envBtn);
     }
-    menu.innerHTML = menuHtml;
+    container.appendChild(menu);
 
     let currentMode = (localStorage && localStorage.getItem(STORAGE_KEY)) || "solid";
-    if (currentMode === "environment" && !hasEnvironment) currentMode = "solid";
-    menu.querySelectorAll("button").forEach((b) => {
+    const envStorageKey = ENV_STORAGE_KEY + "-" + (modelInfo?.environment || "");
+    let envEnabled = hasEnvironment && (!localStorage || localStorage.getItem(envStorageKey) !== "0");
+
+    menu.querySelectorAll("button[data-mode]").forEach((b) => {
       b.classList.toggle("active", b.dataset.mode === currentMode);
       b.addEventListener("click", (e) => {
         e.stopPropagation();
         currentMode = b.dataset.mode;
-        menu.querySelectorAll("button").forEach((x) => x.classList.toggle("active", x.dataset.mode === currentMode));
+        menu.querySelectorAll("button[data-mode]").forEach((x) => x.classList.toggle("active", x.dataset.mode === currentMode));
         if (localStorage) localStorage.setItem(STORAGE_KEY, currentMode);
         onModeChange(currentMode);
         menu.classList.remove("open");
       });
     });
+
+    if (hasEnvironment) {
+      const envBtn = menu.querySelector(".glb-viewer__env-option");
+      envBtn.classList.toggle("active", envEnabled);
+      envBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        envEnabled = !envEnabled;
+        envBtn.classList.toggle("active", envEnabled);
+        if (localStorage) localStorage.setItem(envStorageKey, envEnabled ? "1" : "0");
+        onEnvironmentChange(envEnabled);
+        menu.classList.remove("open");
+      });
+    }
 
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -180,7 +163,7 @@
     });
     document.addEventListener("click", () => menu.classList.remove("open"));
 
-    return () => currentMode;
+    return { getMode: () => currentMode, getEnvEnabled: () => envEnabled };
   }
 
   function applyMode(model, mode) {
@@ -224,6 +207,83 @@
     });
   }
 
+  function createOceanEnvironment(scene) {
+    const oceanGroup = new THREE.Group();
+    const planeW = 50;
+    const segW = 60;
+    const oceanColor = new THREE.Color(0x48b1ff);
+    const oceanColor2 = new THREE.Color(0x64ffda);
+
+    const waveGeo1 = new THREE.PlaneGeometry(planeW, planeW, segW, segW);
+    waveGeo1.rotateX(-Math.PI / 2);
+    const waveMat1 = new THREE.MeshBasicMaterial({
+      color: oceanColor,
+      wireframe: false,
+      transparent: true,
+      opacity: 0.65
+    });
+    const wavePlane1 = new THREE.Mesh(waveGeo1, waveMat1);
+    wavePlane1.position.y = -1.8;
+    wavePlane1.userData.geo = waveGeo1;
+    oceanGroup.add(wavePlane1);
+
+    const waveGeo2 = new THREE.PlaneGeometry(planeW, planeW, segW, segW);
+    waveGeo2.rotateX(-Math.PI / 2);
+    const waveMat2 = new THREE.MeshBasicMaterial({
+      color: oceanColor2,
+      wireframe: false,
+      transparent: true,
+      opacity: 0.45
+    });
+    const wavePlane2 = new THREE.Mesh(waveGeo2, waveMat2);
+    wavePlane2.position.y = -2;
+    wavePlane2.userData.geo = waveGeo2;
+    oceanGroup.add(wavePlane2);
+
+    const foamGeo = new THREE.PlaneGeometry(planeW, planeW, segW, segW);
+    foamGeo.rotateX(-Math.PI / 2);
+    const foamMat = new THREE.MeshBasicMaterial({
+      color: 0xc8e6f5,
+      wireframe: false,
+      transparent: true,
+      opacity: 0.2,
+      depthWrite: false
+    });
+    const foamPlane = new THREE.Mesh(foamGeo, foamMat);
+    foamPlane.position.y = -1.75;
+    foamPlane.userData.geo = foamGeo;
+    oceanGroup.add(foamPlane);
+
+    oceanGroup.userData.wavePlanes = [wavePlane1, wavePlane2, foamPlane];
+    oceanGroup.visible = false;
+    return oceanGroup;
+  }
+
+  function updateOceanWaves(oceanGroup, t) {
+    if (!oceanGroup || !oceanGroup.userData.wavePlanes) return;
+    oceanGroup.userData.wavePlanes.forEach((plane) => {
+      const pos = plane.geometry.attributes.position;
+      if (!pos) return;
+      for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i);
+        const z = pos.getZ(i);
+        const wave1 = (Math.sin(x * 0.15 + t) * Math.cos(z * 0.15 + t) * 0.5 +
+          Math.sin(x * 0.08 - t * 0.5) * 0.25);
+        const wave2 = (Math.sin(x * 0.12 + t * 1.1) * Math.cos(z * 0.12 + t * 0.8) * 0.35);
+        const wave = wave1 + wave2;
+        pos.setY(i, wave);
+      }
+      pos.needsUpdate = true;
+    });
+  }
+
+  function getWaveHeightAt(x, z, t) {
+    const wave1 = (Math.sin(x * 0.15 + t) * Math.cos(z * 0.15 + t) * 0.5 +
+      Math.sin(x * 0.08 - t * 0.5) * 0.25);
+    const wave2 = (Math.sin(x * 0.12 + t * 1.1) * Math.cos(z * 0.12 + t * 0.8) * 0.35);
+    return wave1 + wave2;
+  }
+
   function initViewer(container, src) {
     const canvas = container.querySelector(".glb-viewer__canvas");
     if (!canvas || !src) return;
@@ -263,37 +323,46 @@
       renderer.setSize(w, h);
     };
 
-    const info = getModelInfo(src);
-    const hasEnvironment = !!(info && info.environment);
-
-    let environmentActive = false;
-    let oceanGroup = null;
-    let oceanT = 0;
-
     const setMode = (mode) => {
-      if (mode === MODES.environment && hasEnvironment) {
-        if (!oceanGroup) {
-          oceanGroup = createOceanEnvironment();
-          scene.add(oceanGroup);
+      if (model) applyMode(model, mode);
+    };
+
+    const info = getModelInfo(src);
+    let envEnabled = false;
+    let oceanGroup = null;
+    const defaultBg = new THREE.Color(0x0c121c);
+    const oceanSkyBg = new THREE.Color(0x0a1628);
+
+    const setEnvironment = (enabled) => {
+      envEnabled = enabled;
+      if (oceanGroup) {
+        oceanGroup.visible = enabled;
+        scene.background = enabled ? oceanSkyBg : defaultBg;
+      }
+      if (model && info?.environment === "ocean") {
+        if (enabled) {
+          const box = new THREE.Box3().setFromObject(model);
+          const minY = box.min.y;
+          const waterLevel = -1.8;
+          model.userData.baseY = waterLevel - minY;
+          model.position.y = model.userData.baseY;
+        } else {
+          model.userData.baseY = 0;
+          model.position.y = 0;
         }
-        oceanGroup.visible = true;
-        scene.background = new THREE.Color(0x0a1628);
-        scene.fog = new THREE.FogExp2(0x0a1628, 0.015);
-        environmentActive = true;
-        if (model) applyMode(model, "solid");
-      } else {
-        environmentActive = false;
-        if (oceanGroup) oceanGroup.visible = false;
-        scene.background = new THREE.Color(0x0c121c);
-        scene.fog = null;
-        if (model) applyMode(model, mode);
       }
     };
 
-    const getMode = createSettingsButton(container, setMode, hasEnvironment);
+    oceanGroup = createOceanEnvironment(scene);
+    scene.add(oceanGroup);
+
+    const settingsRet = createSettingsButton(container, setMode, info, setEnvironment);
+    const getMode = settingsRet.getMode;
+    envEnabled = settingsRet.getEnvEnabled();
+    setEnvironment(envEnabled);
+
     resize();
     setMode(getMode());
-
     const downloadable = info && info.downloadable !== false && !info.encrypted;
     const settingsBtn = container.querySelector(".glb-viewer__settings-btn");
     let insertBeforeEl = settingsBtn;
@@ -349,6 +418,16 @@
       const maxDim = Math.max(size.x, size.y, size.z);
       const scale = 3 / maxDim;
       model.scale.setScalar(scale);
+      const box2 = new THREE.Box3().setFromObject(model);
+      const minY = box2.min.y;
+      model.userData.baseY = model.position.y;
+      model.userData.minY = minY;
+      model.userData.floatOffset = 0;
+      if (envEnabled && info?.environment === "ocean") {
+        const waterLevel = -1.8;
+        model.position.y = waterLevel - minY;
+        model.userData.baseY = model.position.y;
+      }
       scene.add(model);
       storeOriginalMaterials(model);
       setMode(getMode());
@@ -369,11 +448,18 @@
       loader.load(fetchUrl, onModelLoaded, undefined, onLoadError);
     }
 
+    let envTime = 0;
     const animate = () => {
       requestAnimationFrame(animate);
-      oceanT += 0.02;
-      if (environmentActive && oceanGroup) animateOcean(oceanGroup, oceanT);
       if (controls) controls.update();
+      if (envEnabled && oceanGroup) {
+        envTime += 0.016;
+        updateOceanWaves(oceanGroup, envTime);
+        if (model && info?.environment === "ocean") {
+          const waveH = getWaveHeightAt(0, 0, envTime);
+          model.position.y = model.userData.baseY + waveH * 0.5;
+        }
+      }
       renderer.render(scene, camera);
     };
     animate();

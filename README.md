@@ -24,12 +24,7 @@ Models are configured in `models-config.json`:
   "encryptionKey": "your-secret-key",
   "models": {
     "ship.glb": { "downloadable": false, "encrypted": true },
-    "public-model.glb": { "downloadable": true, "encrypted": false },
-    "Unit3ShipDone.glb": { "downloadable": true, "encrypted": false, "environment": "ocean" }
+    "public-model.glb": { "downloadable": true, "encrypted": false }
   }
 }
 ```
-
-### Environment option
-
-Models can have an exclusive **Environment** view mode in the settings menu. Set `"environment": "ocean"` for an animated ocean backdrop (e.g. for ship models). Other environment types can be added in future.
