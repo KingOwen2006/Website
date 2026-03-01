@@ -209,6 +209,7 @@
 
   const OCEAN_WATER_LEVEL = -0.5;   // Ocean surface height
   const SHIP_WATER_LEVEL = -1.8;    // Where the ship's bottom sits on the water
+  const WAVE_AMPLITUDE = 0.25;      // Lower = calmer ocean (default was ~1.0)
 
   function createOceanEnvironment(scene) {
     const oceanGroup = new THREE.Group();
@@ -271,8 +272,8 @@
         const x = pos.getX(i);
         const z = pos.getZ(i);
         const wave1 = (Math.sin(x * 0.15 + t) * Math.cos(z * 0.15 + t) * 0.5 +
-          Math.sin(x * 0.08 - t * 0.5) * 0.25);
-        const wave2 = (Math.sin(x * 0.12 + t * 1.1) * Math.cos(z * 0.12 + t * 0.8) * 0.35);
+          Math.sin(x * 0.08 - t * 0.5) * 0.25) * WAVE_AMPLITUDE;
+        const wave2 = (Math.sin(x * 0.12 + t * 1.1) * Math.cos(z * 0.12 + t * 0.8) * 0.35) * WAVE_AMPLITUDE;
         const wave = wave1 + wave2;
         pos.setY(i, wave);
       }
@@ -282,8 +283,8 @@
 
   function getWaveHeightAt(x, z, t) {
     const wave1 = (Math.sin(x * 0.15 + t) * Math.cos(z * 0.15 + t) * 0.5 +
-      Math.sin(x * 0.08 - t * 0.5) * 0.25);
-    const wave2 = (Math.sin(x * 0.12 + t * 1.1) * Math.cos(z * 0.12 + t * 0.8) * 0.35);
+      Math.sin(x * 0.08 - t * 0.5) * 0.25) * WAVE_AMPLITUDE;
+    const wave2 = (Math.sin(x * 0.12 + t * 1.1) * Math.cos(z * 0.12 + t * 0.8) * 0.35) * WAVE_AMPLITUDE;
     return wave1 + wave2;
   }
 
