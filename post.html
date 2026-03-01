@@ -10,9 +10,9 @@
   img{-webkit-user-drag:none;-moz-user-drag:none}
   :root{
     --bg:#060b14;
-    --accent:#64ffda;
-    --accent2:#48b1ff;
-    --accent3:#a78bfa;
+    --accent:#3BCABF;
+    --accent2:#5BD9CF;
+    --accent3:#7BE8DF;
     --text:#e2e8f0;
     --text-muted:#8899aa;
     --muted:#8899aa;
@@ -59,7 +59,7 @@
   [data-theme="light"] .settings-option{color:#556677;background:rgba(0,50,100,.03);border-color:rgba(0,50,120,.1)}
   [data-theme="light"] .settings-option:hover{color:#0d6b4c;border-color:rgba(13,107,76,.2);background:rgba(13,107,76,.05)}
   [data-theme="light"] .settings-option.active{color:#0d6b4c;background:rgba(13,107,76,.08);border-color:rgba(13,107,76,.25)}
-  [data-theme="light"] .settings-accent-btn.active{border-color:#1a2332}
+  [data-theme="light"] .settings-accent-btn.active .settings-accent-swatch{border-color:#1a2332;box-shadow:0 0 0 1px rgba(255,255,255,.5)}
   body{background:var(--bg);color:var(--text);font-family:'Sora',sans-serif;overflow-x:hidden;min-height:100vh}
   canvas#bg{position:fixed;top:0;left:0;z-index:0}
   .vignette{position:fixed;inset:0;pointer-events:none;z-index:1;background:radial-gradient(ellipse at center,transparent 40%,rgba(6,11,20,.85) 100%)}
@@ -84,10 +84,12 @@
   .settings-option{padding:.45rem .9rem;font-size:.78rem;font-weight:500;color:var(--text-muted);background:rgba(255,255,255,.04);border:1px solid var(--glass-border);border-radius:8px;cursor:pointer;transition:all .2s}
   .settings-option:hover{color:var(--accent);border-color:rgba(100,255,218,.2)}
   .settings-option.active{color:var(--accent);background:rgba(100,255,218,.1);border-color:rgba(100,255,218,.25)}
-  .settings-accent{display:flex;gap:.5rem;flex-wrap:wrap}
-  .settings-accent-btn{width:32px;height:32px;border-radius:10px;border:2px solid transparent;background:var(--swatch);cursor:pointer;transition:border-color .2s,transform .2s}
-  .settings-accent-btn:hover{transform:scale(1.08)}
-  .settings-accent-btn.active{border-color:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.3)}
+  .settings-accent{display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-start}
+  .settings-accent-btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:0;border:none;background:transparent;cursor:pointer;transition:transform .2s}
+  .settings-accent-btn:hover{transform:scale(1.05)}
+  .settings-accent-swatch{width:36px;height:36px;border-radius:50%;background:var(--swatch);border:2px solid transparent;transition:border-color .2s,box-shadow .2s}
+  .settings-accent-btn.active .settings-accent-swatch{border-color:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.3)}
+  .settings-accent-label{font-size:.75rem;font-weight:500;color:var(--text-muted)}
 
   .page-wrap{position:relative;z-index:2;max-width:1250px;margin:0 auto;padding:5rem 2rem 4rem}
 
@@ -461,12 +463,11 @@
     <div class="settings-group">
       <label class="settings-label">Accent colour</label>
       <div class="settings-options settings-accent">
-        <button class="settings-accent-btn active" data-accent="default" title="Default" style="--swatch:#64ffda"></button>
-        <button class="settings-accent-btn" data-accent="blue" title="Blue" style="--swatch:#48b1ff"></button>
-        <button class="settings-accent-btn" data-accent="purple" title="Purple" style="--swatch:#a78bfa"></button>
-        <button class="settings-accent-btn" data-accent="green" title="Green" style="--swatch:#3fb950"></button>
-        <button class="settings-accent-btn" data-accent="coral" title="Coral" style="--swatch:#ff6b6b"></button>
-        <button class="settings-accent-btn" data-accent="amber" title="Amber" style="--swatch:#f59e0b"></button>
+        <button class="settings-accent-btn" data-accent="blue" style="--swatch:#4285F4"><span class="settings-accent-swatch"></span><span class="settings-accent-label">Blue</span></button>
+        <button class="settings-accent-btn" data-accent="coral" style="--swatch:#F47C6F"><span class="settings-accent-swatch"></span><span class="settings-accent-label">Coral</span></button>
+        <button class="settings-accent-btn active" data-accent="mint" style="--swatch:#3BCABF"><span class="settings-accent-swatch"></span><span class="settings-accent-label">Mint</span></button>
+        <button class="settings-accent-btn" data-accent="lilac" style="--swatch:#8C78D9"><span class="settings-accent-swatch"></span><span class="settings-accent-label">Lilac</span></button>
+        <button class="settings-accent-btn" data-accent="mono" style="--swatch:#808080"><span class="settings-accent-swatch"></span><span class="settings-accent-label">Mono</span></button>
       </div>
     </div>
     <div class="settings-group">
@@ -474,13 +475,14 @@
       <div class="settings-options">
         <button class="settings-option active" data-setting="viewmode" data-value="wireframe">Wireframe</button>
         <button class="settings-option" data-setting="viewmode" data-value="solid">Solid</button>
+        <button class="settings-option" data-setting="viewmode" data-value="none">None</button>
       </div>
     </div>
   </div>
 </div>
 
 <div class="page-wrap">
-  <div id="post"></div>
+  <div id="post" data-wp-post data-wp-default-site="edu"></div>
 </div>
 
 <script src="settings.js"></script>
@@ -524,6 +526,13 @@ let t = 0, lastT = '', lastV = '';
 window.addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
 
 window.applySceneViewMode = function(mode) {
+  if (mode === 'none') {
+    plane.visible = false;
+    particles.visible = false;
+    return;
+  }
+  plane.visible = true;
+  particles.visible = true;
   plane.material = mode === 'solid' ? matSolid : matWire;
 };
 try { const sv = localStorage.getItem('ko-settings-viewmode'); if (sv) window.applySceneViewMode(sv); } catch(_) {}
@@ -532,7 +541,20 @@ function animate() {
   requestAnimationFrame(animate);
   t += .008;
   const isLight = (document.documentElement.getAttribute('data-theme') || 'dark') === 'light';
+  const isNone = (document.documentElement.getAttribute('data-viewmode') || 'wireframe') === 'none';
   const isSolid = (document.documentElement.getAttribute('data-viewmode') || 'wireframe') === 'solid';
+
+  if (isNone) {
+    plane.visible = false;
+    particles.visible = false;
+    lastT = isLight ? 'l' : 'd';
+    lastV = 'n';
+    const hex = isLight ? 0xeaf0f6 : 0x060b14;
+    renderer.setClearColor(hex);
+    scene.fog.color.setHex(hex);
+    renderer.render(scene, camera);
+    return;
+  }
 
   const curT = isLight ? 'l' : 'd', curV = isSolid ? 's' : 'w';
   if (curT !== lastT || curV !== lastV) {
@@ -543,6 +565,7 @@ function animate() {
     plane.material = isSolid ? matSolid : matWire;
   }
 
+  plane.visible = true;
   matWire.opacity = isLight ? .18 : .04;
   matSolid.opacity = isLight ? .6 : .5;
   scene.fog.density = isLight ? .006 : .015;

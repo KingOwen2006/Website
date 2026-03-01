@@ -438,6 +438,17 @@ function animate() {
   p2.needsUpdate = true;
 
   const isLight = (document.documentElement.getAttribute('data-theme') || 'dark') === 'light';
+  const isNoneMode = document.documentElement.getAttribute('data-viewmode') === 'none';
+
+  if (isNoneMode) {
+    scene.children.forEach(c => { c.visible = false; });
+    lastTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    lastViewMode = 'none';
+    const clearHex = isLight ? 0xeaf0f6 : 0x060b14;
+    renderer.setClearColor(clearHex);
+    renderer.render(scene, camera);
+    return;
+  }
 
   /* Color transition: About (ocean) → Education (field) → Projects (portal space) */
   const projIntensity = projectsMix;
@@ -613,6 +624,11 @@ function animate() {
 animate();
 
 window.applySceneViewMode = function (mode) {
+  if (mode === "none") {
+    scene.children.forEach(c => { c.visible = false; });
+    return;
+  }
+  scene.children.forEach(c => { c.visible = true; });
   const isSolid = mode === "solid";
   wavePlane1.material = isSolid ? waveMat1Solid : waveMat1;
   wavePlane2.material = isSolid ? waveMat2Solid : waveMat2;

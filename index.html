@@ -48,12 +48,11 @@
     <div class="settings-group">
       <label class="settings-label">Accent colour</label>
       <div class="settings-options settings-accent">
-        <button class="settings-accent-btn active" data-accent="default" title="Default" style="--swatch:#64ffda"></button>
-        <button class="settings-accent-btn" data-accent="blue" title="Blue" style="--swatch:#48b1ff"></button>
-        <button class="settings-accent-btn" data-accent="purple" title="Purple" style="--swatch:#a78bfa"></button>
-        <button class="settings-accent-btn" data-accent="green" title="Green" style="--swatch:#3fb950"></button>
-        <button class="settings-accent-btn" data-accent="coral" title="Coral" style="--swatch:#ff6b6b"></button>
-        <button class="settings-accent-btn" data-accent="amber" title="Amber" style="--swatch:#f59e0b"></button>
+        <button class="settings-accent-btn" data-accent="blue" style="--swatch:#4285F4"><span class="settings-accent-swatch"></span><span class="settings-accent-label">Blue</span></button>
+        <button class="settings-accent-btn" data-accent="coral" style="--swatch:#F47C6F"><span class="settings-accent-swatch"></span><span class="settings-accent-label">Coral</span></button>
+        <button class="settings-accent-btn active" data-accent="mint" style="--swatch:#3BCABF"><span class="settings-accent-swatch"></span><span class="settings-accent-label">Mint</span></button>
+        <button class="settings-accent-btn" data-accent="lilac" style="--swatch:#8C78D9"><span class="settings-accent-swatch"></span><span class="settings-accent-label">Lilac</span></button>
+        <button class="settings-accent-btn" data-accent="mono" style="--swatch:#808080"><span class="settings-accent-swatch"></span><span class="settings-accent-label">Mono</span></button>
       </div>
     </div>
     <div class="settings-group">
@@ -61,6 +60,7 @@
       <div class="settings-options">
         <button class="settings-option active" data-setting="viewmode" data-value="wireframe">Wireframe</button>
         <button class="settings-option" data-setting="viewmode" data-value="solid">Solid</button>
+        <button class="settings-option" data-setting="viewmode" data-value="none">None</button>
       </div>
     </div>
   </div>
@@ -132,10 +132,16 @@
     <h2>Education</h2>
     <p>Units & coursework</p>
   </div>
-  <div class="road-timeline" id="posts">
+  <div class="road-timeline" id="posts"
+       data-wp-feed="edu"
+       data-wp-layout="road"
+       data-wp-link-page="post">
     <div class="road-loader"><div class="spinner"></div>Loading posts...</div>
   </div>
 </div>
+
+<!-- TRANSITION: Education → Projects -->
+<div class="education-projects-spacer"></div>
 
 <!-- PROJECTS SECTION -->
 <div class="road-section" id="projects">
@@ -145,7 +151,11 @@
   </div>
   <div class="projects-grid">
     <div class="projects-col">
-      <div class="road-timeline road-timeline--compact" id="projects-posts">
+      <div class="road-timeline road-timeline--compact" id="projects-posts"
+           data-wp-feed="projects"
+           data-wp-layout="road"
+           data-wp-link-page="post"
+           data-wp-link-params="site=projects">
         <div class="road-loader"><div class="spinner"></div>Loading projects...</div>
       </div>
     </div>

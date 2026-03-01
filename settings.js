@@ -7,14 +7,45 @@
   const settingsBtn = document.getElementById("nav-settings");
   const backdrop = document.getElementById("settings-backdrop");
 
-  const ACCENT_PRESETS = {
-    default: { accent: "#64ffda", accent2: "#48b1ff", accent3: "#a78bfa" },
-    blue: { accent: "#48b1ff", accent2: "#64b5f6", accent3: "#90caf9" },
-    purple: { accent: "#a78bfa", accent2: "#c4b5fd", accent3: "#ddd6fe" },
-    green: { accent: "#3fb950", accent2: "#56d364", accent3: "#7ee787" },
-    coral: { accent: "#ff6b6b", accent2: "#ff8787", accent3: "#ffa8a8" },
-    amber: { accent: "#f59e0b", accent2: "#fbbf24", accent3: "#fcd34d" }
+  const ACCENT_SWATCHES = {
+    blue: "#4285F4",
+    coral: "#F47C6F",
+    mint: "#3BCABF",
+    lilac: "#8C78D9",
+    mono: "#808080"
   };
+
+  const HUE_OFFSET_2 = 40;
+  const HUE_OFFSET_3 = 80;
+
+  function hexToHsl(hex) {
+    const n = parseInt(hex.slice(1), 16);
+    const r = (n >> 16) / 255, g = (n >> 8 & 255) / 255, b = (n & 255) / 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h, s, l = (max + min) / 2;
+    if (max === min) h = s = 0;
+    else {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+        case g: h = ((b - r) / d + 2) / 6; break;
+        default: h = ((r - g) / d + 4) / 6; break;
+      }
+    }
+    return { h: h * 360, s: s * 100, l: l * 100 };
+  }
+
+  function hslToHex(h, s, l) {
+    s /= 100; l /= 100;
+    const a = s * Math.min(l, 1 - l);
+    const f = n => {
+      const k = (n + h / 30) % 12;
+      return l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1));
+    };
+    const r = Math.round(f(0) * 255), g = Math.round(f(8) * 255), b = Math.round(f(4) * 255);
+    return "#" + [r, g, b].map(x => x.toString(16).padStart(2, "0")).join("");
+  }
 
   function getStored(key, def) {
     try {
@@ -52,10 +83,16 @@
   }
 
   function applyAccent(val) {
-    const preset = ACCENT_PRESETS[val] || ACCENT_PRESETS.default;
-    root.style.setProperty("--accent", preset.accent);
-    root.style.setProperty("--accent2", preset.accent2);
-    root.style.setProperty("--accent3", preset.accent3);
+    const hex = ACCENT_SWATCHES[val] || ACCENT_SWATCHES.mint;
+    const { h, s, l } = hexToHsl(hex);
+    root.style.setProperty("--accent", hex);
+    if (s < 5) {
+      root.style.setProperty("--accent2", hslToHex(0, 0, Math.min(100, l + 12)));
+      root.style.setProperty("--accent3", hslToHex(0, 0, Math.max(0, l - 12)));
+    } else {
+      root.style.setProperty("--accent2", hslToHex((h + HUE_OFFSET_2) % 360, s, l));
+      root.style.setProperty("--accent3", hslToHex((h + HUE_OFFSET_3) % 360, s, l));
+    }
     setStored("accent", val);
   }
 
@@ -75,7 +112,7 @@
   function init() {
     const themeVal = getStored("theme", "dark") || localStorage.getItem("theme") || "dark";
     applyTheme(themeVal);
-    applyAccent(getStored("accent", "default"));
+    applyAccent(getStored("accent", "mint"));
     applyViewMode(getStored("viewmode", "wireframe"));
 
     if (settingsBtn) settingsBtn.addEventListener("click", openPopup);
@@ -114,7 +151,7 @@
     popup?.querySelectorAll(".settings-option[data-setting='viewmode']").forEach((b) => {
       b.classList.toggle("active", b.dataset.value === viewVal);
     });
-    const accentVal = getStored("accent", "default");
+    const accentVal = getStored("accent", "mint");
     popup?.querySelectorAll(".settings-accent-btn").forEach((b) => {
       b.classList.toggle("active", b.dataset.accent === accentVal);
     });
