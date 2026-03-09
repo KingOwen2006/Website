@@ -60,6 +60,7 @@
   [data-theme="light"] .settings-option:hover{color:#0d6b4c;border-color:rgba(13,107,76,.2);background:rgba(13,107,76,.05)}
   [data-theme="light"] .settings-option.active{color:#0d6b4c;background:rgba(13,107,76,.08);border-color:rgba(13,107,76,.25)}
   [data-theme="light"] .settings-accent-btn.active .settings-accent-swatch{border-color:#1a2332;box-shadow:0 0 0 1px rgba(255,255,255,.5)}
+  [data-theme="light"] .ko-wp-lazy-skeleton__bar{background:rgba(0,50,100,.07)}
   body{background:var(--bg);color:var(--text);font-family:'Sora',sans-serif;overflow-x:hidden;min-height:100vh}
   canvas#bg{position:fixed;top:0;left:0;z-index:0}
   .vignette{position:fixed;inset:0;pointer-events:none;z-index:1;background:radial-gradient(ellipse at center,transparent 40%,rgba(6,11,20,.85) 100%)}
@@ -445,6 +446,16 @@
     .post-content .wp-block-group.is-layout-grid{grid-template-columns:1fr;display:block}
     .post-content .wp-block-gallery.columns-2,.post-content .wp-block-gallery.columns-3{grid-template-columns:1fr}
   }
+
+  /* Lazy-load skeleton — visible before WP JS runs */
+  .ko-wp-lazy-skeleton{padding:2rem 0}
+  .ko-wp-lazy-skeleton__bar{height:14px;background:rgba(100,255,218,.06);border-radius:8px;margin-bottom:14px;animation:wpSkeleton 1.5s ease-in-out infinite;width:100%}
+  .ko-wp-lazy-skeleton__bar--title{height:28px;width:55%;margin-bottom:14px;border-radius:10px}
+  .ko-wp-lazy-skeleton__bar--meta{height:12px;width:20%;margin-bottom:32px;opacity:.5}
+  .ko-wp-lazy-skeleton__bar--short{width:60%}
+  .ko-wp-lazy-skeleton__bar--med{width:82%}
+  .ko-wp-lazy-skeleton__block{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:40px}
+  @keyframes wpSkeleton{0%,100%{opacity:.3}50%{opacity:.7}}
 </style>
 
 </head>
@@ -496,7 +507,19 @@
 </div>
 
 <div class="page-wrap">
-  <div id="post"></div>
+  <div id="post">
+    <div class="ko-wp-lazy-skeleton">
+      <div class="ko-wp-lazy-skeleton__bar ko-wp-lazy-skeleton__bar--title"></div>
+      <div class="ko-wp-lazy-skeleton__bar ko-wp-lazy-skeleton__bar--meta"></div>
+      <div class="ko-wp-lazy-skeleton__block">
+        <div class="ko-wp-lazy-skeleton__bar"></div>
+        <div class="ko-wp-lazy-skeleton__bar"></div>
+        <div class="ko-wp-lazy-skeleton__bar ko-wp-lazy-skeleton__bar--short"></div>
+        <div class="ko-wp-lazy-skeleton__bar"></div>
+        <div class="ko-wp-lazy-skeleton__bar ko-wp-lazy-skeleton__bar--med"></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script src="settings.js"></script>

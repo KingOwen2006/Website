@@ -478,31 +478,58 @@
   }
 
   /* ======================
+     CSS-READY GATE
+     Wait for external stylesheets to load and at least one paint frame
+     so the page renders its styled skeleton/loader before data fetching.
+  ====================== */
+  function waitForStylesheets() {
+    const links = [...document.querySelectorAll('link[rel="stylesheet"]')];
+    const pending = links.filter((l) => { try { return !l.sheet; } catch (_) { return true; } });
+    if (!pending.length) return Promise.resolve();
+    return Promise.race([
+      Promise.all(pending.map((l) => new Promise((r) => {
+        l.addEventListener("load", r, { once: true });
+        l.addEventListener("error", r, { once: true });
+      }))),
+      new Promise((r) => setTimeout(r, 4000))
+    ]);
+  }
+
+  function afterPaint() {
+    return new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  }
+
+  /* ======================
      ROUTING
   ====================== */
-  if (config.mode === "single" && postContainer) {
-    if (postSlug) loadPostBySlug(postSlug);
-    else if (postId) loadPostById(postId);
-  }
+  (async () => {
+    await waitForStylesheets();
+    await afterPaint();
 
-  if (config.mode === "list" && postsContainer) {
-    loadPostList();
-  }
-
-  if (config.mode === "road" && postsContainer) {
-    window._roadObserver =
-      typeof IntersectionObserver !== "undefined"
-        ? new IntersectionObserver((entries) => {
-            entries.forEach((e) => {
-              if (e.isIntersecting) e.target.classList.add("visible");
-            });
-          }, { threshold: 0.15 })
-        : null;
-
-    loadRoadPostsInto(postsContainer, API_BASE, LOCAL_PATH, config.link);
-
-    if (projectsPostsContainer) {
-      loadRoadPostsInto(projectsPostsContainer, PROJECTS_API, PROJECTS_LOCAL, "blog");
+    if (config.mode === "single" && postContainer) {
+      if (postSlug) loadPostBySlug(postSlug);
+      else if (postId) loadPostById(postId);
     }
-  }
+
+    if (config.mode === "list" && postsContainer) {
+      loadPostList();
+    }
+
+    if (config.mode === "road" && postsContainer) {
+      window._roadObserver =
+        typeof IntersectionObserver !== "undefined"
+          ? new IntersectionObserver((entries) => {
+              entries.forEach((e) => {
+                if (e.isIntersecting) e.target.classList.add("visible");
+              });
+            }, { threshold: 0.15 })
+          : null;
+
+      loadRoadPostsInto(postsContainer, API_BASE, LOCAL_PATH, config.link);
+
+      if (projectsPostsContainer) {
+        loadRoadPostsInto(projectsPostsContainer, PROJECTS_API, PROJECTS_LOCAL, "blog");
+      }
+    }
+  })();
 })();

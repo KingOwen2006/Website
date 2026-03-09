@@ -380,38 +380,33 @@ function animate() {
     return easeInOut(clamp(1 - dist / (wh * 0.9), 0, 1));
   };
 
-  const educationFocus = focusFor(document.getElementById('education')) * (1 - contactProgress);
-  const projectsFocus = focusFor(document.getElementById('projects')) * (1 - contactProgress);
-
-  const landness = clamp(Math.max(educationFocus, projectsFocus), 0, 1);
+  const eduTitle = document.querySelector('#education .road-section-title');
+  const postsEl = document.getElementById('posts');
+  let landness = 0;
+  if (eduTitle && postsEl) {
+    const titleRect = eduTitle.getBoundingClientRect();
+    const postsRect = postsEl.getBoundingClientRect();
+    const transitionStart = titleRect.top;
+    const transitionEnd = postsRect.top;
+    const rawLand = clamp((wh - transitionStart) / (wh + transitionEnd - transitionStart), 0, 1);
+    landness = easeInOut(rawLand) * (1 - contactProgress);
+  }
   const inv = 1 - landness;
-  const mixDen = educationFocus + projectsFocus + 1e-6;
-  const projectsMix = clamp(projectsFocus / mixDen, 0, 1) * landness;
-  const educationMix = (1 - clamp(projectsFocus / mixDen, 0, 1)) * landness;
+  const educationMix = landness;
+  const projectsMix = 0;
 
-  /* Camera transition — About → Education/Projects → Contact */
-  // Projects camera: low lounge (like reference)
-  const CAM_PROJECTS = { x: 0, y: 2.6, z: 34, lx: 0, ly: 7.5, lz: -58 };
-  const camTo = {
-    x: lerp(CAM_END.x, CAM_PROJECTS.x, projectsMix),
-    y: lerp(CAM_END.y, CAM_PROJECTS.y, projectsMix),
-    z: lerp(CAM_END.z, CAM_PROJECTS.z, projectsMix),
-    lx: lerp(CAM_END.lx, CAM_PROJECTS.lx, projectsMix),
-    ly: lerp(CAM_END.ly, CAM_PROJECTS.ly, projectsMix),
-    lz: lerp(CAM_END.lz, CAM_PROJECTS.lz, projectsMix)
-  };
-
-  const cx = lerp(CAM_START.x, camTo.x, landness) + mouseX * 1.5 * inv;
-  const cy = lerp(CAM_START.y, camTo.y, landness) - mouseY * .5 * inv;
-  const cz = lerp(CAM_START.z, camTo.z, landness);
+  /* Camera transition — About (ocean POV) → Education (top-down road) */
+  const cx = lerp(CAM_START.x, CAM_END.x, landness) + mouseX * 1.5 * inv;
+  const cy = lerp(CAM_START.y, CAM_END.y, landness) - mouseY * .5 * inv;
+  const cz = lerp(CAM_START.z, CAM_END.z, landness);
   camera.position.x += (cx - camera.position.x) * .06;
   camera.position.y += (cy - camera.position.y) * .06;
   camera.position.z += (cz - camera.position.z) * .06;
 
   lookTarget.set(
-    lerp(CAM_START.lx, camTo.lx, landness),
-    lerp(CAM_START.ly, camTo.ly, landness),
-    lerp(CAM_START.lz, camTo.lz, landness)
+    lerp(CAM_START.lx, CAM_END.lx, landness),
+    lerp(CAM_START.ly, CAM_END.ly, landness),
+    lerp(CAM_START.lz, CAM_END.lz, landness)
   );
   camera.lookAt(lookTarget);
 
@@ -450,19 +445,17 @@ function animate() {
     return;
   }
 
-  /* Color transition: About (ocean) → Education (field) → Projects (portal space) */
-  const projIntensity = projectsMix;
-  const c1 = oceanColor.clone().lerp(fieldColor, educationMix).lerp(projAccentB, projIntensity);
-  const c2 = oceanColor2.clone().lerp(fieldColor2, educationMix).lerp(projAccentA, projIntensity);
+  /* Color transition: About (ocean) → Education (field) */
+  const c1 = oceanColor.clone().lerp(fieldColor, educationMix);
+  const c2 = oceanColor2.clone().lerp(fieldColor2, educationMix);
   waveMat1.color.copy(c1);
   waveMat2.color.copy(c2);
   waveMat1Solid.color.copy(c1);
   waveMat2Solid.color.copy(c2);
-  const waveScale = 1 - projIntensity * 0.92;
-  waveMat1.opacity = (isLight ? lerp(.18, .25, landness) : lerp(.06, .09, landness)) * waveScale;
-  waveMat2.opacity = (isLight ? lerp(.12, .18, landness) : lerp(.03, .06, landness)) * waveScale;
-  waveMat1Solid.opacity = (isLight ? lerp(.6, .7, landness) : lerp(.5, .6, landness)) * waveScale;
-  waveMat2Solid.opacity = (isLight ? lerp(.5, .6, landness) : lerp(.4, .5, landness)) * waveScale;
+  waveMat1.opacity = isLight ? lerp(.18, .25, landness) : lerp(.06, .09, landness);
+  waveMat2.opacity = isLight ? lerp(.12, .18, landness) : lerp(.03, .06, landness);
+  waveMat1Solid.opacity = isLight ? lerp(.6, .7, landness) : lerp(.5, .6, landness);
+  waveMat2Solid.opacity = isLight ? lerp(.5, .6, landness) : lerp(.4, .5, landness);
 
   /* Beach sand: visible in contact section only, not on home (about) page */
   sandPlane.visible = inv > 0.1 && contactProgress > 0.2;
@@ -489,7 +482,7 @@ function animate() {
 
   /* Road ONLY in education — completely hidden otherwise */
   const isSolidMode = document.documentElement.getAttribute('data-viewmode') === 'solid';
-  const roadAlpha = clamp((educationFocus - 0.25) / 0.55, 0, 1);
+  const roadAlpha = clamp((landness - 0.25) / 0.55, 0, 1);
   const roadVisible = roadAlpha > 0.001;
   road.visible = roadVisible;
   roadEdgeL.visible = roadVisible;
@@ -503,7 +496,7 @@ function animate() {
   }
 
   /* Projects “airport lounge”: projects-only environment */
-  projectsGroup.visible = projIntensity > 0.02 && !inContactSection;
+  projectsGroup.visible = false;
   if (projectsGroup.visible) {
     const baseOp = (isLight ? 0.35 : 0.55) * projIntensity;
 
@@ -557,7 +550,7 @@ function animate() {
   shapes.forEach(s => {
     if (isSolidMode && s.material !== s.userData.matSolid) s.material = s.userData.matSolid;
     else if (!isSolidMode && s.material !== s.userData.matWire) s.material = s.userData.matWire;
-    s.visible = !inContactSection && projIntensity < 0.15;
+    s.visible = !inContactSection;
     if (s.visible) {
       s.rotation.x += s.userData.rotSpeed.x;
       s.rotation.y += s.userData.rotSpeed.y;
@@ -568,7 +561,7 @@ function animate() {
     }
   });
   edgeShapes.forEach(s => {
-    s.visible = !isSolidMode && !inContactSection && projIntensity < 0.15;
+    s.visible = !isSolidMode && !inContactSection;
     if (s.visible) {
       s.rotation.x += s.userData.rotSpeed.x;
       s.rotation.y += s.userData.rotSpeed.y;
@@ -614,7 +607,7 @@ function animate() {
   }
   if (!isLight) {
     projFogTmp.copy(showStars ? projFogStarsDark : projFogDefaultDark);
-    if (!showStars && projIntensity > 0.001) projFogTmp.lerp(projFogDark, projIntensity * 0.65);
+    
     scene.fog.color.copy(projFogTmp);
   }
 
