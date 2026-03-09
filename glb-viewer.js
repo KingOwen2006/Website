@@ -179,7 +179,171 @@
     return { getMode: () => currentMode, getEnvEnabled: () => envEnabled };
   }
 
-  const EDGES_THRESHOLD = 1;  // Degrees: only show edges where face angle exceeds this (Blender-style quads)
+  const EDGES_THRESHOLD = 1; // Degrees: only show hard creases between faces
+  const WELD_EPSILON_RATIO = 1e-5;
+  const QUAD_FOLD_LIMIT = 75;
+
+  function edgeKey(a, b) {
+    return a < b ? a + ":" + b : b + ":" + a;
+  }
+
+  function getTriangleEdgeLengths(tri, points) {
+    const a = points[tri.verts[0]];
+    const b = points[tri.verts[1]];
+    const c = points[tri.verts[2]];
+    return [
+      a.distanceTo(b),
+      b.distanceTo(c),
+      c.distanceTo(a)
+    ];
+  }
+
+  function getOppositeVertex(tri, a, b) {
+    for (let i = 0; i < tri.verts.length; i++) {
+      const v = tri.verts[i];
+      if (v !== a && v !== b) return v;
+    }
+    return null;
+  }
+
+  function isLikelyQuadDiagonal(edge, triA, triB, points, edges) {
+    const oppA = getOppositeVertex(triA, edge.a, edge.b);
+    const oppB = getOppositeVertex(triB, edge.a, edge.b);
+    if (oppA === null || oppB === null || oppA === oppB) return false;
+    if (edges.has(edgeKey(oppA, oppB))) return false;
+
+    const foldAngle = THREE.MathUtils.radToDeg(triA.normal.angleTo(triB.normal));
+    if (foldAngle > QUAD_FOLD_LIMIT) return false;
+
+    const sharedLen = edge.length;
+    const triALens = getTriangleEdgeLengths(triA, points);
+    const triBLens = getTriangleEdgeLengths(triB, points);
+    const triALongest = sharedLen >= Math.max(triALens[0], triALens[1], triALens[2]) * 0.98;
+    const triBLongest = sharedLen >= Math.max(triBLens[0], triBLens[1], triBLens[2]) * 0.98;
+    if (!triALongest && !triBLongest) return false;
+
+    const pa = points[edge.a];
+    const pb = points[edge.b];
+    const pc = points[oppA];
+    const pd = points[oppB];
+    const boundaryLens = [
+      pa.distanceTo(pc),
+      pc.distanceTo(pb),
+      pb.distanceTo(pd),
+      pd.distanceTo(pa)
+    ];
+    const avgBoundary = boundaryLens.reduce((sum, len) => sum + len, 0) / boundaryLens.length;
+
+    return sharedLen >= avgBoundary * 0.98;
+  }
+
+  function buildQuadWireframeGeometry(geo) {
+    const posAttr = geo && geo.attributes && geo.attributes.position;
+    if (!posAttr || posAttr.count < 3) return null;
+
+    const bounds = new THREE.Box3().setFromBufferAttribute(posAttr);
+    const size = bounds.getSize(new THREE.Vector3());
+    const maxDim = Math.max(size.x, size.y, size.z, 1);
+    const epsilon = Math.max(maxDim * WELD_EPSILON_RATIO, 1e-6);
+
+    const points = [];
+    const pointMap = new Map();
+    const remap = new Array(posAttr.count);
+
+    for (let i = 0; i < posAttr.count; i++) {
+      const x = posAttr.getX(i);
+      const y = posAttr.getY(i);
+      const z = posAttr.getZ(i);
+      const key = [
+        Math.round(x / epsilon),
+        Math.round(y / epsilon),
+        Math.round(z / epsilon)
+      ].join(",");
+
+      if (!pointMap.has(key)) {
+        pointMap.set(key, points.length);
+        points.push(new THREE.Vector3(x, y, z));
+      }
+      remap[i] = pointMap.get(key);
+    }
+
+    const triangles = [];
+    const edges = new Map();
+    const ab = new THREE.Vector3();
+    const ac = new THREE.Vector3();
+    const normal = new THREE.Vector3();
+
+    function addEdge(a, b, triIndex) {
+      const key = edgeKey(a, b);
+      let edge = edges.get(key);
+      if (!edge) {
+        edge = { a: Math.min(a, b), b: Math.max(a, b), tris: [], length: points[a].distanceTo(points[b]) };
+        edges.set(key, edge);
+      }
+      edge.tris.push(triIndex);
+    }
+
+    function addTriangle(a, b, c) {
+      const wa = remap[a];
+      const wb = remap[b];
+      const wc = remap[c];
+      if (wa === wb || wb === wc || wc === wa) return;
+
+      ab.subVectors(points[wb], points[wa]);
+      ac.subVectors(points[wc], points[wa]);
+      normal.crossVectors(ab, ac);
+      if (normal.lengthSq() <= 1e-12) return;
+
+      const triIndex = triangles.length;
+      triangles.push({
+        verts: [wa, wb, wc],
+        normal: normal.clone().normalize()
+      });
+
+      addEdge(wa, wb, triIndex);
+      addEdge(wb, wc, triIndex);
+      addEdge(wc, wa, triIndex);
+    }
+
+    if (geo.index && geo.index.count >= 3) {
+      const idx = geo.index.array;
+      for (let i = 0; i < idx.length; i += 3) addTriangle(idx[i], idx[i + 1], idx[i + 2]);
+    } else {
+      for (let i = 0; i < posAttr.count; i += 3) addTriangle(i, i + 1, i + 2);
+    }
+
+    if (!edges.size) return null;
+
+    const linePositions = [];
+    edges.forEach((edge) => {
+      const triRefs = edge.tris;
+      let shouldDraw = triRefs.length !== 2;
+
+      if (!shouldDraw) {
+        const triA = triangles[triRefs[0]];
+        const triB = triangles[triRefs[1]];
+        if (!isLikelyQuadDiagonal(edge, triA, triB, points, edges)) {
+          const angle = THREE.MathUtils.radToDeg(triA.normal.angleTo(triB.normal));
+          shouldDraw = angle >= EDGES_THRESHOLD;
+        }
+      }
+
+      if (!shouldDraw) return;
+
+      const start = points[edge.a];
+      const end = points[edge.b];
+      linePositions.push(
+        start.x, start.y, start.z,
+        end.x, end.y, end.z
+      );
+    });
+
+    if (!linePositions.length) return null;
+
+    const lineGeo = new THREE.BufferGeometry();
+    lineGeo.setAttribute("position", new THREE.Float32BufferAttribute(linePositions, 3));
+    return lineGeo;
+  }
 
   function applyMode(model, mode) {
     model.traverse((obj) => {
@@ -193,7 +357,10 @@
       }
 
       if (mode === MODES.wireframe) {
-        const edgesGeo = new THREE.EdgesGeometry(geo, EDGES_THRESHOLD);
+        const edgesGeo = geo.userData.quadWireframeGeometry
+          || buildQuadWireframeGeometry(geo)
+          || new THREE.EdgesGeometry(geo, EDGES_THRESHOLD);
+        geo.userData.quadWireframeGeometry = edgesGeo;
         const lineMat = new THREE.LineBasicMaterial({
           color: 0x64ffda,
           transparent: true,
