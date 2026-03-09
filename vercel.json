@@ -1,5 +1,3 @@
 {
-  "rewrites": [
-    { "source": "/post/:path*", "destination": "/post.html" }
-  ]
+  "framework": "nextjs"
 }
