@@ -3,24 +3,87 @@
 import { useEffect, useRef } from "react";
 
 const EMBED_REPLACEMENTS = {
-  "Interactive-Ship-Here": { type: "model", src: "/Models/Unit3ShipDone.glb", linkText: "Download" },
-  "Unit1-moodboard1-here": { type: "figma", src: "https://embed.figma.com/board/F0BfcSQpK4EtYVEtlb9lwV/Mood-Board?node-id=0-1&embed-host=share", linkText: "Open Mood Board in Figma" },
-  "Unit1-moodboard2-here": { type: "figma", src: "https://embed.figma.com/board/nj3rvRhnhGHPoojzJFonxh/Cannon-Board?embed-host=share", linkText: "Open Cannon Board in Figma" },
-  "Unit1-form-here": { type: "embed", src: "https://forms.cloud.microsoft.com/Pages/ResponsePage.aspx?id=0JsvSSEvbkyhotOQXlsYc-uhBZiIRqdDnRXC2GOFpZpUOFRVVUhTMUswUzBEWTBVTjQzQzY5NVJWWS4u&embed=true", linkText: "Open Form" },
-  "Unit1-formANS-here": { type: "embed", src: "https://forms.cloud.microsoft.com/Pages/AnalysisPage.aspx?AnalyzerToken=GWhIwVOBfSGiYbBrbwU8McqYnS87Sl6e&id=0JsvSSEvbkyhotOQXlsYc-uhBZiIRqdDnRXC2GOFpZpUOFRVVUhTMUswUzBEWTBVTjQzQzY5NVJWWS4u", linkText: "Open Form Analysis" },
-  "Unit2-form-here": { type: "embed", src: "https://forms.cloud.microsoft.com/Pages/ResponsePage.aspx?id=0JsvSSEvbkyhotOQXlsYc-uhBZiIRqdDnRXC2GOFpZpUNFVHSVU4VzRCMlVNTTExOUFONTNYRjBJMC4u&embed=true", linkText: "Open Form" },
-  "Unit2-formANS-here": { type: "embed", src: "https://forms.cloud.microsoft.com/Pages/AnalysisPage.aspx?AnalyzerToken=NbUyeN4dPXxMzyc26vZW5IeiKhlXnoAO&id=0JsvSSEvbkyhotOQXlsYc-uhBZiIRqdDnRXC2GOFpZpUNFVHSVU4VzRCMlVNTTExOUFONTNYRjBJMC4u", linkText: "Open Form Analysis" },
-  "Unit4-moodboard-here": { type: "figma", src: "https://embed.figma.com/board/vC87CfHAXm2Hl2MSUYLsQa/Twine-Mood-board?node-id=0-1&embed-host=share", linkText: "Open Twine Mood Board in Figma" },
-  "Unit4-form-here": { type: "embed", src: "https://forms.cloud.microsoft.com/Pages/ResponsePage.aspx?id=0JsvSSEvbkyhotOQXlsYc-uhBZiIRqdDnRXC2GOFpZpUN09ZNUZRVTNZODZJSlJBTDA0QThDREtIRS4u&embed=true", linkText: "Open Form" },
-  "Unit4-formANS-here": { type: "embed", src: "https://forms.cloud.microsoft.com/Pages/AnalysisPage.aspx?AnalyzerToken=IqfQOSxrfkVAFynsgvV5N4Dns5EQYF1f&id=0JsvSSEvbkyhotOQXlsYc-uhBZiIRqdDnRXC2GOFpZpUN09ZNUZRVTNZODZJSlJBTDA0QThDREtIRS4u", linkText: "Open Form Analysis" },
+  "Interactive-Ship-Here": {
+    type: "model",
+    src: "/Models/Unit3ShipDone.glb",
+    linkText: "Download",
+  },
+  "Unit1-moodboard1-here": {
+    type: "figma",
+    src: "https://embed.figma.com/board/F0BfcSQpK4EtYVEtlb9lwV/Mood-Board?node-id=0-1&embed-host=share",
+    linkText: "Open Mood Board in Figma",
+  },
+  "Unit1-moodboard2-here": {
+    type: "figma",
+    src: "https://embed.figma.com/board/nj3rvRhnhGHPoojzJFonxh/Cannon-Board?embed-host=share",
+    linkText: "Open Cannon Board in Figma",
+  },
+  "Unit1-form-here": {
+    type: "embed",
+    src: "https://forms.cloud.microsoft.com/Pages/ResponsePage.aspx?id=0JsvSSEvbkyhotOQXlsYc-uhBZiIRqdDnRXC2GOFpZpUOFRVVUhTMUswUzBEWTBVTjQzQzY5NVJWWS4u&embed=true",
+    linkText: "Open Form",
+  },
+  "Unit1-formANS-here": {
+    type: "embed",
+    src: "https://forms.cloud.microsoft.com/Pages/AnalysisPage.aspx?AnalyzerToken=GWhIwVOBfSGiYbBrbwU8McqYnS87Sl6e&id=0JsvSSEvbkyhotOQXlsYc-uhBZiIRqdDnRXC2GOFpZpUOFRVVUhTMUswUzBEWTBVTjQzQzY5NVJWWS4u",
+    linkText: "Open Form Analysis",
+  },
+  "Unit2-form-here": {
+    type: "embed",
+    src: "https://forms.cloud.microsoft.com/Pages/ResponsePage.aspx?id=0JsvSSEvbkyhotOQXlsYc-uhBZiIRqdDnRXC2GOFpZpUNFVHSVU4VzRCMlVNTTExOUFONTNYRjBJMC4u&embed=true",
+    linkText: "Open Form",
+  },
+  "Unit2-formANS-here": {
+    type: "embed",
+    src: "https://forms.cloud.microsoft.com/Pages/AnalysisPage.aspx?AnalyzerToken=NbUyeN4dPXxMzyc26vZW5IeiKhlXnoAO&id=0JsvSSEvbkyhotOQXlsYc-uhBZiIRqdDnRXC2GOFpZpUNFVHSVU4VzRCMlVNTTExOUFONTNYRjBJMC4u",
+    linkText: "Open Form Analysis",
+  },
+  "Unit4-moodboard-here": {
+    type: "figma",
+    src: "https://embed.figma.com/board/vC87CfHAXm2Hl2MSUYLsQa/Twine-Mood-board?node-id=0-1&embed-host=share",
+    linkText: "Open Twine Mood Board in Figma",
+  },
+  "Unit4-form-here": {
+    type: "embed",
+    src: "https://forms.cloud.microsoft.com/Pages/ResponsePage.aspx?id=0JsvSSEvbkyhotOQXlsYc-uhBZiIRqdDnRXC2GOFpZpUN09ZNUZRVTNZODZJSlJBTDA0QThDREtIRS4u&embed=true",
+    linkText: "Open Form",
+  },
+  "Unit4-formANS-here": {
+    type: "embed",
+    src: "https://forms.cloud.microsoft.com/Pages/AnalysisPage.aspx?AnalyzerToken=IqfQOSxrfkVAFynsgvV5N4Dns5EQYF1f&id=0JsvSSEvbkyhotOQXlsYc-uhBZiIRqdDnRXC2GOFpZpUN09ZNUZRVTNZODZJSlJBTDA0QThDREtIRS4u",
+    linkText: "Open Form Analysis",
+  },
+
+  "Unit5-Audio-WordDoc": {
+    type: "embed",
+    src: "https://docs.google.com/document/d/e/2PACX-1vRZR3r5IoEGDi0okO7E-GHVfb9yPtadU3H8v6urWH_bvpmze1qFmm_OZL_63jmjGfiG7ML-ahpuoSPC/pub?embedded=true",
+    linkText: "Open Google Doc",
+  },
+
+  "[Insert Name Here] Ep1 FINAL": {
+    type: "audio",
+    src: "/mp3/[Insert Name Here] Ep1 FINAL.mp3",
+    linkText: "Listen / Download",
+  },
 };
 
 function embedBlock(src, linkText) {
-  const figmaUrl = src.replace("embed.figma.com", "www.figma.com").split("?")[0];
-  const href = src.includes("figma.com") ? figmaUrl : src.replace("&embed=true", "");
+  const figmaUrl = src
+    .replace("embed.figma.com", "www.figma.com")
+    .split("?")[0];
+  const href = src.includes("figma.com")
+    ? figmaUrl
+    : src.replace("&embed=true", "");
   return `<div class="figma-wrapper">
     <iframe src="${src}"></iframe>
     <a href="${href}" target="_blank" rel="noopener" class="embed-mobile-link">${linkText}</a>
+  </div>`;
+}
+
+function audioEmbedBlock(src, linkText) {
+  return `<div class="figma-wrapper" data-ko-embed="audio">
+    <audio controls preload="metadata" src="${src}" style="width: 100%;"></audio>
+    <a href="${src}" target="_blank" rel="noopener" download class="embed-mobile-link">${linkText}</a>
   </div>`;
 }
 
@@ -37,6 +100,8 @@ function replaceEmbeds(content) {
   for (const [key, val] of Object.entries(EMBED_REPLACEMENTS)) {
     if (val.type === "model") {
       content = content.replaceAll(key, modelEmbedBlock(val.src, val.linkText));
+    } else if (val.type === "audio") {
+      content = content.replaceAll(key, audioEmbedBlock(val.src, val.linkText));
     } else {
       content = content.replaceAll(key, embedBlock(val.src, val.linkText));
     }
@@ -48,8 +113,14 @@ function getWordCount(html) {
   if (typeof document === "undefined") return 0;
   const temp = document.createElement("div");
   temp.innerHTML = html;
-  temp.querySelectorAll("iframe, img, video, audio, figure, script, style, .embed-mobile-link").forEach((el) => el.remove());
-  const refs = [...temp.querySelectorAll("h1, h2, h3")].find((h) => h.textContent.trim().toLowerCase() === "references");
+  temp
+    .querySelectorAll(
+      "iframe, img, video, audio, figure, script, style, .embed-mobile-link",
+    )
+    .forEach((el) => el.remove());
+  const refs = [...temp.querySelectorAll("h1, h2, h3")].find(
+    (h) => h.textContent.trim().toLowerCase() === "references",
+  );
   if (refs) {
     let node = refs;
     while (node) {
@@ -62,59 +133,64 @@ function getWordCount(html) {
 }
 
 function enhanceImageCompare(scope) {
-  scope.querySelectorAll("figure.wp-block-jetpack-image-compare").forEach((figure, index) => {
-    const juxtapose = figure.querySelector(".juxtapose");
-    const imgs = (juxtapose || figure).querySelectorAll("img");
-    if (imgs.length < 2) return;
+  scope
+    .querySelectorAll("figure.wp-block-jetpack-image-compare")
+    .forEach((figure, index) => {
+      const juxtapose = figure.querySelector(".juxtapose");
+      const imgs = (juxtapose || figure).querySelectorAll("img");
+      if (imgs.length < 2) return;
 
-    const before = imgs[0].cloneNode(true);
-    const after = imgs[1].cloneNode(true);
-    before.removeAttribute("id");
-    after.removeAttribute("id");
-    before.draggable = false;
-    after.draggable = false;
+      const before = imgs[0].cloneNode(true);
+      const after = imgs[1].cloneNode(true);
+      before.removeAttribute("id");
+      after.removeAttribute("id");
+      before.draggable = false;
+      after.draggable = false;
 
-    const caption = figure.querySelector("figcaption");
-    const wrapper = document.createElement("figure");
-    wrapper.className = "ko-compare";
-    wrapper.style.setProperty("--pos", "50%");
-    wrapper.dataset.compareIndex = String(index);
+      const caption = figure.querySelector("figcaption");
+      const wrapper = document.createElement("figure");
+      wrapper.className = "ko-compare";
+      wrapper.style.setProperty("--pos", "50%");
+      wrapper.dataset.compareIndex = String(index);
 
-    const viewport = document.createElement("div");
-    viewport.className = "ko-compare__viewport";
-    before.classList.add("ko-compare__img", "ko-compare__img--before");
-    after.classList.add("ko-compare__img", "ko-compare__img--after");
+      const viewport = document.createElement("div");
+      viewport.className = "ko-compare__viewport";
+      before.classList.add("ko-compare__img", "ko-compare__img--before");
+      after.classList.add("ko-compare__img", "ko-compare__img--after");
 
-    const handle = document.createElement("div");
-    handle.className = "ko-compare__handle";
-    handle.setAttribute("aria-hidden", "true");
+      const handle = document.createElement("div");
+      handle.className = "ko-compare__handle";
+      handle.setAttribute("aria-hidden", "true");
 
-    const sync = (value) => {
-      wrapper.style.setProperty("--pos", `${Math.max(0, Math.min(100, Number(value)))}%`);
-    };
-    const updateFromPointer = (clientX) => {
-      const rect = viewport.getBoundingClientRect();
-      sync(((clientX - rect.left) / rect.width) * 100);
-    };
-    viewport.addEventListener("pointerdown", (e) => {
-      if (e.target?.closest?.("a")) return;
-      updateFromPointer(e.clientX);
-      const onMove = (ev) => updateFromPointer(ev.clientX);
-      const onUp = () => {
-        window.removeEventListener("pointermove", onMove);
-        window.removeEventListener("pointerup", onUp);
+      const sync = (value) => {
+        wrapper.style.setProperty(
+          "--pos",
+          `${Math.max(0, Math.min(100, Number(value)))}%`,
+        );
       };
-      window.addEventListener("pointermove", onMove);
-      window.addEventListener("pointerup", onUp);
-    });
+      const updateFromPointer = (clientX) => {
+        const rect = viewport.getBoundingClientRect();
+        sync(((clientX - rect.left) / rect.width) * 100);
+      };
+      viewport.addEventListener("pointerdown", (e) => {
+        if (e.target?.closest?.("a")) return;
+        updateFromPointer(e.clientX);
+        const onMove = (ev) => updateFromPointer(ev.clientX);
+        const onUp = () => {
+          window.removeEventListener("pointermove", onMove);
+          window.removeEventListener("pointerup", onUp);
+        };
+        window.addEventListener("pointermove", onMove);
+        window.addEventListener("pointerup", onUp);
+      });
 
-    viewport.appendChild(before);
-    viewport.appendChild(after);
-    viewport.appendChild(handle);
-    wrapper.appendChild(viewport);
-    if (caption) wrapper.appendChild(caption);
-    figure.replaceWith(wrapper);
-  });
+      viewport.appendChild(before);
+      viewport.appendChild(after);
+      viewport.appendChild(handle);
+      wrapper.appendChild(viewport);
+      if (caption) wrapper.appendChild(caption);
+      figure.replaceWith(wrapper);
+    });
 }
 
 export default function PostContent({ post }) {
