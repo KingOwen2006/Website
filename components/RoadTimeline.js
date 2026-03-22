@@ -35,10 +35,21 @@ export default function RoadTimeline({ posts }) {
   if (!posts || posts.length === 0) {
     return (
       <div className="road-timeline" id="posts">
-        <div className="road-loader">
-          <div className="spinner" />
-          No posts found
+        <div className="road-timeline__ghost">
+          {[0, 1, 2].map((k) => (
+            <div key={k} className="road-post road-post--ghost visible">
+              <div className="road-card road-card--ghost">
+                <div className="road-card__body">
+                  <div className="road-card__ghost-title" />
+                  <div className="road-card__ghost-line" />
+                  <div className="road-card__ghost-line road-card__ghost-line--short" />
+                  <div className="road-card__ghost-more" />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
+        <p className="road-timeline__empty">No posts found</p>
       </div>
     );
   }

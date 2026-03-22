@@ -2736,3 +2736,332 @@ a.guild-chip:hover {
         grid-template-columns: 1fr;
     }
 }
+
+/* Education post: section cards & sub-pages */
+.edu-post-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.25rem;
+    width: 100%;
+}
+
+a.edu-post-card {
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    transition:
+        border-color 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+        transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+        box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+a.edu-post-card:hover {
+    border-color: rgba(100, 255, 218, 0.25);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.edu-post-card__excerpt {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 0.8rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    flex: 1;
+}
+
+a.edu-post-card .road-card__more {
+    margin-top: auto;
+}
+
+.edu-post-footer {
+    margin-top: 2.5rem;
+}
+
+.edu-post-footer__line {
+    margin: 0 0 0.75rem;
+    font-size: 0.9rem;
+    line-height: 1.85;
+    color: rgba(226, 232, 240, 0.7);
+}
+
+.edu-post-footer__gt {
+    margin: 0.5rem 0 0.75rem;
+    font-size: 0.9rem;
+    line-height: 1.85;
+    color: rgba(226, 232, 240, 0.7);
+}
+
+[data-theme="light"] .edu-post-footer__line,
+[data-theme="light"] .edu-post-footer__gt {
+    color: #2a3a4a;
+}
+
+.edu-post-section-heading {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+}
+
+.edu-section-nav {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2rem;
+    max-width: 1250px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.edu-section-nav__link--prev {
+    justify-self: start;
+}
+
+.edu-section-nav__center {
+    justify-self: center;
+    text-align: center;
+}
+
+.edu-section-nav__link--next {
+    justify-self: end;
+}
+
+.edu-section-nav__spacer {
+    min-width: 4rem;
+}
+
+@keyframes edu-shimmer {
+    0% {
+        background-position: -120% 0;
+    }
+    100% {
+        background-position: 120% 0;
+    }
+}
+
+.edu-post-skeleton-title {
+    height: 40px;
+    width: min(40%, 280px);
+    border-radius: 12px;
+    margin-bottom: 14px;
+    background: linear-gradient(
+        90deg,
+        rgba(100, 255, 218, 0.06) 0%,
+        rgba(100, 255, 218, 0.14) 50%,
+        rgba(100, 255, 218, 0.06) 100%
+    );
+    background-size: 200% 100%;
+    animation: edu-shimmer 1.6s ease-in-out infinite;
+}
+
+.edu-post-skeleton-meta {
+    height: 14px;
+    width: 20%;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    background: linear-gradient(
+        90deg,
+        rgba(100, 255, 218, 0.06) 0%,
+        rgba(100, 255, 218, 0.12) 50%,
+        rgba(100, 255, 218, 0.06) 100%
+    );
+    background-size: 200% 100%;
+    animation: edu-shimmer 1.6s ease-in-out infinite;
+}
+
+.edu-post-card--ghost {
+    cursor: default;
+}
+
+.edu-post-card--ghost:hover {
+    transform: none;
+    border-color: var(--glass-border);
+    box-shadow: none;
+}
+
+.edu-post-card__ghost-title,
+.edu-post-card__ghost-line,
+.edu-post-card__ghost-more,
+.edu-post-card__ghost-nav {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    background: linear-gradient(
+        90deg,
+        rgba(100, 255, 218, 0.06) 0%,
+        rgba(100, 255, 218, 0.12) 50%,
+        rgba(100, 255, 218, 0.06) 100%
+    );
+    background-size: 200% 100%;
+    animation: edu-shimmer 1.6s ease-in-out infinite;
+}
+
+.edu-post-card__ghost-title {
+    height: 18px;
+    width: 72%;
+    margin-bottom: 1.1rem;
+    border-radius: 10px;
+}
+
+.edu-post-card__ghost-title--lg {
+    height: 28px;
+    width: 78%;
+    margin-bottom: 1.25rem;
+}
+
+.edu-post-card__ghost-line {
+    height: 12px;
+    width: 100%;
+    margin-bottom: 12px;
+}
+
+.edu-post-card__ghost-line--short {
+    width: 62%;
+}
+
+.edu-post-card__ghost-line--med {
+    width: 84%;
+}
+
+.edu-post-card__ghost-more {
+    height: 12px;
+    width: 100px;
+    margin-top: 0.5rem;
+    align-self: flex-start;
+}
+
+.edu-section-nav--ghost {
+    margin-top: 2rem;
+}
+
+.edu-post-card__ghost-nav {
+    height: 16px;
+    width: 100%;
+}
+
+.edu-post-card__ghost-nav--narrow {
+    width: 80px;
+    margin: 0 auto;
+}
+
+.edu-post-section--ghost .edu-post-card__ghost-line:last-child {
+    margin-bottom: 0;
+}
+
+[data-theme="light"] .edu-post-skeleton-title,
+[data-theme="light"] .edu-post-skeleton-meta,
+[data-theme="light"] .edu-post-card__ghost-title,
+[data-theme="light"] .edu-post-card__ghost-line,
+[data-theme="light"] .edu-post-card__ghost-more,
+[data-theme="light"] .edu-post-card__ghost-nav {
+    background: linear-gradient(
+        90deg,
+        rgba(0, 50, 100, 0.06) 0%,
+        rgba(0, 50, 100, 0.12) 50%,
+        rgba(0, 50, 100, 0.06) 100%
+    );
+    background-size: 200% 100%;
+}
+
+.road-timeline__ghost {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    max-width: 560px;
+    margin: 0 auto 1.5rem;
+}
+
+.road-post--ghost {
+    margin-bottom: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    flex-direction: row !important;
+}
+
+.road-post--ghost:nth-child(odd),
+.road-post--ghost:nth-child(even) {
+    flex-direction: row !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.road-post--ghost::after {
+    display: none !important;
+}
+
+.road-card--ghost {
+    pointer-events: none !important;
+    cursor: default !important;
+    position: relative;
+    min-height: 120px;
+}
+
+.road-card--ghost:hover {
+    transform: none !important;
+    border-color: var(--glass-border) !important;
+    box-shadow: none !important;
+}
+
+.road-card__ghost-title,
+.road-card__ghost-line,
+.road-card__ghost-more {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    background: linear-gradient(
+        90deg,
+        rgba(100, 255, 218, 0.06) 0%,
+        rgba(100, 255, 218, 0.12) 50%,
+        rgba(100, 255, 218, 0.06) 100%
+    );
+    background-size: 200% 100%;
+    animation: edu-shimmer 1.6s ease-in-out infinite;
+}
+
+.road-card__ghost-title {
+    height: 16px;
+    width: 70%;
+    margin-bottom: 0.75rem;
+}
+
+.road-card__ghost-line {
+    height: 11px;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.road-card__ghost-line--short {
+    width: 58%;
+}
+
+.road-card__ghost-more {
+    height: 11px;
+    width: 88px;
+    margin-top: 0.35rem;
+}
+
+.road-timeline__empty {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+[data-theme="light"] .road-card__ghost-title,
+[data-theme="light"] .road-card__ghost-line,
+[data-theme="light"] .road-card__ghost-more {
+    background: linear-gradient(
+        90deg,
+        rgba(0, 50, 100, 0.06) 0%,
+        rgba(0, 50, 100, 0.12) 50%,
+        rgba(0, 50, 100, 0.06) 100%
+    );
+    background-size: 200% 100%;
+}
