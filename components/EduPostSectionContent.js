@@ -65,23 +65,20 @@ export default function EduPostSectionContent({
         {prev !== null ? (
           <Link
             href={`/post/${slug}/section/${prev}`}
-            className="back-link edu-section-nav__link edu-section-nav__link--prev"
+            className="edu-section-nav__link edu-section-nav__link--prev"
           >
             ← Back
           </Link>
         ) : (
           <span className="edu-section-nav__spacer" aria-hidden="true" />
         )}
-        <Link
-          href={`/post/${slug}`}
-          className="road-card__more edu-section-nav__center"
-        >
+        <Link href={`/post/${slug}`} className="edu-section-nav__center">
           All sections
         </Link>
         {next !== null ? (
           <Link
             href={`/post/${slug}/section/${next}`}
-            className="back-link edu-section-nav__link edu-section-nav__link--next"
+            className="edu-section-nav__link edu-section-nav__link--next"
           >
             Next →
           </Link>
