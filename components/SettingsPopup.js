@@ -3,7 +3,7 @@
 import { useSettings, ACCENT_SWATCHES } from "@/lib/settings-context";
 
 export default function SettingsPopup({ isOpen, onClose }) {
-  const { theme, accent, viewMode, setTheme, setAccent, setViewMode } =
+  const { theme, accent, viewMode, glassMode, setTheme, setAccent, setViewMode, setGlassMode } =
     useSettings();
 
   if (!isOpen) return null;
@@ -60,6 +60,24 @@ export default function SettingsPopup({ isOpen, onClose }) {
                 {val.charAt(0).toUpperCase() + val.slice(1)}
               </button>
             ))}
+          </div>
+        </div>
+
+        <div className="settings-group">
+          <label className="settings-label">Glass mode</label>
+          <div className="settings-options">
+            <button
+              className={`settings-option ${glassMode ? "active" : ""}`}
+              onClick={() => setGlassMode(true)}
+            >
+              On
+            </button>
+            <button
+              className={`settings-option ${!glassMode ? "active" : ""}`}
+              onClick={() => setGlassMode(false)}
+            >
+              Off
+            </button>
           </div>
         </div>
       </div>

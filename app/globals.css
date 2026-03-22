@@ -20,13 +20,18 @@ img {
     --text: #e2e8f0;
     --text-muted: #8899aa;
     --muted: #8899aa;
-    --glass: rgba(15, 25, 40, 0.55);
-    --glass-border: rgba(100, 200, 255, 0.1);
+    --glass: rgba(18, 28, 48, 0.95);
+    --glass-border: rgba(100, 200, 255, 0.12);
     --glass-blur: 24px;
     --panel: rgba(12, 18, 28, 0.85);
     --panel-soft: rgba(15, 25, 40, 0.4);
     --border: rgba(100, 200, 255, 0.08);
     --radius: 14px;
+}
+
+[data-theme="dark"][data-glassmode="true"] {
+    --glass: rgba(15, 25, 40, 0.55);
+    --glass-border: rgba(100, 200, 255, 0.1);
 }
 
 /* ========== LIGHT THEME ========== */
@@ -2801,15 +2806,16 @@ a.edu-post-card .road-card__more {
     color: rgba(226, 232, 240, 0.7);
 }
 
-.edu-post-footer__gt {
-    margin: 0.5rem 0 0.75rem;
-    font-size: 0.9rem;
-    line-height: 1.85;
-    color: rgba(226, 232, 240, 0.7);
+.edu-post-footer__line a {
+    color: inherit;
+    text-decoration: none;
 }
 
-[data-theme="light"] .edu-post-footer__line,
-[data-theme="light"] .edu-post-footer__gt {
+.edu-post-footer__line a:hover {
+    text-decoration: underline;
+}
+
+[data-theme="light"] .edu-post-footer__line {
     color: #2a3a4a;
 }
 

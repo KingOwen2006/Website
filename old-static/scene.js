@@ -1,5 +1,5 @@
 /* ============================================
-   THREE.JS — Beach POV → Ocean → Field + Road
+   THREE.JS — Field + Road
    ============================================ */
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x060b14, .012);
@@ -15,36 +15,26 @@ const CAM_END   = { x: 0, y: 45, z: 0.1, lx: 0, ly: 0, lz: 0 };
 camera.position.set(CAM_START.x, CAM_START.y, CAM_START.z);
 camera.lookAt(CAM_START.lx, CAM_START.ly, CAM_START.lz);
 
-const oceanColor = new THREE.Color(0x48b1ff);
 const fieldColor = new THREE.Color(0x1a6b3a);
-const oceanColor2 = new THREE.Color(0x64ffda);
 const fieldColor2 = new THREE.Color(0x2d8a4e);
 
-/* ---- Wave planes ---- */
+/* ---- Field planes (ground) ---- */
 const planeW = 120, segW = 90;
-const waveGeo1 = new THREE.PlaneGeometry(planeW, planeW, segW, segW);
-waveGeo1.rotateX(-Math.PI / 2);
-const waveMat1 = new THREE.MeshBasicMaterial({ color: oceanColor, wireframe: true, transparent: true, opacity: .06 });
-const waveMat1Solid = new THREE.MeshBasicMaterial({ color: oceanColor, wireframe: false, transparent: true, opacity: .5 });
-const wavePlane1 = new THREE.Mesh(waveGeo1, waveMat1);
-wavePlane1.position.y = -3;
-scene.add(wavePlane1);
+const fieldGeo1 = new THREE.PlaneGeometry(planeW, planeW, segW, segW);
+fieldGeo1.rotateX(-Math.PI / 2);
+const fieldMat1 = new THREE.MeshBasicMaterial({ color: fieldColor, wireframe: true, transparent: true, opacity: .09 });
+const fieldMat1Solid = new THREE.MeshBasicMaterial({ color: fieldColor, wireframe: false, transparent: true, opacity: .6 });
+const fieldPlane1 = new THREE.Mesh(fieldGeo1, fieldMat1);
+fieldPlane1.position.y = -3;
+scene.add(fieldPlane1);
 
-const waveGeo2 = new THREE.PlaneGeometry(planeW, planeW, segW, segW);
-waveGeo2.rotateX(-Math.PI / 2);
-const waveMat2 = new THREE.MeshBasicMaterial({ color: oceanColor2, wireframe: true, transparent: true, opacity: .03 });
-const waveMat2Solid = new THREE.MeshBasicMaterial({ color: oceanColor2, wireframe: false, transparent: true, opacity: .4 });
-const wavePlane2 = new THREE.Mesh(waveGeo2, waveMat2);
-wavePlane2.position.y = -3.8;
-scene.add(wavePlane2);
-
-/* ---- Beach / sand (foreground, ocean POV) ---- */
-const sandGeo = new THREE.PlaneGeometry(55, 28, 1, 1);
-sandGeo.rotateX(-Math.PI / 2);
-const sandMat = new THREE.MeshBasicMaterial({ color: 0xd4b896, transparent: true, opacity: 0 });
-const sandPlane = new THREE.Mesh(sandGeo, sandMat);
-sandPlane.position.set(0, -2.92, 16);
-scene.add(sandPlane);
+const fieldGeo2 = new THREE.PlaneGeometry(planeW, planeW, segW, segW);
+fieldGeo2.rotateX(-Math.PI / 2);
+const fieldMat2 = new THREE.MeshBasicMaterial({ color: fieldColor2, wireframe: true, transparent: true, opacity: .06 });
+const fieldMat2Solid = new THREE.MeshBasicMaterial({ color: fieldColor2, wireframe: false, transparent: true, opacity: .5 });
+const fieldPlane2 = new THREE.Mesh(fieldGeo2, fieldMat2);
+fieldPlane2.position.y = -3.8;
+scene.add(fieldPlane2);
 
 /* ---- Road strip (hidden initially) ---- */
 const roadGeo = new THREE.PlaneGeometry(6, 300, 1, 1);
@@ -125,22 +115,6 @@ const starMat = new THREE.PointsMaterial({ size: 0.15, vertexColors: true, trans
 const stars = new THREE.Points(starGeo, starMat);
 stars.visible = false;
 scene.add(stars);
-
-/* ---- Ocean foam plane (dark white, dark mode + solid only) ---- */
-const foamGeo = new THREE.PlaneGeometry(planeW, planeW, segW, segW);
-foamGeo.rotateX(-Math.PI / 2);
-const foamMat = new THREE.MeshBasicMaterial({ color: 0xb8b8b8, transparent: true, opacity: 0, wireframe: false, depthWrite: false });
-const foamPlane = new THREE.Mesh(foamGeo, foamMat);
-foamPlane.position.y = -2.85;
-scene.add(foamPlane);
-
-/* ---- Shore waves (wash on/off the sand, contact section only) ---- */
-const shoreWaveGeo = new THREE.PlaneGeometry(50, 5, 40, 4);
-shoreWaveGeo.rotateX(-Math.PI / 2);
-const shoreWaveMat = new THREE.MeshBasicMaterial({ color: 0x48b1ff, transparent: true, opacity: 0, depthWrite: false });
-const shoreWave = new THREE.Mesh(shoreWaveGeo, shoreWaveMat);
-shoreWave.position.set(0, -2.93, 10);
-scene.add(shoreWave);
 
 const edgeShapes = [];
 for (let i = 0; i < 6; i++) {
@@ -395,7 +369,7 @@ function animate() {
   const educationMix = landness;
   const projectsMix = 0;
 
-  /* Camera transition — About (ocean POV) → Education (top-down road) */
+  /* Camera transition — About → Education (top-down road) */
   const cx = lerp(CAM_START.x, CAM_END.x, landness) + mouseX * 1.5 * inv;
   const cy = lerp(CAM_START.y, CAM_END.y, landness) - mouseY * .5 * inv;
   const cz = lerp(CAM_START.z, CAM_END.z, landness);
@@ -410,28 +384,6 @@ function animate() {
   );
   camera.lookAt(lookTarget);
 
-  /* Wave amplitude fades with scroll; fade to flat at beach (z > 4) so ocean doesn't overlap sand */
-  const waveAmp = inv;
-  const BEACH_EDGE_Z = 0;
-  const BEACH_FADE_Z = 5;
-  const p1 = wavePlane1.geometry.attributes.position;
-  for (let i = 0; i < p1.count; i++) {
-    const x = p1.getX(i), z = p1.getZ(i);
-    const beachFade = z > BEACH_EDGE_Z ? Math.max(0, 1 - (z - BEACH_EDGE_Z) / (BEACH_FADE_Z - BEACH_EDGE_Z)) : 1;
-    const wave = (Math.sin(x * .12 + t) * Math.cos(z * .12 + t) * .7 + Math.sin(x * .06 - t * .4) * .4) * waveAmp * beachFade;
-    p1.setY(i, wave);
-  }
-  p1.needsUpdate = true;
-
-  const p2 = wavePlane2.geometry.attributes.position;
-  for (let i = 0; i < p2.count; i++) {
-    const x = p2.getX(i), z = p2.getZ(i);
-    const beachFade = z > BEACH_EDGE_Z ? Math.max(0, 1 - (z - BEACH_EDGE_Z) / (BEACH_FADE_Z - BEACH_EDGE_Z)) : 1;
-    const wave = (Math.sin(x * .1 + t * 1.1) * Math.cos(z * .1 + t * .7) * .5) * waveAmp * beachFade;
-    p2.setY(i, wave);
-  }
-  p2.needsUpdate = true;
-
   const isLight = (document.documentElement.getAttribute('data-theme') || 'dark') === 'light';
   const isNoneMode = document.documentElement.getAttribute('data-viewmode') === 'none';
 
@@ -445,40 +397,11 @@ function animate() {
     return;
   }
 
-  /* Color transition: About (ocean) → Education (field) */
-  const c1 = oceanColor.clone().lerp(fieldColor, educationMix);
-  const c2 = oceanColor2.clone().lerp(fieldColor2, educationMix);
-  waveMat1.color.copy(c1);
-  waveMat2.color.copy(c2);
-  waveMat1Solid.color.copy(c1);
-  waveMat2Solid.color.copy(c2);
-  waveMat1.opacity = isLight ? lerp(.18, .25, landness) : lerp(.06, .09, landness);
-  waveMat2.opacity = isLight ? lerp(.12, .18, landness) : lerp(.03, .06, landness);
-  waveMat1Solid.opacity = isLight ? lerp(.6, .7, landness) : lerp(.5, .6, landness);
-  waveMat2Solid.opacity = isLight ? lerp(.5, .6, landness) : lerp(.4, .5, landness);
-
-  /* Beach sand: visible in contact section only, not on home (about) page */
-  sandPlane.visible = inv > 0.1 && contactProgress > 0.2;
-  if (sandPlane.visible) {
-    sandMat.color.setHex(isLight ? 0xe8d5b8 : 0xd4b896);
-    sandMat.opacity = inv * (isLight ? 0.9 : 0.75);
-  }
-
-  /* Shore waves: wash on/off the sand at water's edge (contact section only) */
-  const showShoreWaves = inv > 0.1 && contactProgress > 0.2;
-  shoreWave.visible = showShoreWaves;
-  if (showShoreWaves) {
-    const washCycle = Math.sin(t * 0.4) * 0.5 + 0.5;
-    const swPos = shoreWave.geometry.attributes.position;
-    for (let i = 0; i < swPos.count; i++) {
-      const x = swPos.getX(i), z = swPos.getZ(i);
-      const wave = Math.sin(x * 0.5 + t * 1.2) * Math.cos(z * 0.8 + t * 0.9) * 0.25 * washCycle;
-      swPos.setY(i, wave);
-    }
-    swPos.needsUpdate = true;
-    shoreWaveMat.color.copy(c1);
-    shoreWaveMat.opacity = inv * (0.35 + washCycle * 0.25) * (isLight ? 0.6 : 0.5);
-  }
+  /* Field planes: opacity by scroll */
+  fieldMat1.opacity = isLight ? lerp(.18, .25, landness) : lerp(.09, .12, landness);
+  fieldMat2.opacity = isLight ? lerp(.12, .18, landness) : lerp(.06, .09, landness);
+  fieldMat1Solid.opacity = isLight ? lerp(.6, .7, landness) : lerp(.6, .65, landness);
+  fieldMat2Solid.opacity = isLight ? lerp(.5, .6, landness) : lerp(.5, .55, landness);
 
   /* Road ONLY in education — completely hidden otherwise */
   const isSolidMode = document.documentElement.getAttribute('data-viewmode') === 'solid';
@@ -577,21 +500,6 @@ function animate() {
   stars.visible = showStars;
   if (showStars) starMat.opacity = 0.85 * contactProgress;
 
-  /* Ocean foam: dark white, dark mode + solid + contact section only */
-  const showFoam = !isLight && isSolidMode && inContactSection && inv > 0.1;
-  foamPlane.visible = showFoam;
-  if (showFoam) {
-    const fp = foamPlane.geometry.attributes.position;
-    for (let i = 0; i < fp.count; i++) {
-      const x = fp.getX(i), z = fp.getZ(i);
-      const beachFade = z > BEACH_EDGE_Z ? Math.max(0, 1 - (z - BEACH_EDGE_Z) / (BEACH_FADE_Z - BEACH_EDGE_Z)) : 1;
-      const wave = (Math.sin(x * .12 + t) * Math.cos(z * .12 + t) * .7 + Math.sin(x * .06 - t * .4) * .4) * waveAmp * beachFade;
-      fp.setY(i, wave);
-    }
-    fp.needsUpdate = true;
-    foamMat.opacity = 0.25 * inv;
-  }
-
   /* In solid mode hide particles; in contact section hide particles too */
   pMat.opacity = isSolidMode ? 0 : (isLight ? .55 : .35);
   particles.visible = !isSolidMode && !inContactSection;
@@ -623,8 +531,8 @@ window.applySceneViewMode = function (mode) {
   }
   scene.children.forEach(c => { c.visible = true; });
   const isSolid = mode === "solid";
-  wavePlane1.material = isSolid ? waveMat1Solid : waveMat1;
-  wavePlane2.material = isSolid ? waveMat2Solid : waveMat2;
+  fieldPlane1.material = isSolid ? fieldMat1Solid : fieldMat1;
+  fieldPlane2.material = isSolid ? fieldMat2Solid : fieldMat2;
   shapes.forEach((s) => {
     s.material = isSolid ? s.userData.matSolid : s.userData.matWire;
   });

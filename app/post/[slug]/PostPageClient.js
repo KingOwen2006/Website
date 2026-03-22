@@ -6,6 +6,7 @@ import PostScene from "@/components/PostScene";
 import SettingsPopup from "@/components/SettingsPopup";
 import GlbViewerLoader from "@/components/GlbViewerLoader";
 import LightboxLoader from "@/components/LightboxLoader";
+import BackToTop from "@/components/BackToTop";
 
 export default function PostPageClient({ children }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -46,6 +47,8 @@ export default function PostPageClient({ children }) {
         isOpen={settingsOpen}
         onClose={() => setSettingsOpen(false)}
       />
+
+      <BackToTop forPosts />
 
       <div className="page-wrap">{children}</div>
     </>

@@ -129,33 +129,6 @@ function createTree() {
   return group;
 }
 
-function createFinishLine() {
-  const group = new THREE.Group();
-  const w = ROAD_HALF_W * 2;
-  const cols = 6;
-  const rows = 2;
-  const cw = w / cols;
-  const depth = 1.05;
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      const cell = new THREE.Mesh(
-        new THREE.PlaneGeometry(cw * 0.97, depth * 0.96),
-        new THREE.MeshBasicMaterial({
-          color: (r + c) % 2 === 0 ? 0xf5f5f5 : 0x141414,
-          side: THREE.DoubleSide,
-          transparent: true,
-          opacity: 1,
-        }),
-      );
-      cell.rotation.x = -Math.PI / 2;
-      cell.position.set(-w / 2 + cw * (c + 0.5), -2.915, 11.5 + r * depth);
-      group.add(cell);
-    }
-  }
-  group.visible = false;
-  return group;
-}
-
 function createStarField(count) {
   const geo = new THREE.BufferGeometry();
   const pos = new Float32Array(count * 3);
@@ -314,9 +287,6 @@ export default function HomeScene() {
       dashes.push(dash);
     }
     scene.add(dashGroup);
-
-    const finishLineGroup = createFinishLine();
-    scene.add(finishLineGroup);
 
     const cloudCount = 6 + Math.floor(Math.random() * 5);
     const clouds = [];
@@ -562,21 +532,11 @@ export default function HomeScene() {
         }
       }
 
-      finishLineGroup.visible =
-        atPageBottom && inContactSection && !isNoneMode;
-      finishLineGroup.traverse((o) => {
-        if (o.material) {
-          o.material.opacity = roadBaseOp;
-          o.material.transparent = isLight;
-        }
-      });
-
       sky.visible = !isNoneMode;
       sun.visible = isLight && !isNoneMode;
       moon.visible = !isLight && !isNoneMode;
       stars.visible = !isLight && !isNoneMode;
-      const showGrassBesideRoad =
-        !isNoneMode && (!inContactSection || atPageBottom);
+      const showGrassBesideRoad = !isNoneMode;
       grassLeft.visible = showGrassBesideRoad;
       grassRight.visible = showGrassBesideRoad;
       clouds.forEach((c) => {
@@ -600,7 +560,7 @@ export default function HomeScene() {
         : starBase * inv * hideInContact;
 
       const grassOp =
-        atPageBottom && inContactSection
+        contactProgress > 0 || atPageBottom
           ? roadBaseOp * (isLight ? 0.95 : 1)
           : (isLight ? 0.95 : 1) * inv * hideInContact;
       grassLeftMat.opacity = grassOp;
