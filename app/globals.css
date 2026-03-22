@@ -757,6 +757,12 @@ canvas#bg {
     align-items: stretch;
 }
 
+@media (min-width: 901px) {
+    .hero-section .col-right {
+        margin-left: clamp(4.5rem, 18vw, 14rem);
+    }
+}
+
 .avatar-wrap {
     position: relative;
     margin-bottom: 2rem;

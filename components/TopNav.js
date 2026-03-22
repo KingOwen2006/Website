@@ -35,7 +35,11 @@ export default function TopNav({ sections }) {
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
 
-  const hrefMap = { about: "about", education: "posts", contact: "contact-section" };
+  const hrefMap = {
+    about: "about",
+    education: "education",
+    contact: "contact-section",
+  };
 
   return (
     <>
