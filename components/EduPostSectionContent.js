@@ -11,8 +11,9 @@ import {
 
 export default function EduPostSectionContent({
   slug,
-  sectionIndex,
-  totalSections,
+  sectionSlug,
+  prevSlug,
+  nextSlug,
   titleHtml,
   bodyHtml,
 }) {
@@ -44,10 +45,6 @@ export default function EduPostSectionContent({
     if (window.initGlbViewers) window.initGlbViewers(scope);
   }, [htmlForCount, processedBody]);
 
-  const prev = sectionIndex > 0 ? sectionIndex - 1 : null;
-  const next =
-    sectionIndex < totalSections - 1 ? sectionIndex + 1 : null;
-
   return (
     <div id="post">
       <p className="word-count">Loading word count...</p>
@@ -62,9 +59,9 @@ export default function EduPostSectionContent({
         />
       </div>
       <nav className="edu-section-nav" aria-label="Section navigation">
-        {prev !== null ? (
+        {prevSlug ? (
           <Link
-            href={`/post/${slug}/section/${prev}`}
+            href={`/post/${slug}/${prevSlug}`}
             className="edu-section-nav__link edu-section-nav__link--prev"
           >
             ← Back
@@ -75,9 +72,9 @@ export default function EduPostSectionContent({
         <Link href={`/post/${slug}`} className="edu-section-nav__center">
           All sections
         </Link>
-        {next !== null ? (
+        {nextSlug ? (
           <Link
-            href={`/post/${slug}/section/${next}`}
+            href={`/post/${slug}/${nextSlug}`}
             className="edu-section-nav__link edu-section-nav__link--next"
           >
             Next →
@@ -86,6 +83,11 @@ export default function EduPostSectionContent({
           <span className="edu-section-nav__spacer" aria-hidden="true" />
         )}
       </nav>
+      <div className="edu-read-in-full-footer">
+        <Link href={`/post/${slug}/full`} className="edu-read-in-full-link">
+          Read in full
+        </Link>
+      </div>
     </div>
   );
 }

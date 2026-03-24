@@ -214,14 +214,20 @@ export default function HomeScene() {
 
     const grassLeftGeo = new THREE.PlaneGeometry(GRASS_HALF_W * 2, ROAD_LEN_Z, 1, 1);
     grassLeftGeo.rotateX(-Math.PI / 2);
-    const grassLeftMat = new THREE.MeshBasicMaterial({ color: COL.grassDark });
+    const grassLeftMat = new THREE.MeshBasicMaterial({
+      color: COL.grassDark,
+      fog: false,
+    });
     const grassLeft = new THREE.Mesh(grassLeftGeo, grassLeftMat);
     grassLeft.position.set(-(ROAD_HALF_W + GRASS_HALF_W), -2.88, 0);
     scene.add(grassLeft);
 
     const grassRightGeo = new THREE.PlaneGeometry(GRASS_HALF_W * 2, ROAD_LEN_Z, 1, 1);
     grassRightGeo.rotateX(-Math.PI / 2);
-    const grassRightMat = new THREE.MeshBasicMaterial({ color: COL.grassLight });
+    const grassRightMat = new THREE.MeshBasicMaterial({
+      color: COL.grassLight,
+      fog: false,
+    });
     const grassRight = new THREE.Mesh(grassRightGeo, grassRightMat);
     grassRight.position.set(ROAD_HALF_W + GRASS_HALF_W, -2.9, 0);
     scene.add(grassRight);
@@ -559,10 +565,12 @@ export default function HomeScene() {
         ? starBase * 0.9
         : starBase * inv * hideInContact;
 
+      /* Hero fades with inv; in Education landness is high and inv→0 — keep grass green there */
+      const grassLandBlend = Math.max(inv, landness);
       const grassOp =
         contactProgress > 0 || atPageBottom
           ? roadBaseOp * (isLight ? 0.95 : 1)
-          : (isLight ? 0.95 : 1) * inv * hideInContact;
+          : (isLight ? 0.95 : 1) * hideInContact * grassLandBlend;
       grassLeftMat.opacity = grassOp;
       grassRightMat.opacity = grassOp;
       grassLeftMat.transparent = isLight;

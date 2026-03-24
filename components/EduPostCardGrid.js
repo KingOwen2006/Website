@@ -31,8 +31,8 @@ export default function EduPostCardGrid({ post, sections }) {
           const excerpt = stripHtmlToExcerpt(section.bodyHtml || "");
           return (
             <Link
-              key={`${i}-${section.titleHtml?.slice(0, 20)}`}
-              href={`/post/${slug}/section/${i}`}
+              key={section.slug || `${i}-${section.titleHtml?.slice(0, 20)}`}
+              href={`/post/${slug}/${section.slug}`}
               className="glass-card edu-post-card"
             >
               <h3 dangerouslySetInnerHTML={{ __html: section.titleHtml }} />
@@ -41,6 +41,11 @@ export default function EduPostCardGrid({ post, sections }) {
             </Link>
           );
         })}
+      </div>
+      <div className="edu-read-in-full-footer edu-read-in-full-footer--grid">
+        <Link href={`/post/${slug}/full`} className="edu-read-in-full-link">
+          Read in full
+        </Link>
       </div>
     </div>
   );
