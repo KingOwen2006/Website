@@ -1,15 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "vite",
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
+  "installCommand": "npm ci --prefix studio/kingowen-portfollio",
+  "buildCommand": "npm run build --prefix studio/kingowen-portfollio",
+  "outputDirectory": "studio/kingowen-portfollio/dist",
   "rewrites": [
     {
-      "source": "/api/fxtwitter/:path*",
-      "destination": "https://api.fxtwitter.com/:path*"
-    },
-    {
-      "source": "/((?!assets/).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]
