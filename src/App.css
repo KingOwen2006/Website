@@ -586,6 +586,48 @@
   will-change: transform;
 }
 
+.home-landing-scroll-hint {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(24px, 6vh, 48px);
+  z-index: 2;
+  margin: 0;
+  pointer-events: auto;
+  opacity: clamp(0, calc(1 - var(--erase-progress) * 2.5), 1);
+  transform: translateX(-50%);
+  animation: home-scroll-hint-bob 1.8s ease-in-out infinite;
+}
+
+@keyframes home-scroll-hint-bob {
+  0%,
+  100% {
+    transform: translateX(-50%) translateY(0);
+  }
+
+  50% {
+    transform: translateX(-50%) translateY(10px);
+  }
+}
+
+.home-landing-scroll-hint:hover {
+  animation-play-state: paused;
+  transform: translateX(-50%) translateY(12px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-continue-hint:hover {
+    transform: none;
+  }
+
+  .home-landing-scroll-hint {
+    animation: none;
+  }
+
+  .home-landing-scroll-hint:hover {
+    transform: translateX(-50%);
+  }
+}
+
 .profile-name-row--centered {
   position: relative;
   isolation: isolate;

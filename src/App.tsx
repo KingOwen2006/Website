@@ -8,6 +8,7 @@ import { CommissionsPanel } from './components/ArtistSections'
 import PortfolioGrid from './components/PortfolioGrid'
 import SettingsPanel from './components/SettingsPanel'
 import TwitterFeed from './components/TwitterFeed'
+import ScrollContinueHint from './components/ScrollContinueHint'
 import { TWITTER_HANDLE } from './config/twitter'
 import { SPECIALTIES } from './data/portfolio'
 import { useLandingErase } from './hooks/useLandingErase'
@@ -198,6 +199,16 @@ export default function MyApp() {
                     )}
                   </div>
                 </div>
+                {!isFullyErased ? (
+                  <ScrollContinueHint
+                    className="home-landing-scroll-hint"
+                    onClick={() =>
+                      document
+                        .querySelector('.profile-hero--dex')
+                        ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                    }
+                  />
+                ) : null}
               </div>
             </section>
             <header className="profile-hero profile-hero--dex">
