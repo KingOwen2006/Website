@@ -1,0 +1,58 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+@import './themes/tokens.css';
+
+@font-face {
+  font-family: 'One UI Sans';
+  src: url('/fonts/oneuisans.ttf') format('truetype-variations');
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Clock Serif';
+  src: url('/fonts/Clock Bold Serif.ttf') format('truetype');
+  font-weight: bold;
+  font-display: swap;
+}
+
+:root {
+  --button-height: 44px;
+  --icon-size: 20px;
+  --button-gap: 12px;
+
+  --body: 'One UI Sans', sans-serif;
+  --serif: 'Clock Serif', Georgia, serif;
+  --racing: 'Bebas Neue', 'Arial Narrow', sans-serif;
+
+  --br-md: 16px;
+  --br-lg: 20px;
+
+  --color-text: var(--primary);
+  --color-text-secondary: var(--secondary);
+  --color-border: var(--divider);
+  --color-hover-line: var(--divider);
+  --color-active: var(--accent-blue);
+  --color-hover-bg: var(--selected);
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100vh;
+  overflow-x: clip;
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+}
+
+body {
+  margin: 0;
+  font-family: var(--body);
+  color: var(--primary);
+  background: var(--background);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

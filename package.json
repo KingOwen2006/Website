@@ -1,0 +1,43 @@
+{
+  "name": "website",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "studio": "npm run dev --prefix studio/kingowen-portfollio",
+    "typegen": "npm run typegen --prefix studio/kingowen-portfollio",
+    "migrate:wordpress": "tsx --env-file=.env scripts/migrate-wordpress.ts",
+    "clean:summaries": "tsx --env-file=.env scripts/clean-unit-summaries.ts",
+    "migrate:embeds": "tsx --env-file=.env scripts/migrate-embeds-to-sanity.ts",
+    "group:images": "tsx --env-file=.env scripts/group-unit-images.ts",
+    "backfill:editorial": "tsx --env-file=.env scripts/backfill-editorial-fields.ts"
+  },
+  "dependencies": {
+    "@portabletext/react": "^8.0.1",
+    "@sanity/client": "^8.5.0",
+    "@sanity/image-url": "^2.1.1",
+    "@thatjoshguy/oneui-icons": "^1.1.1",
+    "groq": "^6.12.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.18.3",
+    "three": "^0.185.1"
+  },
+  "devDependencies": {
+    "@portabletext/block-tools": "^1.1.31",
+    "@sanity/schema": "^6.12.0",
+    "@sanity/types": "^6.12.0",
+    "@types/jsdom": "^27.0.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@types/three": "^0.185.4",
+    "@vitejs/plugin-react": "^4.3.4",
+    "jsdom": "^27.0.1",
+    "tsx": "^4.21.0",
+    "typescript": "~5.7.2",
+    "vite": "^6.0.3"
+  }
+}

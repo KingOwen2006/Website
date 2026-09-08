@@ -1,0 +1,170 @@
+/* Clean white base */
+
+:root {
+  --display-font: var(--body);
+  --label-font: var(--body);
+  --hero-weight: 400;
+  --hero-letter-spacing: 0.06em;
+  --hero-transform: uppercase;
+
+  --nav-width-expanded: 220px;
+  --nav-width-collapsed: 72px;
+  --nav-inset-y: 20px;
+  --nav-inset-x: 0px;
+  --nav-radius-right: 24px;
+  --nav-border-width: 1px;
+  --nav-blur: 24px;
+  --nav-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  --nav-selected-shadow: none;
+
+  --nav-glass-bg: rgba(255, 255, 255, 0.25);
+  --nav-glass-border: rgba(0, 0, 0, 0.1);
+  --nav-glass-highlight: rgba(255, 255, 255, 0.95);
+  --nav-item-hover: rgba(0, 0, 0, 0.06);
+  --nav-item-active-bg: var(--accent);
+  --nav-item-active-text: #ffffff;
+  --nav-icon-color: #5f6673;
+  --nav-icon-color-active: var(--primary);
+
+  --pfp-radius: 20px;
+  --pill-radius: 9999px;
+  --pill-border-width: 1px;
+  --pill-shadow: none;
+  --button-radius: 9999px;
+  --button-shadow: none;
+  --meta-shadow: none;
+  --meta-radius: 9999px;
+
+  --nav-selected-weight: 700;
+  --border-width: 1px;
+  --card-radius: 16px;
+  --card-shadow: none;
+
+  --btn-follow-border: transparent;
+  --discord-logo-filter: brightness(0) invert(1);
+  --twitter-logo-filter: brightness(0) invert(1);
+
+  --grid-unit: 24px;
+
+  --panel-header-height: 0;
+  --bevel-top: transparent;
+  --bevel-bottom: transparent;
+
+  --background: #ffffff;
+  --container-background: #ececee;
+  --primary: #1a1a1a;
+  --secondary: #6b7280;
+  --on-accent: #ffffff;
+
+  --accent: #2563eb;
+  --accent-blue: #3b82f6;
+  --accent-lime: #059669;
+  --accent-sun: #d97706;
+  --accent-violet: #7c3aed;
+  --accent-orange: #ea580c;
+
+  --border: #d5d7dc;
+  --divider: #dfe1e6;
+  --selected: #e2e4e8;
+
+  --pill-1: #e8e9ec;
+  --pill-2: #e2e4e8;
+  --pill-3: #dcdde2;
+
+  --meta-software: transparent;
+  --meta-game: transparent;
+  --meta-inspiration: transparent;
+  --discord-card: transparent;
+
+  --nav-bg: rgba(232, 233, 236, 0.94);
+  --nav-bg-expanded: #e4e5e9;
+  --nav-border: #d0d2d8;
+  --glass-bg: rgba(228, 229, 233, 0.96);
+  --glass-blur: var(--nav-blur);
+  --nav-hover: rgba(0, 0, 0, 0.06);
+  --nav-selected-bg: var(--accent);
+
+  --btn-discord: #5865f2;
+  --btn-follow: var(--accent);
+  --btn-follow-text: #ffffff;
+
+  --hero-title: #111111;
+  --strong-color: var(--accent);
+
+  --hero-card-bg: transparent;
+  --hero-card-border: none;
+  --hero-card-shadow: none;
+
+  --input-bg: #e8e9ec;
+  --surface-raised: #ececee;
+  --panel-header-bg: transparent;
+
+  --exp-group-1-bg: transparent;
+  --exp-group-2-bg: transparent;
+  --exp-group-3-bg: transparent;
+}
+
+:root,
+[data-theme='blender'] {
+  --accent: #2563eb;
+  --nav-selected-bg: #2563eb;
+  --strong-color: #2563eb;
+  --pill-1: #e6eaf0;
+  --pill-2: #dfe5ee;
+  --pill-3: #d6deea;
+}
+
+/* Orange pen */
+[data-theme='blender-light'] {
+  --accent: #ea580c;
+  --accent-blue: #2563eb;
+  --nav-selected-bg: #ea580c;
+  --strong-color: #ea580c;
+  --pill-1: #ebe6e2;
+  --pill-2: #e8e0d8;
+  --pill-3: #e2d8ce;
+}
+
+/* Green pen */
+[data-theme='blender-sculpt'] {
+  --accent: #059669;
+  --accent-blue: #2563eb;
+  --nav-selected-bg: #059669;
+  --strong-color: #059669;
+  --pill-1: #e4ebe8;
+  --pill-2: #dce6e1;
+  --pill-3: #d3dfd8;
+}
+
+/* Teal pen */
+[data-theme='blender-nodes'] {
+  --accent: #0d9488;
+  --accent-blue: #2563eb;
+  --nav-selected-bg: #0d9488;
+  --strong-color: #0d9488;
+  --pill-1: #e4ebe9;
+  --pill-2: #dce6e3;
+  --pill-3: #d3dfdc;
+}
+
+/* Purple pen */
+[data-theme='blender-shader'] {
+  --accent: #7c3aed;
+  --accent-blue: #2563eb;
+  --nav-selected-bg: #7c3aed;
+  --strong-color: #7c3aed;
+  --pill-1: #e8e6ec;
+  --pill-2: #e2dfe8;
+  --pill-3: #dbd6e4;
+}
+
+/* Sky blue pen */
+[data-theme='blender-render'] {
+  --accent: #0284c7;
+  --accent-blue: #0284c7;
+  --nav-selected-bg: #0284c7;
+  --strong-color: #0284c7;
+  --pill-1: #e6ebef;
+  --pill-2: #dee6ec;
+  --pill-3: #d5e0e8;
+}

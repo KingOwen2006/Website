@@ -1,0 +1,297 @@
+/* Graph paper — soft UI, no hard section blocks */
+
+.blender-panel {
+  position: relative;
+  padding-top: 0;
+}
+
+.blender-panel[data-panel]::before {
+  display: none;
+}
+
+.profile-hero-name {
+  color: var(--hero-title);
+  font-family: var(--racing, var(--display-font));
+  font-size: clamp(56px, 8vw, 88px);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 0.95;
+}
+
+.profile-pill,
+.profile-side-pill {
+  background: var(--glass-bg);
+  border: 1px solid var(--nav-border);
+  box-shadow: var(--nav-shadow);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.2);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.2);
+}
+
+.profile-pill {
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 18px;
+}
+
+.profile-pill-label {
+  color: var(--secondary);
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.profile-about-text {
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.65;
+  max-width: none;
+  color: var(--primary);
+}
+
+.profile-about-text strong {
+  color: var(--strong-color, var(--accent));
+  font-weight: 700;
+}
+
+.PFP {
+  border: 2px solid var(--border);
+  border-radius: var(--pfp-radius);
+  box-shadow: none;
+  background: var(--surface-raised);
+}
+
+.profile-side-pill {
+  border-radius: 9999px;
+}
+
+.profile-hero-card .profile-side-pill {
+  border-radius: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.profile-hero-card .profile-side-pill + .profile-side-pill {
+  border-top: 1px solid var(--nav-border);
+}
+
+/* Nav — icons + active pill only */
+.nav-icon-container,
+.sidebar-toggle {
+  border-radius: 9999px;
+  height: 44px;
+  min-height: 44px;
+}
+
+.nav-icon-container-selected {
+  border-radius: 9999px;
+  background: var(--nav-item-active-bg);
+  box-shadow: none;
+}
+
+.nav-icon-container-selected .nav-label-selected {
+  color: var(--nav-item-active-text);
+  font-weight: 600;
+}
+
+.nav-brand {
+  border-bottom-color: var(--divider);
+}
+
+/* Buttons */
+.Icon_Button {
+  background: #5865f2;
+  border: none;
+  border-radius: 50%;
+  box-shadow: none;
+}
+
+.Follow_Button {
+  background: var(--btn-follow);
+  border: none;
+  border-radius: var(--button-radius);
+  box-shadow: none;
+  color: var(--btn-follow-text);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.Follow_Button .Twitter_Logo {
+  filter: brightness(0) invert(1);
+}
+
+.Follow_Button:hover {
+  background: color-mix(in srgb, var(--accent) 88%, #000);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.Icon_Button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+/* Sections */
+.experience-group-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--secondary);
+  padding: 0 4px;
+  margin-bottom: 4px;
+  border: none;
+  background: transparent;
+}
+
+.experience-group-title::before {
+  content: none;
+}
+
+.experience-group {
+  gap: 10px;
+}
+
+.experience-card {
+  border-radius: var(--card-radius);
+  background: var(--glass-bg);
+  border: 1px solid var(--nav-border);
+  box-shadow: var(--nav-shadow);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.2);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.2);
+  padding: 16px 20px;
+}
+
+.experience-group:nth-child(1) .experience-card,
+.experience-group:nth-child(2) .experience-card,
+.experience-group:nth-child(3) .experience-card {
+  border-left: 1px solid var(--nav-border);
+}
+
+.experience-card-link:hover {
+  background: var(--nav-bg-expanded);
+  box-shadow: var(--nav-shadow);
+  transform: translateY(-1px);
+}
+
+.experience-card-logo {
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface-raised);
+}
+
+.tweet-card {
+  border-radius: 0;
+  border: none;
+  border-bottom: 1px solid var(--divider);
+  background: transparent;
+  box-shadow: none;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.portfolio-section {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding-top: 0 !important;
+}
+
+.portfolio-card {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.portfolio-card:hover {
+  box-shadow: none;
+  border-color: transparent;
+  transform: translateY(-2px);
+}
+
+.portfolio-filter {
+  border-radius: 9999px;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+
+.portfolio-filter--active {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+}
+
+.specialty-card {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.commissions-section {
+  padding-top: 0 !important;
+}
+
+.commissions-inner {
+  background: transparent;
+  border: none;
+}
+
+.commissions-tag {
+  border-radius: 9999px;
+  background: transparent;
+  border: 1px solid var(--border);
+}
+
+.settings-title {
+  color: var(--hero-title);
+}
+
+.theme-card {
+  border-radius: var(--card-radius);
+  border: 1px solid var(--border);
+  background: var(--surface-raised);
+  box-shadow: none;
+}
+
+.theme-card--selected {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.theme-card-check {
+  background: var(--accent);
+  border-color: var(--border);
+  color: #ffffff;
+  border-radius: 50%;
+}
+
+.tab-content {
+  background: transparent;
+}
+
+.tweet-hashtag,
+.tweet-mention {
+  color: var(--accent);
+}
+
+.tweet-action:hover {
+  color: var(--accent);
+}
+
+.about-section {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}

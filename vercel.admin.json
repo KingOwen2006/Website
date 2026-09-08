@@ -1,0 +1,12 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "npm ci --prefix studio/kingowen-portfollio",
+  "buildCommand": "npm run build --prefix studio/kingowen-portfollio",
+  "outputDirectory": "studio/kingowen-portfollio/dist",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
