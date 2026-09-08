@@ -29,7 +29,7 @@ function UnitCard({ chapterSlug, unit }: { chapterSlug: string; unit: UnitSummar
             <p className="unit-card-summary">{summary}</p>
           ) : null}
           <span className="unit-card-open" aria-hidden="true">
-            View project <span>↗</span>
+            View project <span>&gt;</span>
           </span>
         </div>
       </Link>
