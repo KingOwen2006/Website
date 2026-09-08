@@ -52,8 +52,10 @@ const ABOUT_TEXT = (
 const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed'
 
 function readCollapsedPreference() {
-  if (typeof window === 'undefined') return false
-  return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === 'true'
+  if (typeof window === 'undefined') return true
+  const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY)
+  if (stored === null) return true
+  return stored === 'true'
 }
 
 function readInitialTab(): NavTab {
