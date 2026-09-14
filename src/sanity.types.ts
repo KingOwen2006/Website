@@ -392,6 +392,12 @@ export type UnitsByChapterSlugQueryResult = Array<{
     } | null;
     alt: string;
   } | null;
+  categories: Array<{
+    _id: string;
+    title: string;
+    slug: string;
+    kind: "category" | "tag";
+  }> | null;
 }>;
 
 // Source: ../../src/lib/sanity/queries.ts

@@ -10,6 +10,7 @@ export type UnitImageValue = {
   alt?: string
   caption?: string
   size?: 'default' | 'wide' | 'narrow'
+  align?: 'left' | 'center' | 'right'
 }
 
 export function getUnitImageUrl(value?: UnitImageValue | null, width = 1200) {
@@ -20,6 +21,13 @@ export function getUnitImageUrl(value?: UnitImageValue | null, width = 1200) {
 export function getUnitImageSizeClass(size?: UnitImageValue['size']) {
   if (size === 'wide') return 'unit-body-image--wide'
   if (size === 'narrow') return 'unit-body-image--narrow'
+  return ''
+}
+
+export function getUnitImageAlignClass(align?: UnitImageValue['align']) {
+  if (align === 'left') return 'unit-body-figure--align-left'
+  if (align === 'right') return 'unit-body-figure--align-right'
+  if (align === 'center') return 'unit-body-figure--align-center'
   return ''
 }
 

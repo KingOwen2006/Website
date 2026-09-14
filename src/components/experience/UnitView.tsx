@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom'
-import { formatExcerpt } from '../../lib/cleanText'
 import { urlForThumbnail } from '../../lib/sanity/image'
 import { useUnit } from '../../hooks/useSanityContent'
 import PortableTextRenderer from './PortableTextRenderer'
@@ -13,8 +12,6 @@ export default function UnitView({ chapterSlug, unitSlug }: UnitViewProps) {
   const { data: unit, loading, error } = useUnit(chapterSlug, unitSlug)
   const thumbnailUrl =
     unit?.thumbnail?.asset?.url ?? urlForThumbnail(unit?.thumbnail) ?? '/img/BPC.png'
-  const summary = unit?.summary ? formatExcerpt(unit.summary) : ''
-  const hasBody = Boolean(unit?.body?.length)
 
   return (
     <section className="unit-page" aria-label={unit?.title ?? 'Unit'}>
@@ -32,13 +29,6 @@ export default function UnitView({ chapterSlug, unitSlug }: UnitViewProps) {
               <div className="unit-page-copy">
                 <p className="chapter-hero-kicker">{unit.chapter?.title ?? 'Unit'}</p>
                 <h1 className="chapter-hero-title">{unit.title}</h1>
-                {summary ? (
-                  <p
-                    className={`chapter-hero-summary${hasBody ? ' chapter-hero-summary--continued' : ''}`}
-                  >
-                    {summary}
-                  </p>
-                ) : null}
                 {unit.categories?.length ? (
                   <div className="unit-page-meta">
                     {unit.categories.map((category) => (

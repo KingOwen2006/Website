@@ -1,4 +1,4 @@
-import {useRef, useState} from 'react'
+import {useEffect, useRef, useState} from 'react'
 import {getUnitImageUrl, type UnitImageValue} from '../../lib/unitImages'
 import {useUnitLightbox} from './UnitLightbox'
 
@@ -13,10 +13,42 @@ export default function UnitImageGallery({layout = 'grid', columns = 2, images}:
   const trackRef = useRef<HTMLDivElement>(null)
   const [activeIndex, setActiveIndex] = useState(0)
   const items = images?.filter((image) => getUnitImageUrl(image)) ?? []
-  if (items.length < 2) return null
-
   const columnClass = columns === 3 ? 'unit-gallery--cols-3' : 'unit-gallery--cols-2'
-  const isSlider = layout === 'slider'
+  const isSlider = layout === 'slider' || items.length >= 3
+
+  useEffect(() => {
+    if (!isSlider || items.length < 2) return
+    const track = trackRef.current
+    if (!track) return
+
+    const syncActiveSlide = () => {
+      const slides = [...track.children] as HTMLElement[]
+      if (!slides.length) return
+
+      const trackRect = track.getBoundingClientRect()
+      const trackCenter = trackRect.left + trackRect.width / 2
+      let closestIndex = 0
+      let closestDistance = Number.POSITIVE_INFINITY
+
+      slides.forEach((slide, index) => {
+        const slideRect = slide.getBoundingClientRect()
+        const slideCenter = slideRect.left + slideRect.width / 2
+        const distance = Math.abs(slideCenter - trackCenter)
+        if (distance < closestDistance) {
+          closestDistance = distance
+          closestIndex = index
+        }
+      })
+
+      setActiveIndex(closestIndex)
+    }
+
+    syncActiveSlide()
+    track.addEventListener('scroll', syncActiveSlide, {passive: true})
+    return () => track.removeEventListener('scroll', syncActiveSlide)
+  }, [isSlider, items.length])
+
+  if (items.length < 2) return null
 
   const scrollToIndex = (index: number) => {
     const track = trackRef.current

@@ -24,12 +24,21 @@ function UnitCard({ chapterSlug, unit }: { chapterSlug: string; unit: UnitSummar
           <span className="unit-card-number">{unitLabel}</span>
         </div>
         <div className="unit-card-copy">
+          {unit.categories?.length ? (
+            <div className="unit-card-categories">
+              {unit.categories.map((category) => (
+                <span key={category._id} className="unit-card-category">
+                  {category.title}
+                </span>
+              ))}
+            </div>
+          ) : null}
           <h3 className="unit-card-title">{unit.title}</h3>
           {summary ? (
             <p className="unit-card-summary">{summary}</p>
           ) : null}
           <span className="unit-card-open" aria-hidden="true">
-            View project <span>&gt;</span>
+            <span>&gt;</span>
           </span>
         </div>
       </Link>
