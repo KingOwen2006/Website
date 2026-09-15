@@ -174,6 +174,13 @@ export default function HeroShapes() {
       renderer.setSize(width, height, false)
       camera.aspect = width / height
       camera.updateProjectionMatrix()
+
+      const reference = 900
+      const viewportScale = THREE.MathUtils.clamp(Math.min(width, height) / reference, 0.45, 2.4)
+      shapeRuntimes.forEach((shape) => {
+        shape.group.scale.setScalar(viewportScale)
+      })
+
       layoutShapes(shapeRuntimes, width, height, SHAPES)
     }
 
