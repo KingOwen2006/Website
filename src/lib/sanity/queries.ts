@@ -164,7 +164,7 @@ export const recentUnitsQuery = defineQuery(`
     defined(slug.current) &&
     defined(chapter->slug.current)
   ]
-    | order(coalesce(publishedAt, _createdAt) desc) [0...5] {
+    | order(coalesce(publishedAt, _createdAt) desc) [0...8] {
     _id,
     title,
     "slug": slug.current,

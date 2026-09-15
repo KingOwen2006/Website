@@ -79,7 +79,7 @@ type CarouselItem =
   | { kind: 'unit'; unit: RecentUnit; sortTime: number }
   | { kind: 'twidget'; entry: TwidgetChangelogEntry; sortTime: number }
 
-const RECENT_UPDATES_LIMIT = 5
+const RECENT_UPDATES_LIMIT = 8
 
 function itemSortTime(date: string | null | undefined) {
   if (!date) return 0

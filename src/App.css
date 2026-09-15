@@ -876,7 +876,7 @@
   .profile-page {
     --content-nav-inset: 0px;
     --nav-mobile-inset-x: 10%;
-    --nav-mobile-inset-bottom: 10%;
+    --nav-mobile-inset-bottom: 2.5%;
     --content-bottom-inset: calc(
       var(--nav-bottom-height) + var(--nav-mobile-inset-bottom) + env(safe-area-inset-bottom, 0px)
     );

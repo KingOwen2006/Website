@@ -40,12 +40,26 @@ type ShapeRuntime = {
   baseX: number
   baseY: number
   baseZ: number
+  baseFloatAmp: number
   floatAmp: number
   floatSpeed: number
   floatPhase: number
   rotX: number
   rotY: number
   rotZ: number
+}
+
+const LAYOUT_REFERENCE = 900
+
+function fitPerspectiveCamera(camera: THREE.PerspectiveCamera, width: number, height: number) {
+  camera.aspect = width / height
+  const fovRad = THREE.MathUtils.degToRad(camera.fov)
+  camera.position.z = (height / 2) / Math.tan(fovRad / 2)
+  camera.updateProjectionMatrix()
+}
+
+function viewportScale(width: number, height: number) {
+  return THREE.MathUtils.clamp(Math.min(width, height) / LAYOUT_REFERENCE, 0.65, 2)
 }
 
 function wireColor(index: number) {
@@ -145,13 +159,15 @@ export default function HeroShapes() {
       const size = shapeSize(index)
       const { group, layers, materials } = createSketchShape(config.type, wireColor(index), size)
       const speedScale = config.slow ? 0.55 : 1
+      const baseFloatAmp = 10 + (index % 6) * 3.5
       const runtime: ShapeRuntime = {
         group,
         layers,
         baseX: 0,
         baseY: 0,
         baseZ: -40 + (index % 4) * 38,
-        floatAmp: 10 + (index % 6) * 3.5,
+        baseFloatAmp,
+        floatAmp: baseFloatAmp,
         floatSpeed: 0.00045 + (index % 7) * 0.00012,
         floatPhase: index * 0.73,
         rotX: (0.001 + (index % 3) * 0.00035) * speedScale,
@@ -172,13 +188,12 @@ export default function HeroShapes() {
       const width = container.clientWidth
       const height = container.clientHeight
       renderer.setSize(width, height, false)
-      camera.aspect = width / height
-      camera.updateProjectionMatrix()
+      fitPerspectiveCamera(camera, width, height)
 
-      const reference = 900
-      const viewportScale = THREE.MathUtils.clamp(Math.min(width, height) / reference, 0.45, 2.4)
+      const scale = viewportScale(width, height)
       shapeRuntimes.forEach((shape) => {
-        shape.group.scale.setScalar(viewportScale)
+        shape.group.scale.setScalar(scale)
+        shape.floatAmp = shape.baseFloatAmp * scale
       })
 
       layoutShapes(shapeRuntimes, width, height, SHAPES)
