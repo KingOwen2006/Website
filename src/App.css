@@ -56,7 +56,6 @@
 }
 
 .desktop-nav .icon-container,
-.desktop-nav .nav-footer,
 .desktop-nav .nav-main {
   background: transparent;
 }
@@ -73,11 +72,6 @@
   min-height: 0;
 }
 
-.desktop-nav .nav-footer {
-  margin-top: auto;
-  padding-top: 8px;
-}
-
 .desktop-nav.collapsed .icon-container {
   padding: 0;
   align-items: center;
@@ -92,21 +86,6 @@
 }
 
 .desktop-nav.collapsed .nav-main {
-  align-items: center;
-}
-
-.nav-footer {
-  margin-top: auto;
-  width: 100%;
-  padding: 0 12px 0;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-}
-
-.desktop-nav.collapsed .nav-footer {
-  padding: 0;
   align-items: center;
 }
 
