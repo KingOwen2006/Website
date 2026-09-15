@@ -78,26 +78,30 @@
 .home-landing-scroll-hint {
   position: absolute;
   left: 50%;
-  bottom: 36px;
+  bottom: clamp(24px, 5vw, 36px);
   z-index: 2;
-  margin: 0 0 0 -22px;
+  margin: 0;
+  width: clamp(40px, 10vw, 48px);
+  height: clamp(40px, 10vw, 48px);
+  font-size: clamp(18px, 4.5vw, 22px);
   color: var(--hero-title);
   background: rgba(15, 23, 42, 0.55);
   border-color: rgba(232, 236, 244, 0.2);
+  transform: translateX(-50%);
   animation: home-scroll-bounce 1.8s ease-in-out infinite;
 }
 
 .home-landing-scroll-hint:hover {
-  transform: none;
+  transform: translateX(-50%) translateY(4px);
 }
 
 @keyframes home-scroll-bounce {
   0%,
   100% {
-    transform: translateY(0);
+    transform: translateX(-50%) translateY(0);
   }
   50% {
-    transform: translateY(8px);
+    transform: translateX(-50%) translateY(clamp(6px, 1.5vw, 8px));
   }
 }
 
@@ -581,10 +585,14 @@
 
 @media (prefers-reduced-motion: reduce) {
   .home-landing-inner,
-  .home-landing-scroll-hint,
   .home-updates-track--loop {
     animation: none;
     transform: none;
+  }
+
+  .home-landing-scroll-hint {
+    animation: none;
+    transform: translateX(-50%);
   }
 }
 
@@ -621,7 +629,10 @@
   }
 
   .home-landing-scroll-hint {
-    bottom: calc(36px + var(--content-bottom-inset));
+    bottom: calc(clamp(12px, 3dvh, 20px) + var(--content-bottom-inset));
+    width: clamp(48px, 13vw, 56px);
+    height: clamp(48px, 13vw, 56px);
+    font-size: clamp(22px, 6vw, 26px);
   }
 
   .home-updates-track-wrap {
