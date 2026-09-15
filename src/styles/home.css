@@ -476,9 +476,16 @@
 
 .feed-card-header {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr);
+  grid-template-columns: 44px minmax(0, 1fr) auto;
   gap: 12px;
   align-items: center;
+}
+
+.feed-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .feed-card-avatar {
@@ -535,9 +542,6 @@
 .feed-card-open {
   display: inline-flex;
   align-items: center;
-  align-self: flex-end;
-  margin-top: auto;
-  padding-top: 12px;
   color: var(--accent);
   font-size: clamp(16px, 2.4vw, 20px);
   font-weight: 800;
@@ -551,6 +555,29 @@
 
 .feed-card:hover .feed-card-open span {
   transform: translateX(3px);
+}
+
+.feed-card-share {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--secondary);
+  font: inherit;
+  font-size: clamp(12px, 1.8vw, 14px);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.feed-card-share:hover {
+  color: var(--primary);
+}
+
+.feed-card-share-icon {
+  width: 18px;
+  height: 18px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -591,12 +618,7 @@
     max-width: 100%;
   }
 
-  .home-landing {
-    padding-left: 16px;
-    padding-right: 16px;
-    padding-bottom: 0;
-  }
-
+  .home-landing,
   .home-profile {
     padding-left: 16px;
     padding-right: 16px;
@@ -604,7 +626,13 @@
   }
 
   .home-landing-scroll-hint {
-    bottom: 1.5%;
+    bottom: calc(
+      var(--nav-mobile-inset-bottom) + var(--nav-bottom-height) + env(safe-area-inset-bottom, 0px) +
+        var(--scroll-hint-nav-gap)
+    );
+    width: clamp(40px, 11vw, 48px);
+    height: clamp(40px, 11vw, 48px);
+    font-size: clamp(18px, 4.5vw, 22px);
   }
 
   .home-updates-track-wrap {

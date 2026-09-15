@@ -11,6 +11,40 @@ type FeedCardProps = {
   stripHashes?: boolean
 }
 
+function ShareIcon() {
+  return (
+    <svg className="feed-card-share-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M14 7l7 5-7 5V7z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M4 12h12"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
+async function shareStatus(url: string, title: string) {
+  if (typeof navigator !== 'undefined' && navigator.share) {
+    try {
+      await navigator.share({ title, url })
+      return
+    } catch {
+      // User cancelled or share is unavailable — fall through to the tweet URL.
+    }
+  }
+
+  window.open(url, '_blank', 'noopener,noreferrer')
+}
+
 function hasMedia(status: FxTwitterStatus) {
   return Boolean(status.media?.photos?.[0] || status.media?.videos?.[0]?.thumbnail_url)
 }
@@ -59,6 +93,25 @@ export default function FeedCard({
               {formatRelativeTime(status.created_at)}
             </time>
           </div>
+          <div className="feed-card-actions">
+            <a
+              className="feed-card-open"
+              href={status.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Open post on X"
+            >
+              <span>&gt;</span>
+            </a>
+            <button
+              type="button"
+              className="feed-card-share"
+              onClick={() => void shareStatus(status.url, displayName)}
+            >
+              <ShareIcon />
+              Share
+            </button>
+          </div>
         </header>
 
         <div className="feed-card-copy">
@@ -71,16 +124,6 @@ export default function FeedCard({
             <p className="feed-card-excerpt feed-card-excerpt--rich">{formatTweetText(status.text)}</p>
           )}
         </div>
-
-        <a
-          className="feed-card-open"
-          href={status.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Open post on X"
-        >
-          <span>&gt;</span>
-        </a>
       </div>
     </article>
   )
