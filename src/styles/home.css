@@ -1,5 +1,8 @@
 .home-landing,
 .home-profile {
+  --home-content-max: min(100%, 980px);
+  --home-update-card-width: clamp(220px, 72vw, 260px);
+  --home-update-thumb-height: clamp(128px, 38vw, 148px);
   position: relative;
   width: 100%;
   padding-left: calc(var(--content-nav-inset) + 24px);
@@ -7,6 +10,31 @@
   box-sizing: border-box;
   background: var(--container-background);
   color: var(--primary);
+}
+
+@media (min-width: 768px) {
+  .home-landing,
+  .home-profile {
+    --home-update-card-width: clamp(240px, 28vw, 280px);
+  }
+}
+
+@media (min-width: 979px) {
+  .home-landing,
+  .home-profile {
+    --home-content-max: min(100%, 1080px);
+    --home-update-card-width: clamp(260px, 24vw, 300px);
+    --home-update-thumb-height: clamp(148px, 14vw, 168px);
+  }
+}
+
+@media (min-width: 1200px) {
+  .home-landing,
+  .home-profile {
+    --home-content-max: min(100%, 1200px);
+    --home-update-card-width: clamp(280px, 22vw, 340px);
+    --home-update-thumb-height: clamp(160px, 16vw, 190px);
+  }
 }
 
 .home-panel {
@@ -92,7 +120,7 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
-  width: min(100%, 980px);
+  width: var(--home-content-max);
   margin: 0 auto;
 }
 
@@ -224,7 +252,7 @@
 }
 
 .home-section-title {
-  width: min(100%, 980px);
+  width: var(--home-content-max);
   margin: 0 auto 20px;
   font-size: clamp(24px, 4vw, 32px);
   font-weight: 800;
@@ -232,7 +260,7 @@
 }
 
 .home-section-state {
-  width: min(100%, 980px);
+  width: var(--home-content-max);
   margin: 0 auto;
   color: var(--secondary);
 }
@@ -277,7 +305,7 @@
 
 .home-updates-track {
   display: flex;
-  gap: 16px;
+  gap: clamp(16px, 2vw, 24px);
   width: max-content;
 }
 
@@ -303,7 +331,7 @@
 }
 
 .home-update-card {
-  flex: 0 0 260px;
+  flex: 0 0 var(--home-update-card-width);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -319,7 +347,7 @@
 }
 
 .home-update-thumb {
-  height: 148px;
+  height: var(--home-update-thumb-height);
   background: rgba(255, 255, 255, 0.04);
   border-bottom: 1px solid rgba(232, 236, 244, 0.08);
 }
@@ -577,8 +605,13 @@
 @media (max-width: 767px) {
   .home-landing,
   .home-profile {
-    padding-left: calc(var(--content-nav-inset) + 16px);
+    padding-left: 16px;
     padding-right: 16px;
+    padding-bottom: calc(clamp(48px, 8vw, 96px) + var(--content-bottom-inset));
+  }
+
+  .home-landing-scroll-hint {
+    bottom: calc(36px + var(--content-bottom-inset));
   }
 
   .home-updates-track-wrap {

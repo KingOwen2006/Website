@@ -46,6 +46,23 @@ const ABOUT_TEXT = (
   </>
 )
 const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed'
+const MOBILE_NAV_QUERY = '(max-width: 767px)'
+
+function useMobileBottomNav() {
+  const [isMobileNav, setIsMobileNav] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia(MOBILE_NAV_QUERY).matches : false,
+  )
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(MOBILE_NAV_QUERY)
+    const syncMobileNav = () => setIsMobileNav(mediaQuery.matches)
+    syncMobileNav()
+    mediaQuery.addEventListener('change', syncMobileNav)
+    return () => mediaQuery.removeEventListener('change', syncMobileNav)
+  }, [])
+
+  return isMobileNav
+}
 
 function readCollapsedPreference() {
   if (typeof window === 'undefined') return true
@@ -64,6 +81,7 @@ export default function MyApp() {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<NavTab>(readInitialTab)
   const [collapsed, setCollapsed] = useState(readCollapsedPreference)
+  const isMobileNav = useMobileBottomNav()
   const { profile, avatarUrl } = useTwitterProfile()
   const feed = useTwitterFeed(TWITTER_HANDLE)
   const {
@@ -141,17 +159,23 @@ export default function MyApp() {
         aria-label="Site sections"
       >
         <div className="icon-container">
-          <button
-            type="button"
-            className={`sidebar-toggle nav-icon-container ${collapsed ? 'sidebar-toggle-collapsed' : 'sidebar-toggle-expanded'}`}
-            aria-label={collapsed ? 'Expand navigation' : 'Collapse navigation'}
-            aria-expanded={!collapsed}
-            onClick={toggleCollapsed}
-          >
-            <Drawer size={24} color="var(--nav-icon-color)" />
-          </button>
+          {!isMobileNav && (
+            <button
+              type="button"
+              className={`sidebar-toggle nav-icon-container ${collapsed ? 'sidebar-toggle-collapsed' : 'sidebar-toggle-expanded'}`}
+              aria-label={collapsed ? 'Expand navigation' : 'Collapse navigation'}
+              aria-expanded={!collapsed}
+              onClick={toggleCollapsed}
+            >
+              <Drawer size={24} color="var(--nav-icon-color)" />
+            </button>
+          )}
 
-          <div className="nav-main" role="tablist" aria-orientation="vertical">
+          <div
+            className="nav-main"
+            role="tablist"
+            aria-orientation={isMobileNav ? 'horizontal' : 'vertical'}
+          >
             {MAIN_NAV_TABS.map(({ id, icon }) => renderNavButton(id, icon))}
           </div>
         </div>

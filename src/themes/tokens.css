@@ -9,6 +9,8 @@
 
   --nav-width-expanded: 220px;
   --nav-width-collapsed: 72px;
+  --nav-bottom-height: 64px;
+  --content-bottom-inset: 0px;
   --nav-inset-y: 20px;
   --nav-inset-x: 0px;
   --nav-radius-right: 24px;

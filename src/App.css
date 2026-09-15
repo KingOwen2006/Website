@@ -873,17 +873,113 @@
 }
 
 @media (max-width: 767px) {
-  .desktop-nav {
-    top: var(--nav-inset-y);
-    left: 0;
-    bottom: var(--nav-inset-y);
+  .profile-page {
+    --content-nav-inset: 0px;
+    --content-bottom-inset: calc(var(--nav-bottom-height) + env(safe-area-inset-bottom, 0px));
+  }
+
+  .profile-main {
+    padding-bottom: var(--content-bottom-inset);
+  }
+
+  .tab-content {
+    padding-left: var(--grid-unit);
+    padding-bottom: calc(var(--grid-unit) + var(--content-bottom-inset));
   }
 
   .profile-hero {
-    padding: 18px 16px;
-    padding-left: calc(var(--content-nav-inset) + 16px);
+    padding-left: var(--grid-unit);
   }
 
+  .desktop-nav,
+  .desktop-nav.collapsed {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    height: auto;
+    min-height: var(--nav-bottom-height);
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    border-radius: var(--nav-radius-right) var(--nav-radius-right) 0 0;
+    border-top: var(--nav-border-width) solid var(--nav-glass-border);
+  }
+
+  .sidebar-toggle {
+    display: none;
+  }
+
+  .desktop-nav .icon-container,
+  .desktop-nav.collapsed .icon-container {
+    flex-direction: row;
+    flex: 1;
+    width: 100%;
+    padding: 0;
+    align-items: stretch;
+    gap: 0;
+  }
+
+  .nav-main,
+  .desktop-nav.collapsed .nav-main {
+    flex-direction: row;
+    flex: 1;
+    width: 100%;
+    align-items: stretch;
+    justify-content: space-around;
+    gap: 0;
+  }
+
+  .nav-icon-container,
+  .nav-icon-container-selected,
+  .desktop-nav.collapsed .nav-icon-container,
+  .desktop-nav.collapsed .nav-icon-container-selected {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    height: auto;
+    min-height: var(--nav-bottom-height);
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 4px;
+    border-radius: 0;
+  }
+
+  .desktop-nav-content,
+  .desktop-nav.collapsed .desktop-nav-content {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    width: auto;
+  }
+
+  .nav-label,
+  .nav-label-selected,
+  .desktop-nav.collapsed .nav-label,
+  .desktop-nav.collapsed .nav-label-selected {
+    opacity: 1;
+    max-width: 100%;
+    transform: none;
+    pointer-events: auto;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .nav-icon-container-selected {
+    border-radius: 12px 12px 0 0;
+  }
 }
 
 .experience-card {
