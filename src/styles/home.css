@@ -476,16 +476,9 @@
 
 .feed-card-header {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) auto;
+  grid-template-columns: 44px minmax(0, 1fr);
   gap: 12px;
   align-items: center;
-}
-
-.feed-card-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
 }
 
 .feed-card-avatar {
@@ -537,6 +530,15 @@
 .feed-card-excerpt--rich {
   -webkit-line-clamp: 4;
   line-clamp: 4;
+}
+
+.feed-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 4px;
 }
 
 .feed-card-open {
@@ -627,12 +629,11 @@
 
   .home-landing-scroll-hint {
     bottom: calc(
-      var(--nav-mobile-inset-bottom) + var(--nav-bottom-height) + env(safe-area-inset-bottom, 0px) +
-        var(--scroll-hint-nav-gap)
+      var(--nav-mobile-inset-bottom) + var(--nav-bottom-height) + env(safe-area-inset-bottom, 0px) + 1.25%
     );
     width: clamp(40px, 11vw, 48px);
     height: clamp(40px, 11vw, 48px);
-    font-size: clamp(18px, 4.5vw, 22px);
+    font-size: clamp(18px, 5vw, 22px);
   }
 
   .home-updates-track-wrap {

@@ -93,25 +93,6 @@ export default function FeedCard({
               {formatRelativeTime(status.created_at)}
             </time>
           </div>
-          <div className="feed-card-actions">
-            <a
-              className="feed-card-open"
-              href={status.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Open post on X"
-            >
-              <span>&gt;</span>
-            </a>
-            <button
-              type="button"
-              className="feed-card-share"
-              onClick={() => void shareStatus(status.url, displayName)}
-            >
-              <ShareIcon />
-              Share
-            </button>
-          </div>
         </header>
 
         <div className="feed-card-copy">
@@ -123,6 +104,26 @@ export default function FeedCard({
           ) : (
             <p className="feed-card-excerpt feed-card-excerpt--rich">{formatTweetText(status.text)}</p>
           )}
+        </div>
+
+        <div className="feed-card-actions">
+          <a
+            className="feed-card-open"
+            href={status.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Open post on X"
+          >
+            <span>&gt;</span>
+          </a>
+          <button
+            type="button"
+            className="feed-card-share"
+            onClick={() => void shareStatus(status.url, displayName)}
+          >
+            <ShareIcon />
+            Share
+          </button>
         </div>
       </div>
     </article>
