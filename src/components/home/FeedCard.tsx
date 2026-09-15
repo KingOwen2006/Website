@@ -1,5 +1,16 @@
+import {
+  HeartOutline,
+  Repeat,
+  Reply,
+  ShareOutline,
+} from '@thatjoshguy/oneui-icons'
 import type { FxTwitterStatus } from '../../lib/fxtwitter'
-import { formatRelativeTime } from '../../lib/fxtwitter'
+import {
+  formatCount,
+  formatRelativeTime,
+  getReplyIntentUrl,
+  getRetweetIntentUrl,
+} from '../../lib/fxtwitter'
 import { formatTweetText, splitFeedCopy } from '../../lib/tweetText'
 import '../../styles/home.css'
 
@@ -11,26 +22,8 @@ type FeedCardProps = {
   stripHashes?: boolean
 }
 
-function ShareIcon() {
-  return (
-    <svg className="feed-card-share-icon" viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        d="M14 7l7 5-7 5V7z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M4 12h12"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-    </svg>
-  )
-}
+const ACTION_ICON_SIZE = 18
+const ACTION_ICON_COLOR = 'currentColor'
 
 async function shareStatus(url: string, title: string) {
   if (typeof navigator !== 'undefined' && navigator.share) {
@@ -56,6 +49,89 @@ function FeedMedia({ status }: { status: FxTwitterStatus }) {
   return (
     <div className="feed-card-media">
       <img src={src} alt="" loading="lazy" />
+    </div>
+  )
+}
+
+function ViewsIcon() {
+  return (
+    <svg
+      className="tweet-action-icon"
+      width={ACTION_ICON_SIZE}
+      height={ACTION_ICON_SIZE}
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path
+        d="M5 18V11M9.5 18V8M14 18V13M18.5 18V6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
+function FeedCardActions({ status, displayName }: { status: FxTwitterStatus; displayName: string }) {
+  const viewsLabel = status.views == null ? 'Views' : `${formatCount(status.views)} views`
+
+  return (
+    <div className="tweet-actions" aria-label="Post actions">
+      <a
+        className="tweet-action tweet-action--replies"
+        href={getReplyIntentUrl(status.id)}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={`Reply. ${formatCount(status.replies)} replies`}
+      >
+        <Reply size={ACTION_ICON_SIZE} color={ACTION_ICON_COLOR} className="tweet-action-icon" />
+        <span className="tweet-action-count">{formatCount(status.replies)}</span>
+      </a>
+
+      <a
+        className="tweet-action tweet-action--reposts"
+        href={getRetweetIntentUrl(status.id)}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={`Repost. ${formatCount(status.reposts)} reposts`}
+      >
+        <Repeat size={ACTION_ICON_SIZE} color={ACTION_ICON_COLOR} className="tweet-action-icon" />
+        <span className="tweet-action-count">{formatCount(status.reposts)}</span>
+      </a>
+
+      <a
+        className="tweet-action tweet-action--likes"
+        href={status.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={`Like on X. ${formatCount(status.likes)} likes`}
+      >
+        <HeartOutline size={ACTION_ICON_SIZE} color={ACTION_ICON_COLOR} className="tweet-action-icon" />
+        <span className="tweet-action-count">{formatCount(status.likes)}</span>
+      </a>
+
+      <a
+        className="tweet-action tweet-action--views"
+        href={status.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={viewsLabel}
+      >
+        <ViewsIcon />
+        <span className="tweet-action-count">
+          {status.views == null ? '0' : formatCount(status.views)}
+        </span>
+      </a>
+
+      <button
+        type="button"
+        className="tweet-action tweet-action--share tweet-action--icon-only"
+        aria-label="Share post"
+        onClick={() => void shareStatus(status.url, displayName)}
+      >
+        <ShareOutline size={ACTION_ICON_SIZE} color={ACTION_ICON_COLOR} className="tweet-action-icon" />
+      </button>
     </div>
   )
 }
@@ -106,25 +182,7 @@ export default function FeedCard({
           )}
         </div>
 
-        <div className="feed-card-actions">
-          <a
-            className="feed-card-open"
-            href={status.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Open post on X"
-          >
-            <span>&gt;</span>
-          </a>
-          <button
-            type="button"
-            className="feed-card-share"
-            onClick={() => void shareStatus(status.url, displayName)}
-          >
-            <ShareIcon />
-            Share
-          </button>
-        </div>
+        <FeedCardActions status={status} displayName={displayName} />
       </div>
     </article>
   )

@@ -229,5 +229,16 @@ export function formatRelativeTime(dateString: string): string {
 }
 
 export function formatCount(value: number): string {
-  return new Intl.NumberFormat().format(value)
+  return new Intl.NumberFormat('en', {
+    notation: 'compact',
+    maximumFractionDigits: 1,
+  }).format(value)
+}
+
+export function getRetweetIntentUrl(statusId: string) {
+  return `https://x.com/intent/retweet?tweet_id=${encodeURIComponent(statusId)}`
+}
+
+export function getReplyIntentUrl(statusId: string) {
+  return `https://x.com/intent/tweet?in_reply_to=${encodeURIComponent(statusId)}`
 }

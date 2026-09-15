@@ -28,6 +28,22 @@ const MAIN_NAV_TABS = [
 
 type NavTab = (typeof MAIN_NAV_TABS)[number]['id']
 
+const TAB_PATHS: Record<NavTab, string> = {
+  Home: '/',
+  Experience: '/experience',
+  Feed: '/feed',
+  Shop: '/shop',
+  Contact: '/contact',
+}
+
+function tabFromPath(pathname: string): NavTab {
+  if (pathname.startsWith('/experience')) return 'Experience'
+  if (pathname.startsWith('/feed')) return 'Feed'
+  if (pathname.startsWith('/shop')) return 'Shop'
+  if (pathname.startsWith('/contact')) return 'Contact'
+  return 'Home'
+}
+
 const FALLBACK_PFP = '/img/Pfp.jpg'
 const PROFILE_HERO_NAME = 'KingOwen'
 const SIDE_PILLS = [
@@ -73,7 +89,7 @@ function readCollapsedPreference() {
 
 function readInitialTab(): NavTab {
   if (typeof window === 'undefined') return 'Home'
-  return window.location.pathname.startsWith('/experience') ? 'Experience' : 'Home'
+  return tabFromPath(window.location.pathname)
 }
 
 export default function MyApp() {
@@ -101,14 +117,7 @@ export default function MyApp() {
   }, [collapsed])
 
   useEffect(() => {
-    if (location.pathname.startsWith('/experience')) {
-      setActiveTab('Experience')
-      return
-    }
-
-    if (location.pathname === '/') {
-      setActiveTab('Home')
-    }
+    setActiveTab(tabFromPath(location.pathname))
   }, [location.pathname])
 
   useEffect(() => {
@@ -121,8 +130,7 @@ export default function MyApp() {
 
   const openTab = (id: NavTab) => {
     setActiveTab(id)
-    if (id === 'Home') navigate('/')
-    else if (id === 'Experience') navigate('/experience')
+    navigate(TAB_PATHS[id])
   }
 
   const activityDetail =

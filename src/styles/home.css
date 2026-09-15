@@ -532,54 +532,8 @@
   line-clamp: 4;
 }
 
-.feed-card-actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+.feed-card .tweet-actions {
   margin-top: auto;
-  padding-top: 4px;
-}
-
-.feed-card-open {
-  display: inline-flex;
-  align-items: center;
-  color: var(--accent);
-  font-size: clamp(16px, 2.4vw, 20px);
-  font-weight: 800;
-  text-decoration: none;
-}
-
-.feed-card-open span {
-  font-size: clamp(16px, 2.4vw, 20px);
-  transition: transform 0.18s ease;
-}
-
-.feed-card:hover .feed-card-open span {
-  transform: translateX(3px);
-}
-
-.feed-card-share {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--secondary);
-  font: inherit;
-  font-size: clamp(12px, 1.8vw, 14px);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.feed-card-share:hover {
-  color: var(--primary);
-}
-
-.feed-card-share-icon {
-  width: 18px;
-  height: 18px;
 }
 
 @media (prefers-reduced-motion: reduce) {

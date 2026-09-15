@@ -1,5 +1,5 @@
 import {useEffect, useMemo, useRef, useState} from 'react'
-import {ListFilter} from '@thatjoshguy/oneui-icons'
+import {FilterBy} from '@thatjoshguy/oneui-icons'
 import {getEntryKey} from '../lib/feedCache'
 import {
   FEED_SORT_OPTIONS,
@@ -69,7 +69,7 @@ function FeedFilterBar({
         aria-label={`Filter posts: ${activeLabel}`}
         onClick={() => setOpen((value) => !value)}
       >
-        <ListFilter size={24} color="currentColor" aria-hidden="true" />
+        <FilterBy size={24} color="currentColor" className="feed-filter-icon" aria-hidden="true" />
       </button>
 
       {open ? (

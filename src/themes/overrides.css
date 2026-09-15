@@ -269,10 +269,6 @@
   color: var(--accent);
 }
 
-.tweet-action:hover {
-  color: var(--accent);
-}
-
 .about-section {
   background: transparent;
   border: none;

@@ -1202,6 +1202,11 @@
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
+.feed-filter-icon {
+  display: block;
+  flex-shrink: 0;
+}
+
 .feed-filter-trigger:hover {
   color: var(--primary);
 }
@@ -1509,55 +1514,73 @@
 .tweet-actions {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 6px;
+  align-items: center;
+  gap: 0;
   width: 100%;
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid var(--divider);
+  margin-top: 12px;
+  padding-top: 2px;
 }
 
 .tweet-action {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
+  justify-content: flex-start;
+  gap: 4px;
   min-width: 0;
-  padding: 8px 6px;
+  padding: 0;
   border: none;
-  border-radius: 12px;
+  border-radius: 9999px;
   background: transparent;
-  color: var(--secondary);
-  font-size: 12px;
-  font-weight: 700;
+  color: #8b98a5;
+  font-family: var(--body);
+  font-size: 13px;
+  font-weight: 400;
   line-height: 1;
   text-decoration: none;
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition: color 0.15s ease;
 }
 
 .tweet-action:hover {
-  background: var(--selected);
-  color: var(--primary);
+  background: transparent;
+}
+
+.tweet-action--replies:hover {
+  color: #1d9bf0;
+}
+
+.tweet-action--reposts:hover {
+  color: #00ba7c;
 }
 
 .tweet-action--likes:hover {
-  color: #e11d48;
+  color: #f91880;
 }
 
 .tweet-action--views:hover {
-  color: var(--accent);
+  color: #1d9bf0;
+}
+
+.tweet-action--share:hover {
+  color: #1d9bf0;
+}
+
+.tweet-action--icon-only {
+  justify-content: center;
+  width: auto;
 }
 
 .tweet-action-icon {
   display: block;
   flex-shrink: 0;
+  width: 18px;
+  height: 18px;
 }
 
 .tweet-action-count {
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
 }
 
 .feed-state--inline {
@@ -1607,12 +1630,11 @@
   }
 
   .tweet-actions {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0;
   }
 
-  .tweet-action:nth-child(4),
-  .tweet-action:nth-child(5) {
-    grid-column: span 1;
+  .tweet-action {
+    font-size: 12px;
   }
 }
 
