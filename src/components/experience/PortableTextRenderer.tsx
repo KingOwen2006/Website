@@ -12,6 +12,7 @@ import { UnitLightboxProvider } from './UnitLightbox'
 
 const components: PortableTextComponents = {
   block: {
+    h1: ({ children }) => <h1 className="unit-body-h1">{children}</h1>,
     h2: ({ children }) => <h2 className="unit-body-h2">{children}</h2>,
     h3: ({ children }) => <h3 className="unit-body-h3">{children}</h3>,
     h4: ({ children }) => <h4 className="unit-body-h4">{children}</h4>,

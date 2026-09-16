@@ -1,5 +1,6 @@
 import {UserIcon} from '@sanity/icons/User'
 import {defineField, defineType} from 'sanity'
+import {AutoSlugInput} from '../components/AutoSlugInput'
 
 export const author = defineType({
   name: 'author',
@@ -18,6 +19,7 @@ export const author = defineType({
       title: 'Slug',
       type: 'slug',
       options: {source: 'name', maxLength: 96},
+      components: {input: AutoSlugInput},
       validation: (rule) => rule.required(),
     }),
     defineField({

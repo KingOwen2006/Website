@@ -4,7 +4,7 @@ import {sanityImageFields} from './sharedImageFields'
 
 export const imageGallery = defineType({
   name: 'imageGallery',
-  title: 'Image gallery',
+  title: 'Gallery',
   type: 'object',
   icon: ImagesIcon,
   fields: [
@@ -58,7 +58,7 @@ export const imageGallery = defineType({
     prepare({layout, columns, images}) {
       const count = images?.length ?? 0
       return {
-        title: layout === 'slider' ? 'Image slider' : 'Image gallery',
+        title: layout === 'slider' ? 'Gallery slider' : 'Gallery',
         subtitle: `${count} image${count === 1 ? '' : 's'}${layout === 'grid' ? ` · ${columns ?? 2} cols` : ''}`,
       }
     },

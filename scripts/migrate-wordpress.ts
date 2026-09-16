@@ -255,7 +255,7 @@ function wpImageMetaFromElement(img: HTMLImageElement) {
   const classNames = `${img.className} ${figure?.className ?? ''}`
 
   let size: string | undefined
-  if (img.getAttribute('data-wide') === 'true' || /\balignfull\b|\bsize-full\b/i.test(classNames)) {
+  if (img.getAttribute('data-wide') === 'true' || /\balignfull\b|\balignwide\b|\bsize-full\b/i.test(classNames)) {
     size = 'wide'
   } else if (
     img.getAttribute('data-narrow') === 'true' ||

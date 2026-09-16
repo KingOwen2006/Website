@@ -4,7 +4,7 @@ import {sanityImageFields} from './sharedImageFields'
 
 export const imageCompare = defineType({
   name: 'imageCompare',
-  title: 'Before / after slider',
+  title: 'Image Compare',
   type: 'object',
   icon: SplitHorizontalIcon,
   fields: [
@@ -33,7 +33,7 @@ export const imageCompare = defineType({
   preview: {
     prepare() {
       return {
-        title: 'Before / after slider',
+        title: 'Image Compare',
       }
     },
   },

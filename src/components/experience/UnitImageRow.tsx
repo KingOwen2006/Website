@@ -25,6 +25,7 @@ export default function UnitImageRow({images}: UnitImageRowProps) {
               aria-label={image.alt ? `View image: ${image.alt}` : 'View image'}
             >
               <img src={src} alt={image.alt ?? ''} loading="lazy" />
+              {image.caption ? <span className="unit-gallery__caption">{image.caption}</span> : null}
             </button>
           )
         })}

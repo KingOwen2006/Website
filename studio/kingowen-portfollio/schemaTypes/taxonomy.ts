@@ -1,5 +1,6 @@
 import {TagIcon} from '@sanity/icons/Tag'
 import {defineField, defineType} from 'sanity'
+import {AutoSlugInput} from '../components/AutoSlugInput'
 
 export const taxonomy = defineType({
   name: 'taxonomy',
@@ -18,6 +19,7 @@ export const taxonomy = defineType({
       title: 'Slug',
       type: 'slug',
       options: {source: 'title', maxLength: 96},
+      components: {input: AutoSlugInput},
       validation: (rule) => rule.required(),
     }),
     defineField({

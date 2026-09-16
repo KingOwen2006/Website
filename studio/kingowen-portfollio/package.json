@@ -16,9 +16,11 @@
     "sanity"
   ],
   "dependencies": {
+    "@portabletext/editor": "^8.1.5",
     "@portabletext/react": "^8.0.1",
     "@sanity/icons": "^5.2.1",
     "@sanity/image-url": "^2.1.1",
+    "@sanity/themer": "^0.3.13",
     "@sanity/vision": "^6.12.0",
     "react": "^19.1",
     "react-dom": "^19.1",

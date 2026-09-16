@@ -1,6 +1,10 @@
 import {DocumentTextIcon} from '@sanity/icons/DocumentText'
 import {ImageIcon} from '@sanity/icons/Image'
 import {defineArrayMember, defineField, defineType} from 'sanity'
+import {AutoSlugInput} from '../components/AutoSlugInput'
+import {BlockImagePreview} from '../components/BlockImagePreview'
+import {HideTitleField} from '../components/HideTitleField'
+import {WordPressDocumentForm} from '../components/WordPressDocumentForm'
 import {sanityImageFields} from './sharedImageFields'
 
 export const unit = defineType({
@@ -8,12 +12,17 @@ export const unit = defineType({
   title: 'Experience Post',
   type: 'document',
   icon: DocumentTextIcon,
-  groups: [
-    {name: 'content', title: 'Post', default: true},
-    {name: 'organization', title: 'Categories & author'},
-    {name: 'publishing', title: 'Publishing'},
-    {name: 'seo', title: 'SEO'},
-    {name: 'legacy', title: 'Migration'},
+  components: {
+    input: WordPressDocumentForm,
+  },
+  // Hide Sanity's extra document title above the Gutenberg canvas.
+  __experimental_formPreviewTitle: false,
+  fieldsets: [
+    {name: 'featured', title: 'Featured image', options: {collapsible: true, collapsed: false}},
+    {name: 'publish', title: 'Publish', options: {collapsible: true, collapsed: false}},
+    {name: 'organization', title: 'Categories', options: {collapsible: true, collapsed: false}},
+    {name: 'seo', title: 'SEO', options: {collapsible: true, collapsed: true}},
+    {name: 'legacy', title: 'Migration', options: {collapsible: true, collapsed: true}},
   ],
   initialValue: {
     status: 'draft',
@@ -23,7 +32,6 @@ export const unit = defineType({
       name: 'title',
       title: 'Title',
       type: 'string',
-      group: 'content',
       validation: (rule) => rule.required(),
     }),
     defineField({
@@ -31,8 +39,9 @@ export const unit = defineType({
       title: 'Slug',
       type: 'slug',
       options: {source: 'title', maxLength: 96},
-      group: 'content',
-      description: 'Generated from the title. You can edit it before publishing.',
+      fieldset: 'publish',
+      description: 'Generated from the title as you type. You can still edit it.',
+      components: {input: AutoSlugInput},
       validation: (rule) => rule.required(),
     }),
     defineField({
@@ -40,7 +49,7 @@ export const unit = defineType({
       title: 'Course year',
       type: 'reference',
       to: [{type: 'chapter'}],
-      group: 'organization',
+      fieldset: 'organization',
       validation: (rule) => rule.required(),
     }),
     defineField({
@@ -48,7 +57,7 @@ export const unit = defineType({
       title: 'Featured image',
       type: 'image',
       options: {hotspot: true},
-      group: 'content',
+      fieldset: 'featured',
       icon: ImageIcon,
       fields: [
         defineField({
@@ -61,24 +70,29 @@ export const unit = defineType({
       ],
     }),
     defineField({
-      name: 'summary',
-      title: 'Excerpt',
-      type: 'text',
-      rows: 3,
-      group: 'content',
-      description: 'A short summary used on the Year 1/Year 2 post list.',
-      validation: (rule) => rule.max(320).warning('Keep excerpts concise for post cards.'),
-    }),
-    defineField({
       name: 'body',
       title: 'Post content',
       type: 'array',
-      group: 'content',
+      components: {field: HideTitleField},
+      options: {
+        insertMenu: {
+          filter: true,
+          showIcons: true,
+          groups: [
+            {
+              name: 'wordpressHtml',
+              title: 'WordPress HTML',
+              of: ['image', 'imageRow', 'imageGallery', 'imageCompare'],
+            },
+          ],
+        },
+      },
       of: [
         defineArrayMember({
           type: 'block',
           styles: [
             {title: 'Normal', value: 'normal'},
+            {title: 'H1', value: 'h1'},
             {title: 'H2', value: 'h2'},
             {title: 'H3', value: 'h3'},
             {title: 'H4', value: 'h4'},
@@ -124,26 +138,42 @@ export const unit = defineType({
           icon: ImageIcon,
           options: {hotspot: true},
           fields: sanityImageFields,
+          components: {preview: BlockImagePreview},
+          preview: {
+            select: {media: 'asset'},
+            prepare({media}) {
+              return {media}
+            },
+          },
         }),
-        defineArrayMember({type: 'imageRow'}),
-        defineArrayMember({type: 'imageGallery'}),
-        defineArrayMember({type: 'imageCompare'}),
+        defineArrayMember({type: 'imageRow', title: 'Images'}),
+        defineArrayMember({type: 'imageGallery', title: 'Gallery'}),
+        defineArrayMember({type: 'imageCompare', title: 'Image Compare'}),
         defineArrayMember({type: 'codeBlock'}),
         defineArrayMember({type: 'unitEmbed'}),
       ],
+    }),
+    defineField({
+      name: 'summary',
+      title: 'Excerpt',
+      type: 'text',
+      rows: 3,
+      fieldset: 'publish',
+      description: 'A short summary used on the Year 1/Year 2 post list.',
+      validation: (rule) => rule.max(320).warning('Keep excerpts concise for post cards.'),
     }),
     defineField({
       name: 'author',
       title: 'Author',
       type: 'reference',
       to: [{type: 'author'}],
-      group: 'organization',
+      fieldset: 'organization',
     }),
     defineField({
       name: 'categories',
       title: 'Categories',
       type: 'array',
-      group: 'organization',
+      fieldset: 'organization',
       of: [
         defineArrayMember({
           type: 'reference',
@@ -157,7 +187,7 @@ export const unit = defineType({
       name: 'tags',
       title: 'Tags',
       type: 'array',
-      group: 'organization',
+      fieldset: 'organization',
       of: [
         defineArrayMember({
           type: 'reference',
@@ -171,7 +201,7 @@ export const unit = defineType({
       name: 'status',
       title: 'Website visibility',
       type: 'string',
-      group: 'publishing',
+      fieldset: 'publish',
       description:
         'Set to Published and use Sanity’s Publish action to make the post visible on the website.',
       options: {
@@ -188,7 +218,7 @@ export const unit = defineType({
       name: 'publishedAt',
       title: 'Published date',
       type: 'datetime',
-      group: 'publishing',
+      fieldset: 'publish',
       validation: (rule) =>
         rule.custom((value, context) => {
           if (context.document?.status === 'published' && !value) {
@@ -201,20 +231,20 @@ export const unit = defineType({
       name: 'seo',
       title: 'Search and social sharing',
       type: 'seo',
-      group: 'seo',
+      fieldset: 'seo',
     }),
     defineField({
       name: 'unitNumber',
       title: 'Unit number',
       type: 'number',
-      group: 'organization',
+      fieldset: 'organization',
       description: 'Parsed from title for sorting (1–8). Non-numbered posts stay empty.',
     }),
     defineField({
       name: 'order',
       title: 'Sort order',
       type: 'number',
-      group: 'organization',
+      fieldset: 'organization',
       description: 'Lower numbers appear first. Work experience currently uses 900.',
       initialValue: 0,
     }),
@@ -222,9 +252,20 @@ export const unit = defineType({
       name: 'legacyWordPressId',
       title: 'WordPress post ID',
       type: 'number',
-      group: 'legacy',
+      fieldset: 'legacy',
       readOnly: true,
     }),
+  ],
+  orderings: [
+    {
+      title: 'Unit number',
+      name: 'unitNumberAsc',
+      by: [
+        {field: 'order', direction: 'asc'},
+        {field: 'unitNumber', direction: 'asc'},
+        {field: 'title', direction: 'asc'},
+      ],
+    },
   ],
   preview: {
     select: {

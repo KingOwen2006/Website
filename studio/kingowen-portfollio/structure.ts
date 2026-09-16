@@ -12,20 +12,26 @@ import type {
 } from 'sanity/structure'
 import PostPreview from './PostPreview'
 
-const DATE_ORDER = [{field: 'publishedAt', direction: 'desc'}] as const
+const UNIT_ORDER = [
+  {field: 'order', direction: 'asc'},
+  {field: 'unitNumber', direction: 'asc'},
+  {field: 'title', direction: 'asc'},
+] as const
 
 function postList(
   S: StructureBuilder,
+  id: string,
   title: string,
   filter: string,
   params: Record<string, string> = {},
 ) {
   return S.documentList()
+    .id(id)
     .title(title)
     .schemaType('unit')
     .filter(filter)
     .params(params)
-    .defaultOrdering([...DATE_ORDER])
+    .defaultOrdering([...UNIT_ORDER])
 }
 
 export const structure: StructureResolver = (S) =>
@@ -35,13 +41,14 @@ export const structure: StructureResolver = (S) =>
       S.listItem()
         .title('Posts')
         .icon(DocumentTextIcon)
-        .child(postList(S, 'All posts', '_type == "unit"')),
+        .child(postList(S, 'all-posts-by-unit', 'All posts', '_type == "unit"')),
       S.listItem()
         .title('Year 1')
         .icon(CalendarIcon)
         .child(
           postList(
             S,
+            'year-1-posts-by-unit',
             'Year 1 posts',
             '_type == "unit" && chapter->slug.current == $chapterSlug',
             {chapterSlug: 'bpc-level-3-year-1'},
@@ -53,6 +60,7 @@ export const structure: StructureResolver = (S) =>
         .child(
           postList(
             S,
+            'year-2-posts-by-unit',
             'Year 2 posts',
             '_type == "unit" && chapter->slug.current == $chapterSlug',
             {chapterSlug: 'bpc-level-3-year-2'},
@@ -61,13 +69,14 @@ export const structure: StructureResolver = (S) =>
       S.listItem()
         .title('Drafts')
         .icon(DocumentsIcon)
-        .child(postList(S, 'Draft posts', '_type == "unit" && _id in path("drafts.**")')),
+        .child(postList(S, 'draft-posts-by-unit', 'Draft posts', '_type == "unit" && _id in path("drafts.**")')),
       S.listItem()
         .title('Published')
         .icon(EyeOpenIcon)
         .child(
           postList(
             S,
+            'published-posts-by-unit',
             'Published posts',
             '_type == "unit" && !(_id in path("drafts.**")) && coalesce(status, "published") == "published"',
           ),
@@ -114,7 +123,7 @@ export const structure: StructureResolver = (S) =>
 export const defaultDocumentNode: DefaultDocumentNodeResolver = (S, {schemaType}) => {
   if (schemaType === 'unit') {
     return S.document().views([
-      S.view.form().title('Write'),
+      S.view.form().title('Edit'),
       S.view.component(PostPreview).title('Live preview'),
     ])
   }

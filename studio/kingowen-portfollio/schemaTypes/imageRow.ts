@@ -4,7 +4,7 @@ import {sanityImageFields} from './sharedImageFields'
 
 export const imageRow = defineType({
   name: 'imageRow',
-  title: 'Side-by-side images',
+  title: 'Images',
   type: 'object',
   icon: InlineIcon,
   fields: [
@@ -26,7 +26,7 @@ export const imageRow = defineType({
     select: {images: 'images'},
     prepare({images}) {
       return {
-        title: 'Side-by-side images',
+        title: 'Images',
         subtitle: `${images?.length ?? 0} images`,
       }
     },

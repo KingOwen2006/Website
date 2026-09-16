@@ -454,6 +454,14 @@
   margin: 8px 0;
 }
 
+.unit-body-h1 {
+  margin: 0 0 16px;
+  font-size: clamp(1.7rem, 4vw, 2.2rem);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--primary);
+}
+
 .unit-body-h2 {
   margin: 40px 0 12px;
   padding-top: 12px;
@@ -519,7 +527,7 @@
 }
 
 .unit-body-figure {
-  margin: 28px auto;
+  margin: 40px auto;
   max-width: 1000px;
 }
 
@@ -594,21 +602,26 @@
   font-style: italic;
 }
 
+.unit-body-figure > .unit-body-caption {
+  margin-top: 14px;
+  padding-top: 10px;
+}
+
 .unit-body-caption::before {
   content: '— ';
   color: var(--accent);
-  opacity: 0.7;
+  opacity: 0.6;
 }
 
 .unit-image-row {
-  margin: 28px auto;
+  margin: 40px auto;
   max-width: 1000px;
 }
 
 .unit-image-row__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  gap: 24px;
 }
 
 .unit-image-row__item {
@@ -623,13 +636,13 @@
   max-height: 420px;
   object-fit: contain;
   border: 1px solid rgba(232, 236, 244, 0.14);
-  border-radius: calc(var(--card-radius) - 2px);
+  border-radius: 14px;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
   display: block;
 }
 
 .unit-gallery {
-  margin: 28px auto;
+  margin: 40px auto;
   max-width: 1000px;
 }
 
@@ -680,7 +693,7 @@
   height: auto;
   object-fit: cover;
   border: 1px solid rgba(232, 236, 244, 0.14);
-  border-radius: calc(var(--card-radius) - 2px);
+  border-radius: 12px;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
   display: block;
 }
@@ -763,7 +776,7 @@
 }
 
 .unit-compare {
-  margin: 28px auto;
+  margin: 40px auto;
   max-width: 1000px;
 }
 
@@ -773,8 +786,8 @@
   aspect-ratio: 16 / 9;
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: var(--card-radius);
-  background: var(--background);
+  border-radius: 14px;
+  background: #0b0f1a;
   user-select: none;
   touch-action: none;
   cursor: col-resize;
@@ -788,7 +801,7 @@
   left: var(--pos, 50%);
   transform: translateX(-1px);
   width: 2px;
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.7);
   pointer-events: none;
 }
 
@@ -829,7 +842,7 @@
   border-radius: 999px;
   border: 1px solid var(--border);
   background: var(--container-background);
-  box-shadow: 0 8px 18px color-mix(in srgb, var(--primary) 18%, transparent);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
   pointer-events: none;
 }
 

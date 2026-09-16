@@ -375,7 +375,7 @@ export type ChapterBySlugQueryResult = {
 
 // Source: ../../src/lib/sanity/queries.ts
 // Variable: unitsByChapterSlugQuery
-// Query: *[    _type == "unit" &&    chapter->slug.current == $slug &&    coalesce(status, "published") == "published"  ]    | order(coalesce(order, 999) asc, coalesce(unitNumber, 999) asc, title asc) {    _id,    title,    "slug": slug.current,    summary,    order,    unitNumber,    publishedAt,    status,    thumbnail {      asset->{ _id, url },      alt    }  }
+// Query: *[    _type == "unit" &&    chapter->slug.current == $slug &&    coalesce(status, "published") == "published"  ]    | order(coalesce(order, 999) asc, coalesce(unitNumber, 999) asc, title asc) {    _id,    title,    "slug": slug.current,    summary,    order,    unitNumber,    publishedAt,    status,    thumbnail {      asset->{ _id, url },      alt    },    categories[]->{      _id,      title,      "slug": slug.current,      kind    }  }
 export type UnitsByChapterSlugQueryResult = Array<{
   _id: string;
   title: string;
@@ -402,7 +402,7 @@ export type UnitsByChapterSlugQueryResult = Array<{
 
 // Source: ../../src/lib/sanity/queries.ts
 // Variable: unitBySlugsQuery
-// Query: *[    _type == "unit" &&    slug.current == $unitSlug &&    chapter->slug.current == $chapterSlug &&    coalesce(status, "published") == "published"  ][0]{    _id,    title,    "slug": slug.current,    summary,    order,    unitNumber,    publishedAt,    status,    body[]{      ...,      _type == "image" => {        ...,        asset->{ _id, url }      },      _type == "unitEmbed" => {        ...      }    },    thumbnail {      asset->{ _id, url },      alt    },    author->{      name,      "slug": slug.current,      bio,      avatar {        asset->{ _id, url },        alt      }    },    categories[]->{      _id,      title,      "slug": slug.current,      kind    },    tags[]->{      _id,      title,      "slug": slug.current,      kind    },    "seo": {      "title": coalesce(seo.metaTitle, title, ""),      "description": coalesce(seo.metaDescription, summary, ""),      "image": coalesce(seo.ogImage, thumbnail) {        asset->{ _id, url },        alt      },      "noIndex": seo.noIndex == true    },    chapter->{      _id,      title,      "slug": slug.current    }  }
+// Query: *[    _type == "unit" &&    slug.current == $unitSlug &&    chapter->slug.current == $chapterSlug &&    coalesce(status, "published") == "published"  ][0]{    _id,    title,    "slug": slug.current,    summary,    order,    unitNumber,    publishedAt,    status,    body[]{      ...,      _type == "image" => {        ...,        asset->{ _id, url }      },      _type == "imageRow" => {        ...,        images[]{          ...,          asset->{ _id, url }        }      },      _type == "imageGallery" => {        ...,        images[]{          ...,          asset->{ _id, url }        }      },      _type == "imageCompare" => {        ...,        before{          ...,          asset->{ _id, url }        },        after{          ...,          asset->{ _id, url }        }      },      _type == "unitEmbed" => {        ...      }    },    thumbnail {      asset->{ _id, url },      alt    },    author->{      name,      "slug": slug.current,      bio,      avatar {        asset->{ _id, url },        alt      }    },    categories[]->{      _id,      title,      "slug": slug.current,      kind    },    tags[]->{      _id,      title,      "slug": slug.current,      kind    },    "seo": {      "title": coalesce(seo.metaTitle, title, ""),      "description": coalesce(seo.metaDescription, summary, ""),      "image": coalesce(seo.ogImage, thumbnail) {        asset->{ _id, url },        alt      },      "noIndex": seo.noIndex == true    },    chapter->{      _id,      title,      "slug": slug.current    }  }
 export type UnitBySlugsQueryResult = {
   _id: string;
   title: string;
@@ -531,12 +531,32 @@ export type UnitBySlugsQueryResult = {
   };
 } | null;
 
+// Source: ../../src/lib/sanity/queries.ts
+// Variable: recentUnitsQuery
+// Query: *[    _type == "unit" &&    coalesce(status, "published") == "published" &&    defined(slug.current) &&    defined(chapter->slug.current)  ]    | order(coalesce(publishedAt, _createdAt) desc) [0...8] {    _id,    title,    "slug": slug.current,    summary,    publishedAt,    "chapterSlug": chapter->slug.current,    thumbnail {      asset->{ _id, url },      alt    }  }
+export type RecentUnitsQueryResult = Array<{
+  _id: string;
+  title: string;
+  slug: string;
+  summary: string | null;
+  publishedAt: string | null;
+  chapterSlug: string;
+  thumbnail: {
+    asset: {
+      _id: string;
+      url: string;
+    } | null;
+    alt: string;
+  } | null;
+}>;
+
 // Query TypeMap
 declare global {
   interface SanityQueries {
     '\n  *[_type == "chapter" && slug.current == $slug][0]{\n    _id,\n    title,\n    "slug": slug.current,\n    subtitle,\n    summary,\n    dateRange,\n    logo {\n      asset->{ _id, url },\n      alt\n    }\n  }\n': ChapterBySlugQueryResult;
-    '\n  *[\n    _type == "unit" &&\n    chapter->slug.current == $slug &&\n    coalesce(status, "published") == "published"\n  ]\n    | order(coalesce(order, 999) asc, coalesce(unitNumber, 999) asc, title asc) {\n    _id,\n    title,\n    "slug": slug.current,\n    summary,\n    order,\n    unitNumber,\n    publishedAt,\n    status,\n    thumbnail {\n      asset->{ _id, url },\n      alt\n    }\n  }\n': UnitsByChapterSlugQueryResult;
-    '\n  *[\n    _type == "unit" &&\n    slug.current == $unitSlug &&\n    chapter->slug.current == $chapterSlug &&\n    coalesce(status, "published") == "published"\n  ][0]{\n    _id,\n    title,\n    "slug": slug.current,\n    summary,\n    order,\n    unitNumber,\n    publishedAt,\n    status,\n    body[]{\n      ...,\n      _type == "image" => {\n        ...,\n        asset->{ _id, url }\n      },\n      _type == "unitEmbed" => {\n        ...\n      }\n    },\n    thumbnail {\n      asset->{ _id, url },\n      alt\n    },\n    author->{\n      name,\n      "slug": slug.current,\n      bio,\n      avatar {\n        asset->{ _id, url },\n        alt\n      }\n    },\n    categories[]->{\n      _id,\n      title,\n      "slug": slug.current,\n      kind\n    },\n    tags[]->{\n      _id,\n      title,\n      "slug": slug.current,\n      kind\n    },\n    "seo": {\n      "title": coalesce(seo.metaTitle, title, ""),\n      "description": coalesce(seo.metaDescription, summary, ""),\n      "image": coalesce(seo.ogImage, thumbnail) {\n        asset->{ _id, url },\n        alt\n      },\n      "noIndex": seo.noIndex == true\n    },\n    chapter->{\n      _id,\n      title,\n      "slug": slug.current\n    }\n  }\n': UnitBySlugsQueryResult;
+    '\n  *[\n    _type == "unit" &&\n    chapter->slug.current == $slug &&\n    coalesce(status, "published") == "published"\n  ]\n    | order(coalesce(order, 999) asc, coalesce(unitNumber, 999) asc, title asc) {\n    _id,\n    title,\n    "slug": slug.current,\n    summary,\n    order,\n    unitNumber,\n    publishedAt,\n    status,\n    thumbnail {\n      asset->{ _id, url },\n      alt\n    },\n    categories[]->{\n      _id,\n      title,\n      "slug": slug.current,\n      kind\n    }\n  }\n': UnitsByChapterSlugQueryResult;
+    '\n  *[\n    _type == "unit" &&\n    slug.current == $unitSlug &&\n    chapter->slug.current == $chapterSlug &&\n    coalesce(status, "published") == "published"\n  ][0]{\n    _id,\n    title,\n    "slug": slug.current,\n    summary,\n    order,\n    unitNumber,\n    publishedAt,\n    status,\n    body[]{\n      ...,\n      _type == "image" => {\n        ...,\n        asset->{ _id, url }\n      },\n      _type == "imageRow" => {\n        ...,\n        images[]{\n          ...,\n          asset->{ _id, url }\n        }\n      },\n      _type == "imageGallery" => {\n        ...,\n        images[]{\n          ...,\n          asset->{ _id, url }\n        }\n      },\n      _type == "imageCompare" => {\n        ...,\n        before{\n          ...,\n          asset->{ _id, url }\n        },\n        after{\n          ...,\n          asset->{ _id, url }\n        }\n      },\n      _type == "unitEmbed" => {\n        ...\n      }\n    },\n    thumbnail {\n      asset->{ _id, url },\n      alt\n    },\n    author->{\n      name,\n      "slug": slug.current,\n      bio,\n      avatar {\n        asset->{ _id, url },\n        alt\n      }\n    },\n    categories[]->{\n      _id,\n      title,\n      "slug": slug.current,\n      kind\n    },\n    tags[]->{\n      _id,\n      title,\n      "slug": slug.current,\n      kind\n    },\n    "seo": {\n      "title": coalesce(seo.metaTitle, title, ""),\n      "description": coalesce(seo.metaDescription, summary, ""),\n      "image": coalesce(seo.ogImage, thumbnail) {\n        asset->{ _id, url },\n        alt\n      },\n      "noIndex": seo.noIndex == true\n    },\n    chapter->{\n      _id,\n      title,\n      "slug": slug.current\n    }\n  }\n': UnitBySlugsQueryResult;
+    '\n  *[\n    _type == "unit" &&\n    coalesce(status, "published") == "published" &&\n    defined(slug.current) &&\n    defined(chapter->slug.current)\n  ]\n    | order(coalesce(publishedAt, _createdAt) desc) [0...8] {\n    _id,\n    title,\n    "slug": slug.current,\n    summary,\n    publishedAt,\n    "chapterSlug": chapter->slug.current,\n    thumbnail {\n      asset->{ _id, url },\n      alt\n    }\n  }\n': RecentUnitsQueryResult;
   }
 }
 // Lets @sanity/client releases that predate the global registry read it too
