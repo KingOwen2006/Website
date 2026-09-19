@@ -4,6 +4,12 @@
   "installCommand": "npm ci --legacy-peer-deps && npm ci --legacy-peer-deps --prefix admin",
   "buildCommand": "npm run build --prefix admin",
   "outputDirectory": "admin/dist",
+  "functions": {
+    "api/[[...path]].ts": {
+      "maxDuration": 60,
+      "memory": 1024
+    }
+  },
   "rewrites": [
     {
       "source": "/((?!api/|assets/).*)",
