@@ -39,6 +39,7 @@ export const unitsByChapterSlugQuery = defineQuery(`
     unitNumber,
     publishedAt,
     status,
+    visibility,
     thumbnail {
       asset->{ _id, url },
       alt
@@ -67,6 +68,7 @@ export const unitBySlugsQuery = defineQuery(`
     unitNumber,
     publishedAt,
     status,
+    visibility,
     body[]{
       ...,
       _type == "image" => {
@@ -150,6 +152,7 @@ export type RecentUnit = {
   slug: string | null
   summary: string | null
   publishedAt: string | null
+  visibility?: string | null
   chapterSlug: string | null
   thumbnail: {
     asset?: { _id?: string; url?: string } | null
@@ -170,6 +173,7 @@ export const recentUnitsQuery = defineQuery(`
     "slug": slug.current,
     summary,
     publishedAt,
+    visibility,
     "chapterSlug": chapter->slug.current,
     thumbnail {
       asset->{ _id, url },

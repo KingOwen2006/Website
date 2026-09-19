@@ -23,7 +23,7 @@ import {htmlToBlocks} from '@portabletext/block-tools'
 import {JSDOM} from 'jsdom'
 import {randomUUID} from 'node:crypto'
 import {cleanWordPressText} from '../src/lib/cleanText.ts'
-import {embedExternalHref, replaceEmbeds} from '../src/lib/embeds.ts'
+import {embedExternalHref, replaceEmbeds, resolveEmbedValue} from '../src/lib/embeds.ts'
 import {convertPhraseEmbedsInBody} from '../src/lib/portableTextEmbeds.ts'
 import {groupConsecutiveImages} from '../src/lib/groupUnitImages.ts'
 
@@ -70,6 +70,7 @@ const dataset = process.env.SANITY_DATASET ?? 'production'
 const token = process.env.SANITY_API_TOKEN
 const wordpressSite = process.env.WORDPRESS_SITE ?? 'kingowenfyi.wordpress.com'
 const year2FirstUnit = Number(process.env.WORDPRESS_YEAR_2_FIRST_UNIT ?? 9)
+const singlePostId = process.env.WORDPRESS_POST_ID ? Number(process.env.WORDPRESS_POST_ID) : null
 
 if (!projectId || !token) {
   console.error('Missing required env vars: SANITY_PROJECT_ID, SANITY_API_TOKEN')
@@ -460,7 +461,9 @@ function htmlToUnitBlocks(html: string) {
               src = audio?.getAttribute('src') || ''
             } else if (iframe) {
               src = iframe.getAttribute('src') || ''
-              embedType = src.includes('figma.com') ? 'figma' : 'embed'
+              const resolved = resolveEmbedValue({src})
+              embedType = resolved.embedType ?? 'embed'
+              src = resolved.src ?? src
             }
 
             const linkText = link?.textContent?.trim() || 'Open'
@@ -600,7 +603,9 @@ async function upsertUnit(
 
 async function main() {
   console.log(`Fetching posts from ${wordpressSite}…`)
-  const posts = await fetchAllPosts()
+  const posts = singlePostId
+    ? [await fetchJson<WordPressComPost>(`/posts/${singlePostId}?content=raw`)]
+    : await fetchAllPosts()
   console.log(`Found ${posts.length} posts.`)
 
   const chapterIds = new Map<string, string>()

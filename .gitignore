@@ -5,9 +5,4 @@ dist
 .env.*.local
 *.local
 .DS_Store
-
-studio/kingowen-portfollio/node_modules
-studio/kingowen-portfollio/dist
-studio/kingowen-portfollio/.env
-studio/kingowen-portfollio/.env.local
-
+*.tsbuildinfo

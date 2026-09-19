@@ -82,6 +82,11 @@ export const EMBED_REPLACEMENTS: Record<string, EmbedConfig> = {
     src: 'https://archive.org/embed/vghf_design_doc_archive/bioshock-pitch-document',
     linkText: 'Bioshock Pitch',
   },
+  'Keywords-Unit9-Figma': {
+    type: 'figma',
+    src: 'https://embed.figma.com/board/nxG6cSmcjlkxea6cnEMWhe/Keywords-Unit-9?node-id=0-1&embed-host=share',
+    linkText: 'Open Keywords mood board in Figma',
+  },
   '[Insert Name Here] Ep1 FINAL': {
     type: 'audio',
     src: '/mp3/[Insert Name Here] Ep1 FINAL.mp3',
@@ -150,4 +155,171 @@ export function replaceEmbeds(content: string) {
 
 export function embedExternalHref(src: string) {
   return embedHref(src)
+}
+
+export function parseYoutubeVideoId(src: string) {
+  try {
+    const url = new URL(src.trim())
+    if (url.hostname === 'youtu.be') {
+      return url.pathname.replace(/^\//, '').split('/')[0] || null
+    }
+    if (!/(^|\.)youtube\.com$/i.test(url.hostname)) return null
+    if (url.pathname.startsWith('/embed/')) {
+      return url.pathname.split('/')[2] || null
+    }
+    if (url.pathname.startsWith('/shorts/')) {
+      return url.pathname.split('/')[2] || null
+    }
+    return url.searchParams.get('v')
+  } catch {
+    return null
+  }
+}
+
+export function isYoutubeUrl(src: string) {
+  return parseYoutubeVideoId(src) !== null
+}
+
+export function normalizeYoutubeEmbedUrl(src: string) {
+  const videoId = parseYoutubeVideoId(src)
+  if (!videoId) return src.trim()
+  return `https://www.youtube.com/embed/${videoId}`
+}
+
+export function isFigmaUrl(src: string) {
+  try {
+    const {hostname} = new URL(src.trim())
+    return hostname === 'embed.figma.com' || hostname === 'www.figma.com' || hostname === 'figma.com'
+  } catch {
+    return false
+  }
+}
+
+export function normalizeFigmaEmbedUrl(src: string) {
+  const url = new URL(src.trim())
+  url.protocol = 'https:'
+  url.hostname = 'embed.figma.com'
+  if (!url.searchParams.has('embed-host')) {
+    url.searchParams.set('embed-host', 'share')
+  }
+  return url.toString()
+}
+
+export function isMicrosoftFormsUrl(src: string) {
+  try {
+    return new URL(src.trim()).hostname === 'forms.cloud.microsoft.com'
+  } catch {
+    return false
+  }
+}
+
+export function normalizeMicrosoftFormsEmbedUrl(src: string) {
+  const url = new URL(src.trim())
+  if (url.pathname.includes('ResponsePage.aspx') && url.searchParams.get('embed') !== 'true') {
+    url.searchParams.set('embed', 'true')
+  }
+  return url.toString()
+}
+
+export function isGoogleDocsEmbedUrl(src: string) {
+  try {
+    const url = new URL(src.trim())
+    return url.hostname === 'docs.google.com' && /\/document\//.test(url.pathname)
+  } catch {
+    return false
+  }
+}
+
+export function normalizeGoogleDocsEmbedUrl(src: string) {
+  const url = new URL(src.trim())
+  if (!url.searchParams.has('embedded')) {
+    url.searchParams.set('embedded', 'true')
+  }
+  return url.toString()
+}
+
+export function isArchiveOrgEmbedUrl(src: string) {
+  try {
+    const url = new URL(src.trim())
+    return url.hostname.includes('archive.org') && url.pathname.includes('/embed/')
+  } catch {
+    return false
+  }
+}
+
+export function isAutoEmbeddableUrl(src: string) {
+  return (
+    isFigmaUrl(src) ||
+    isYoutubeUrl(src) ||
+    isMicrosoftFormsUrl(src) ||
+    isGoogleDocsEmbedUrl(src) ||
+    isArchiveOrgEmbedUrl(src)
+  )
+}
+
+export function resolveEmbedValue(value: {
+  src?: string
+  embedType?: string
+  href?: string
+  linkText?: string
+}) {
+  const rawSrc = value.src?.trim() ?? ''
+  if (!rawSrc) return value
+
+  if (isFigmaUrl(rawSrc)) {
+    const src = normalizeFigmaEmbedUrl(rawSrc)
+    return {
+      ...value,
+      src,
+      embedType: 'figma' as const,
+      href: value.href || embedExternalHref(src),
+      linkText: value.linkText || 'Open in Figma',
+    }
+  }
+
+  if (isYoutubeUrl(rawSrc)) {
+    const src = normalizeYoutubeEmbedUrl(rawSrc)
+    return {
+      ...value,
+      src,
+      embedType: 'embed' as const,
+      href: value.href || rawSrc,
+      linkText: value.linkText || 'Watch on YouTube',
+    }
+  }
+
+  if (isMicrosoftFormsUrl(rawSrc)) {
+    const src = normalizeMicrosoftFormsEmbedUrl(rawSrc)
+    const isAnalysis = src.includes('AnalysisPage.aspx')
+    return {
+      ...value,
+      src,
+      embedType: 'embed' as const,
+      href: value.href || embedExternalHref(src),
+      linkText: value.linkText || (isAnalysis ? 'Open Form Analysis' : 'Open Form'),
+    }
+  }
+
+  if (isGoogleDocsEmbedUrl(rawSrc)) {
+    const src = normalizeGoogleDocsEmbedUrl(rawSrc)
+    return {
+      ...value,
+      src,
+      embedType: 'embed' as const,
+      href: value.href || embedExternalHref(src),
+      linkText: value.linkText || 'Open Google Doc',
+    }
+  }
+
+  if (isArchiveOrgEmbedUrl(rawSrc)) {
+    return {
+      ...value,
+      src: rawSrc,
+      embedType: 'embed' as const,
+      href: value.href || embedExternalHref(rawSrc),
+      linkText: value.linkText || 'Open archive',
+    }
+  }
+
+  return value
 }

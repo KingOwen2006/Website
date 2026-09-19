@@ -29,7 +29,11 @@ export function useRecentUnits() {
         .fetch<RecentUnit[]>(recentUnitsQuery)
         .then((units) => {
           if (!cancelled) {
-            setState({ units: units ?? [], loading: false, error: null })
+            setState({
+              units: (units ?? []).filter((unit) => unit.visibility !== 'private'),
+              loading: false,
+              error: null,
+            })
           }
         })
         .catch((error: unknown) => {

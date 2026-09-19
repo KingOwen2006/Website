@@ -1,0 +1,14 @@
+{
+  "name": "kingowen-sanity",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "typegen": "sanity schema extract --enforce-required-fields && sanity typegen generate",
+    "schema:extract": "sanity schema extract --enforce-required-fields",
+    "schema:deploy": "sanity schema deploy"
+  },
+  "dependencies": {
+    "sanity": "^6.12.0"
+  }
+}

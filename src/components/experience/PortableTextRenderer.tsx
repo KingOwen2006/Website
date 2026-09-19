@@ -16,9 +16,13 @@ const components: PortableTextComponents = {
     h2: ({ children }) => <h2 className="unit-body-h2">{children}</h2>,
     h3: ({ children }) => <h3 className="unit-body-h3">{children}</h3>,
     h4: ({ children }) => <h4 className="unit-body-h4">{children}</h4>,
+    h5: ({ children }) => <h5 className="unit-body-h5">{children}</h5>,
+    h6: ({ children }) => <h6 className="unit-body-h6">{children}</h6>,
     blockquote: ({ children }) => <blockquote className="unit-body-quote">{children}</blockquote>,
   },
   marks: {
+    underline: ({ children }) => <u>{children}</u>,
+    'strike-through': ({ children }) => <s>{children}</s>,
     link: ({ value, children }) => {
       const href = value?.href
       if (!href) return <>{children}</>
@@ -55,6 +59,30 @@ const components: PortableTextComponents = {
       </figure>
     ),
     unitEmbed: ({ value }) => <UnitEmbed value={value} />,
+    separator: () => <hr className="unit-separator" />,
+    spacer: ({ value }) => <div className="unit-spacer" style={{ height: value?.height ?? 40 }} />,
+    buttonBlock: ({ value }) =>
+      value?.href ? (
+        <p>
+          <a
+            className={`unit-button unit-button--${value.style || 'primary'}`}
+            href={value.href}
+            target={value.openInNewTab ? '_blank' : undefined}
+            rel={value.openInNewTab ? 'noopener noreferrer' : undefined}
+          >
+            {value.label || 'Button'}
+          </a>
+        </p>
+      ) : null,
+    columns: ({ value }) => (
+      <div className="unit-columns">
+        {(value?.items ?? []).map((item: {_key?: string; text?: string}, index: number) => (
+          <div key={item._key || index} className="unit-column">
+            {item.text}
+          </div>
+        ))}
+      </div>
+    ),
   },
 }
 
