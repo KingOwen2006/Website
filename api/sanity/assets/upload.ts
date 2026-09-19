@@ -1,1 +1,1 @@
-export {config, default} from '../../admin/api/sanity/assets/upload'
+export {config, default} from '../../../admin/api/sanity/assets/upload.js'

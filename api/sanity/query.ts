@@ -1,1 +1,1 @@
-export {default} from '../admin/api/sanity/query'
+export {default} from '../../admin/api/sanity/query.js'

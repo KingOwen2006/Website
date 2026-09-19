@@ -1,1 +1,1 @@
-export {default} from '../admin/api/auth/logout'
+export {default} from '../../admin/api/auth/logout.js'

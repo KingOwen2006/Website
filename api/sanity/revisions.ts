@@ -1,1 +1,1 @@
-export {default} from '../admin/api/sanity/revisions'
+export {default} from '../../admin/api/sanity/revisions.js'
