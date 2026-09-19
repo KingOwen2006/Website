@@ -31,23 +31,3 @@ export function SoftwareBar() {
     </section>
   )
 }
-
-export function CommissionsPanel() {
-  return (
-    <section className="commissions-section" aria-label="Commissions">
-      <div className="commissions-inner">
-        <h3 className="commissions-title">Open for projects</h3>
-        <p className="commissions-desc">
-          Interested in a custom car, character, or print-ready model? Get in touch on Discord and
-          we can talk through your idea, timeline, and scope.
-        </p>
-        <div className="commissions-tags">
-          <span className="commissions-tag">Vehicles</span>
-          <span className="commissions-tag">Characters</span>
-          <span className="commissions-tag">Print files</span>
-          <span className="commissions-tag">Game assets</span>
-        </div>
-      </div>
-    </section>
-  )
-}

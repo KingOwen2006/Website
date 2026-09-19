@@ -1,4 +1,9 @@
-import {getUnitImageSizeClass, getUnitImageUrl, type UnitImageValue} from '../../lib/unitImages'
+import {
+  getUnitImageAlignClass,
+  getUnitImageSizeClass,
+  getUnitImageUrl,
+  type UnitImageValue,
+} from '../../lib/unitImages'
 import {useUnitLightbox} from './UnitLightbox'
 
 type UnitImageFigureProps = {
@@ -17,9 +22,11 @@ export default function UnitImageFigure({
   if (!src) return null
 
   const sizeClass = getUnitImageSizeClass(value?.size)
+  const alignClass = getUnitImageAlignClass(value?.align)
+  const figureClass = [className, alignClass].filter(Boolean).join(' ')
 
   return (
-    <figure className={className}>
+    <figure className={figureClass}>
       <button
         type="button"
         className={`unit-body-image-button${sizeClass ? ` ${sizeClass}` : ''}`}

@@ -1,4 +1,4 @@
-import { embedExternalHref } from '../../lib/embeds'
+import { embedExternalHref, resolveEmbedValue } from '../../lib/embeds'
 import { isYoutubeEmbed } from '../../lib/unitImages'
 import GlbViewer from './GlbViewer'
 
@@ -14,10 +14,11 @@ type UnitEmbedProps = {
 }
 
 export default function UnitEmbed({ value }: UnitEmbedProps) {
-  const src = value.src ?? ''
-  const href = value.href || embedExternalHref(src)
-  const linkText = value.linkText ?? 'Open'
-  const embedType = value.embedType ?? 'embed'
+  const resolved = resolveEmbedValue(value)
+  const src = resolved.src ?? ''
+  const href = resolved.href || embedExternalHref(src)
+  const linkText = resolved.linkText ?? 'Open'
+  const embedType = resolved.embedType ?? 'embed'
 
   if (!src) return null
 

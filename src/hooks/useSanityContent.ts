@@ -74,7 +74,11 @@ export function useChapter(slug: string | undefined) {
 }
 
 export function useChapterUnits(chapterSlug: string | undefined) {
-  return useSanityQuery<UnitSummary[]>(unitsByChapterSlugQuery, { slug: chapterSlug }, Boolean(chapterSlug))
+  const state = useSanityQuery<UnitSummary[]>(unitsByChapterSlugQuery, { slug: chapterSlug }, Boolean(chapterSlug))
+  return {
+    ...state,
+    data: state.data?.filter((unit) => (unit as {visibility?: string}).visibility !== 'private') ?? state.data,
+  }
 }
 
 export function useUnit(chapterSlug: string | undefined, unitSlug: string | undefined) {

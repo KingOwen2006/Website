@@ -23,7 +23,7 @@ import {htmlToBlocks} from '@portabletext/block-tools'
 import {JSDOM} from 'jsdom'
 import {randomUUID} from 'node:crypto'
 import {cleanWordPressText} from '../src/lib/cleanText.ts'
-import {embedExternalHref, replaceEmbeds} from '../src/lib/embeds.ts'
+import {embedExternalHref, replaceEmbeds, resolveEmbedValue} from '../src/lib/embeds.ts'
 import {convertPhraseEmbedsInBody} from '../src/lib/portableTextEmbeds.ts'
 import {groupConsecutiveImages} from '../src/lib/groupUnitImages.ts'
 
@@ -38,6 +38,7 @@ type WordPressComPostListItem = {
 
 type WordPressComPost = WordPressComPostListItem & {
   content?: string
+  categories?: Record<string, { name: string; slug: string }>
 }
 
 type ChapterSeed = {
@@ -69,6 +70,7 @@ const dataset = process.env.SANITY_DATASET ?? 'production'
 const token = process.env.SANITY_API_TOKEN
 const wordpressSite = process.env.WORDPRESS_SITE ?? 'kingowenfyi.wordpress.com'
 const year2FirstUnit = Number(process.env.WORDPRESS_YEAR_2_FIRST_UNIT ?? 9)
+const singlePostId = process.env.WORDPRESS_POST_ID ? Number(process.env.WORDPRESS_POST_ID) : null
 
 if (!projectId || !token) {
   console.error('Missing required env vars: SANITY_PROJECT_ID, SANITY_API_TOKEN')
@@ -127,6 +129,7 @@ const blockContentType = Schema.compile({
                 {name: 'alt', type: 'string'},
                 {name: 'caption', type: 'string'},
                 {name: 'size', type: 'string'},
+                {name: 'align', type: 'string'},
               ],
             },
             {
@@ -248,6 +251,28 @@ async function uploadImageCached(
   return asset._id
 }
 
+function wpImageMetaFromElement(img: HTMLImageElement) {
+  const figure = img.closest('figure')
+  const classNames = `${img.className} ${figure?.className ?? ''}`
+
+  let size: string | undefined
+  if (img.getAttribute('data-wide') === 'true' || /\balignfull\b|\balignwide\b|\bsize-full\b/i.test(classNames)) {
+    size = 'wide'
+  } else if (
+    img.getAttribute('data-narrow') === 'true' ||
+    /\bsize-medium\b|\bsize-thumbnail\b/i.test(classNames)
+  ) {
+    size = 'narrow'
+  }
+
+  let align: string | undefined
+  if (/\balignleft\b|\balign-left\b/i.test(classNames)) align = 'left'
+  else if (/\balignright\b|\balign-right\b/i.test(classNames)) align = 'right'
+  else if (/\baligncenter\b|\balign-center\b/i.test(classNames)) align = 'center'
+
+  return {size, align}
+}
+
 async function createImageMarker(
   img: HTMLImageElement,
   postSlug: string,
@@ -263,8 +288,9 @@ async function createImageMarker(
   marker.setAttribute('data-asset-id', assetId)
   marker.setAttribute('data-alt', img.getAttribute('alt') || '')
 
-  if (img.getAttribute('data-wide') === 'true') marker.setAttribute('data-size', 'wide')
-  if (img.getAttribute('data-narrow') === 'true') marker.setAttribute('data-size', 'narrow')
+  const {size, align} = wpImageMetaFromElement(img)
+  if (size) marker.setAttribute('data-size', size)
+  if (align) marker.setAttribute('data-align', align)
 
   const caption =
     img.closest('figure')?.querySelector('figcaption')?.textContent?.trim() ||
@@ -304,9 +330,13 @@ async function preprocessHtml(html: string, postSlug: string, imageCache: Map<st
     const imgs = [...gallery.querySelectorAll('img')]
     if (imgs.length < 2) continue
 
-    const layout = gallery.matches('.wp-block-jetpack-slideshow, .jetpack-slideshow')
+    const layout = gallery.matches(
+      '.wp-block-jetpack-slideshow, .jetpack-slideshow, .wp-block-gallery-is-layout-flex',
+    )
       ? 'slider'
-      : 'grid'
+      : imgs.length >= 3
+        ? 'slider'
+        : 'grid'
     const columns = gallery.classList.contains('columns-3') ? 3 : 2
 
     const wrapper = doc.createElement('div')
@@ -359,6 +389,7 @@ function imageBlockFromMarker(el: HTMLElement) {
     alt: el.getAttribute('data-alt') || undefined,
     caption: el.getAttribute('data-caption') || undefined,
     size: el.getAttribute('data-size') || undefined,
+    align: el.getAttribute('data-align') || undefined,
   }
 }
 
@@ -430,7 +461,9 @@ function htmlToUnitBlocks(html: string) {
               src = audio?.getAttribute('src') || ''
             } else if (iframe) {
               src = iframe.getAttribute('src') || ''
-              embedType = src.includes('figma.com') ? 'figma' : 'embed'
+              const resolved = resolveEmbedValue({src})
+              embedType = resolved.embedType ?? 'embed'
+              src = resolved.src ?? src
             }
 
             const linkText = link?.textContent?.trim() || 'Open'
@@ -476,6 +509,44 @@ async function ensureChapter(seed: ChapterSeed) {
   return client.create({...document, _id: randomUUID()}).then((created) => created._id)
 }
 
+async function ensureTaxonomy(
+  title: string,
+  slug: string,
+  kind: 'category' | 'tag' = 'category',
+) {
+  const existing = await client.fetch<{_id: string} | null>(
+    `*[_type == "taxonomy" && slug.current == $slug && kind == $kind][0]{ _id }`,
+    {slug, kind},
+  )
+  if (existing?._id) return existing._id
+
+  return client
+    .create({
+      _type: 'taxonomy',
+      _id: randomUUID(),
+      title,
+      slug: {_type: 'slug', current: slug},
+      kind,
+    })
+    .then((created) => created._id)
+}
+
+async function categoryRefsFromPost(post: WordPressComPost) {
+  const refs: Array<{_type: 'reference'; _ref: string}> = []
+  const seen = new Set<string>()
+
+  for (const category of Object.values(post.categories ?? {})) {
+    if (!category?.slug || seen.has(category.slug)) continue
+    seen.add(category.slug)
+    refs.push({
+      _type: 'reference',
+      _ref: await ensureTaxonomy(category.name, category.slug, 'category'),
+    })
+  }
+
+  return refs
+}
+
 async function upsertUnit(
   post: WordPressComPost,
   chapterId: string,
@@ -491,6 +562,7 @@ async function upsertUnit(
   const blocks =
     groupConsecutiveImages(convertPhraseEmbedsInBody(htmlToUnitBlocks(html)) ?? []) ?? []
   const unitNumber = parseUnitNumber(post.title)
+  const categories = await categoryRefsFromPost(post)
 
   let thumbnailAssetId: string | undefined
   if (post.featured_image) {
@@ -509,6 +581,7 @@ async function upsertUnit(
     order,
     unitNumber: unitNumber ?? undefined,
     publishedAt: post.date,
+    ...(categories.length ? {categories} : {}),
     ...(thumbnailAssetId
       ? {
           thumbnail: {
@@ -530,7 +603,9 @@ async function upsertUnit(
 
 async function main() {
   console.log(`Fetching posts from ${wordpressSite}…`)
-  const posts = await fetchAllPosts()
+  const posts = singlePostId
+    ? [await fetchJson<WordPressComPost>(`/posts/${singlePostId}?content=raw`)]
+    : await fetchAllPosts()
   console.log(`Found ${posts.length} posts.`)
 
   const chapterIds = new Map<string, string>()

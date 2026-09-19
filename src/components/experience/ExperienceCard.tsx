@@ -45,6 +45,11 @@ export default function ExperienceCard({ entry, logoOverride }: ExperienceCardPr
         )}
         <p className="experience-card-date">{entry.date}</p>
       </div>
+      {isLink ? (
+        <span className="experience-card-continue" aria-hidden="true">
+          &gt;
+        </span>
+      ) : null}
     </article>
   )
 }

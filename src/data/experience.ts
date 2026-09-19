@@ -53,6 +53,8 @@ export const EXPERIENCE_ENTRIES: ExperienceEntry[] = [
     date: 'September 2025 — Present',
     logo: '/img/Pfp.jpg',
     logoAlt: 'This website',
+    href: 'https://github.com/KingOwen2006/Website/tree/beta',
+    external: true,
   },
   {
     id: 'twidget',

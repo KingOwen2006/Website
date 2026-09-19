@@ -210,6 +210,35 @@ export function formatTweetDate(dateString: string): string {
   })
 }
 
+export function formatRelativeTime(dateString: string): string {
+  const date = new Date(dateString)
+  if (Number.isNaN(date.getTime())) return dateString
+
+  const diffMs = Date.now() - date.getTime()
+  const minutes = Math.max(0, Math.floor(diffMs / 60_000))
+  if (minutes < 1) return 'Just now'
+  if (minutes < 60) return `${minutes} minute${minutes === 1 ? '' : 's'} ago`
+
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`
+
+  const days = Math.floor(hours / 24)
+  if (days < 7) return `${days} day${days === 1 ? '' : 's'} ago`
+
+  return formatTweetDate(dateString)
+}
+
 export function formatCount(value: number): string {
-  return new Intl.NumberFormat().format(value)
+  return new Intl.NumberFormat('en', {
+    notation: 'compact',
+    maximumFractionDigits: 1,
+  }).format(value)
+}
+
+export function getRetweetIntentUrl(statusId: string) {
+  return `https://x.com/intent/retweet?tweet_id=${encodeURIComponent(statusId)}`
+}
+
+export function getReplyIntentUrl(statusId: string) {
+  return `https://x.com/intent/tweet?in_reply_to=${encodeURIComponent(statusId)}`
 }

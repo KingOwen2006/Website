@@ -1,4 +1,10 @@
-import {EMBED_REPLACEMENTS, embedExternalHref, type EmbedConfig} from './embeds'
+import {
+  EMBED_REPLACEMENTS,
+  embedExternalHref,
+  isAutoEmbeddableUrl,
+  resolveEmbedValue,
+  type EmbedConfig,
+} from './embeds'
 
 type PortableTextSpan = {
   _type: 'span'
@@ -33,7 +39,10 @@ export type PortableTextBodyItem =
 
 type TextSegment = {kind: 'text'; text: string}
 type EmbedSegment = {kind: 'embed'; phrase: string}
-type Segment = TextSegment | EmbedSegment
+type UrlSegment = {kind: 'url'; url: string}
+type Segment = TextSegment | EmbedSegment | UrlSegment
+
+const AUTO_EMBED_URL_RE = /https?:\/\/[^\s<>"']+/gi
 
 const embedKeys = Object.keys(EMBED_REPLACEMENTS).sort((a, b) => b.length - a.length)
 
@@ -64,23 +73,60 @@ function findEmbedPhraseAt(text: string, startIndex: number) {
   return null
 }
 
+function findEmbeddableUrlAt(text: string, startIndex: number) {
+  const slice = text.slice(startIndex)
+  const match = slice.match(/^https?:\/\/[^\s<>"']+/i)
+  if (!match) return null
+  return isAutoEmbeddableUrl(match[0]) ? match[0] : null
+}
+
+function findAutoEmbedAt(text: string, startIndex: number): {kind: 'embed' | 'url'; value: string} | null {
+  const phrase = findEmbedPhraseAt(text, startIndex)
+  if (phrase) return {kind: 'embed', value: phrase}
+
+  const url = findEmbeddableUrlAt(text, startIndex)
+  if (url) return {kind: 'url', value: url}
+
+  return null
+}
+
+export function textContainsEmbeddableUrl(text: string) {
+  for (const match of text.matchAll(AUTO_EMBED_URL_RE)) {
+    if (match.index == null) continue
+    if (isAutoEmbeddableUrl(match[0])) return true
+  }
+  return false
+}
+
+export function textContainsEmbedPhrase(text: string) {
+  for (let index = 0; index < text.length; index += 1) {
+    if (findEmbedPhraseAt(text, index)) return true
+  }
+
+  return false
+}
+
+export function textContainsAutoEmbed(text: string) {
+  return textContainsEmbedPhrase(text) || textContainsEmbeddableUrl(text)
+}
+
 export function splitTextByEmbedPhrases(text: string): Segment[] {
   const segments: Segment[] = []
   let index = 0
 
   while (index < text.length) {
-    const phrase = findEmbedPhraseAt(text, index)
+    const hit = findAutoEmbedAt(text, index)
 
-    if (phrase) {
-      segments.push({kind: 'embed', phrase})
-      index += phrase.length
+    if (hit) {
+      segments.push(hit.kind === 'embed' ? {kind: 'embed', phrase: hit.value} : {kind: 'url', url: hit.value})
+      index += hit.value.length
       continue
     }
 
     let nextIndex = text.length
 
     for (let cursor = index + 1; cursor < text.length; cursor += 1) {
-      if (findEmbedPhraseAt(text, cursor)) {
+      if (findAutoEmbedAt(text, cursor)) {
         nextIndex = cursor
         break
       }
@@ -90,17 +136,10 @@ export function splitTextByEmbedPhrases(text: string): Segment[] {
     index = nextIndex
   }
 
-  return segments.filter(
-    (segment) => segment.kind === 'embed' || segment.text.replace(/\[\s*\]/g, ' ').trim().length > 0,
-  )
-}
-
-export function textContainsEmbedPhrase(text: string) {
-  for (let index = 0; index < text.length; index += 1) {
-    if (findEmbedPhraseAt(text, index)) return true
-  }
-
-  return false
+  return segments.filter((segment) => {
+    if (segment.kind === 'embed' || segment.kind === 'url') return true
+    return segment.text.replace(/\[\s*\]/g, ' ').trim().length > 0
+  })
 }
 
 function createUnitEmbedBlock(phrase: string): UnitEmbedBlock | null {
@@ -117,10 +156,40 @@ function createUnitEmbedBlock(phrase: string): UnitEmbedBlock | null {
   }
 }
 
+function createUrlEmbedBlock(rawUrl: string): UnitEmbedBlock {
+  const resolved = resolveEmbedValue({src: rawUrl})
+  return {
+    _type: 'unitEmbed',
+    _key: newKey('embed'),
+    embedType: (resolved.embedType ?? 'embed') as EmbedConfig['type'],
+    src: resolved.src ?? rawUrl,
+    href: resolved.href,
+    linkText: resolved.linkText,
+  }
+}
+
 function getBlockPlainText(block: PortableTextBlock) {
   return (block.children ?? [])
     .map((child) => (child._type === 'span' ? child.text ?? '' : ''))
     .join('')
+}
+
+function extractStandaloneEmbeddableUrl(block: PortableTextBlock) {
+  const plain = getBlockPlainText(block).trim()
+  if (isAutoEmbeddableUrl(plain)) return plain
+
+  const markDefs = (block.markDefs ?? []) as Array<{_key?: string; href?: string}>
+  for (const child of block.children ?? []) {
+    if (child._type !== 'span') continue
+    const text = (child.text ?? '').trim()
+    for (const mark of child.marks ?? []) {
+      const def = markDefs.find((item) => item._key === mark)
+      if (!def?.href || !isAutoEmbeddableUrl(def.href)) continue
+      if (!text || isAutoEmbeddableUrl(text) || text === def.href) return def.href
+    }
+  }
+
+  return null
 }
 
 function createTextBlock(text: string, template: PortableTextBlock): PortableTextBlock | null {
@@ -146,8 +215,11 @@ function createTextBlock(text: string, template: PortableTextBlock): PortableTex
 }
 
 function convertBlock(block: PortableTextBlock): PortableTextBodyItem[] {
+  const standalone = extractStandaloneEmbeddableUrl(block)
+  if (standalone) return [createUrlEmbedBlock(standalone)]
+
   const plainText = getBlockPlainText(block)
-  if (!textContainsEmbedPhrase(plainText)) return [block]
+  if (!textContainsAutoEmbed(plainText)) return [block]
 
   const segments = splitTextByEmbedPhrases(plainText)
   const converted: PortableTextBodyItem[] = []
@@ -156,6 +228,11 @@ function convertBlock(block: PortableTextBlock): PortableTextBodyItem[] {
     if (segment.kind === 'embed') {
       const embed = createUnitEmbedBlock(segment.phrase)
       if (embed) converted.push(embed)
+      continue
+    }
+
+    if (segment.kind === 'url') {
+      converted.push(createUrlEmbedBlock(segment.url))
       continue
     }
 
@@ -187,6 +264,12 @@ export function bodyContainsEmbedPhrases(body: PortableTextBodyItem[] | null | u
     (item) =>
       item._type === 'block' &&
       'children' in item &&
-      textContainsEmbedPhrase(getBlockPlainText(item as PortableTextBlock)),
+      textContainsAutoEmbed(getBlockPlainText(item as PortableTextBlock)),
   )
+}
+
+export function createEmbedBlockFromUrl(rawUrl: string): UnitEmbedBlock | null {
+  const trimmed = rawUrl.trim()
+  if (!trimmed || !isAutoEmbeddableUrl(trimmed)) return null
+  return createUrlEmbedBlock(trimmed)
 }

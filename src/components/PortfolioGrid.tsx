@@ -10,6 +10,7 @@ type PortfolioGridProps = {
   showFilters?: boolean
   title?: string
   limit?: number
+  hideEmptyMessage?: boolean
 }
 
 const STATUS_LABELS: Record<PortfolioItem['status'], string> = {
@@ -23,6 +24,7 @@ export default function PortfolioGrid({
   showFilters = true,
   title,
   limit,
+  hideEmptyMessage = false,
 }: PortfolioGridProps) {
   const [category, setCategory] = useState<PortfolioCategory>('all')
 
@@ -73,7 +75,7 @@ export default function PortfolioGrid({
         ))}
       </div>
 
-      {visible.length === 0 && (
+      {visible.length === 0 && !hideEmptyMessage && (
         <p className="portfolio-empty">Nothing here yet — check back soon.</p>
       )}
     </section>
