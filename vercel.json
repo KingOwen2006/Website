@@ -1,11 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "npm ci --legacy-peer-deps --prefix studio/kingowen-portfollio",
-  "buildCommand": "npm run build --prefix studio/kingowen-portfollio",
-  "outputDirectory": "studio/kingowen-portfollio/dist",
+  "framework": "vite",
+  "installCommand": "npm ci --legacy-peer-deps --prefix admin",
+  "buildCommand": "npm run build --prefix admin",
+  "outputDirectory": "admin/dist",
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/((?!api/|assets/).*)",
       "destination": "/index.html"
     }
   ]
