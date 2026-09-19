@@ -5,12 +5,16 @@
   "buildCommand": "npm run build --prefix admin",
   "outputDirectory": "admin/dist",
   "functions": {
-    "api/[[...path]].ts": {
+    "api/index.ts": {
       "maxDuration": 60,
       "memory": 1024
     }
   },
   "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index?__path=$1"
+    },
     {
       "source": "/((?!api/|assets/).*)",
       "destination": "/index.html"
