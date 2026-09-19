@@ -1,5 +1,5 @@
-import {wrap} from '../../_lib/http'
-import {handleUpload} from '../../_lib/handlers'
+import {wrap} from '../../_lib/http.js'
+import {handleUpload} from '../../_lib/handlers.js'
 
 export const config = {
   api: {

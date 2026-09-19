@@ -1,7 +1,7 @@
-import {json, queryValue, type ApiRequest, type ApiResponse} from './http'
-import {requireAuth} from './auth'
-import {sanityWriteClient} from './sanityClient'
-import {QUERIES, type QueryName} from './queries'
+import {json, queryValue, type ApiRequest, type ApiResponse} from './http.js'
+import {requireAuth} from './auth.js'
+import {sanityWriteClient} from './sanityClient.js'
+import {QUERIES, type QueryName} from './queries.js'
 
 function isQueryName(value: string): value is QueryName {
   return value in QUERIES

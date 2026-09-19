@@ -1,4 +1,4 @@
-import {wrap} from '../../_lib/http'
-import {handleAsset} from '../../_lib/handlers'
+import {wrap} from '../../_lib/http.js'
+import {handleAsset} from '../../_lib/handlers.js'
 
 export default wrap(handleAsset)
