@@ -11,6 +11,8 @@ export type ExperienceEntry = {
   chapterSlug?: string
   href?: string
   external?: boolean
+  startAt?: string
+  endAt?: string
 }
 
 export const EXPERIENCE_ENTRIES: ExperienceEntry[] = [
@@ -55,6 +57,7 @@ export const EXPERIENCE_ENTRIES: ExperienceEntry[] = [
     logoAlt: 'This website',
     href: 'https://github.com/KingOwen2006/Website/tree/beta',
     external: true,
+    startAt: '2025-09-01',
   },
   {
     id: 'twidget',
@@ -66,6 +69,33 @@ export const EXPERIENCE_ENTRIES: ExperienceEntry[] = [
     logoAlt: 'Twidget',
     href: 'https://github.com/thatjoshguy67/twidget',
     external: true,
+    startAt: '2026-07-01',
+  },
+  {
+    id: 'landscape-spline',
+    group: 'projects',
+    title: 'Landscape Spline To Spline Plugin',
+    detail:
+      'Unreal Engine 5.7 plugin that converts landscape splines into spline components, including overlapping splines.',
+    date: 'May 2026 — June 2026',
+    logo: '/img/LandscapeSpline.svg',
+    logoAlt: 'Landscape Spline To Spline Plugin',
+    href: 'https://github.com/KingOwen2006/LandscapeSplineToSpline',
+    external: true,
+    startAt: '2026-05-01',
+    endAt: '2026-06-30',
+  },
+  {
+    id: 'herbet-ai',
+    group: 'projects',
+    title: 'Herbet AI',
+    detail: 'AI project in early development.',
+    date: 'September 2026 — Present',
+    logo: '/img/hurbetai-logo.png',
+    logoAlt: 'Herbet AI',
+    href: 'https://github.com/KingOwen2006/HurbetAI',
+    external: true,
+    startAt: '2026-09-24',
   },
 ]
 

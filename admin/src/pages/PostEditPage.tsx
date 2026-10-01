@@ -6,6 +6,7 @@ import {PrePublishChecklist} from '../editor/publish/PrePublishChecklist'
 import {EditorShell} from '../editor/shell/EditorShell'
 import {EditorSidebar} from '../editor/shell/EditorSidebar'
 import {useDocumentEditor} from '../lib/document/useDocumentEditor'
+import {imageUrl} from '../lib/image'
 import {restoreDocument, trashDocument} from '../lib/api'
 
 export function PostEditPage() {
@@ -26,6 +27,7 @@ export function PostEditPage() {
   }
 
   const post = editor.post
+  const thumbnailSrc = imageUrl(post.thumbnail, 240) || '/img/BPC.png'
 
   return (
     <>
@@ -70,22 +72,52 @@ export function PostEditPage() {
         {view === 'preview' ? (
           <PostPreview post={post} />
         ) : (
-          <>
-            <input
-              className="editor-title"
-              value={post.title ?? ''}
-              placeholder="Add title"
-              onChange={(event) => editor.updateTitle(event.target.value)}
-            />
-            <BodyEditor
-              key={post._id}
-              value={post.body}
-              onChange={(body) => editor.update({body})}
-              onSave={() => void editor.saveNow('Manual save')}
-              inserterOpen={inserterOpen}
-              onInserterClose={() => setInserterOpen(false)}
-            />
-          </>
+          <section className="unit-page editor-live-page" aria-label="Post editor">
+            <div className="unit-page-header">
+              <div className="unit-page-hero">
+                <img
+                  className="unit-page-thumbnail"
+                  src={thumbnailSrc}
+                  alt={post.thumbnail?.alt ?? post.title ?? ''}
+                />
+                <div className="unit-page-copy">
+                  <p className="chapter-hero-kicker">{post.chapter?.title ?? 'Post'}</p>
+                  <input
+                    className="editor-title chapter-hero-title"
+                    lang="en-GB"
+                    spellCheck
+                    value={post.title ?? ''}
+                    placeholder="Add title"
+                    onChange={(event) => editor.updateTitle(event.target.value)}
+                  />
+                  {post.categories?.length ? (
+                    <div className="unit-page-meta">
+                      {post.categories.map((category) => (
+                        <span key={category._id} className="unit-page-taxonomy">
+                          {category.title}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+              <BodyEditor
+                key={post._id}
+                value={post.body}
+                onChange={(body) => editor.update({body})}
+                onSave={() => void editor.saveNow('Manual save')}
+                inserterOpen={inserterOpen}
+                onInserterClose={() => setInserterOpen(false)}
+              />
+              {post.tags?.length ? (
+                <div className="unit-page-tags" aria-label="Tags">
+                  {post.tags.map((tag) => (
+                    <span key={tag._id}>#{tag.title}</span>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          </section>
         )}
       </EditorShell>
       {checklist ? (

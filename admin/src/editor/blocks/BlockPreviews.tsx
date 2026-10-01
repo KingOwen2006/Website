@@ -1,6 +1,7 @@
 import UnitEmbed, {type UnitEmbedValue} from '@site/components/experience/UnitEmbed'
 import UnitImageCompare from '@site/components/experience/UnitImageCompare'
 import {resolveEmbedValue} from '@site/lib/embeds'
+import {getUnitImageAlignClass, getUnitImageSizeClass} from '@site/lib/unitImages'
 import {imageUrl} from '../../lib/image'
 import type {ImageValue} from '../../lib/document/types'
 
@@ -19,11 +20,21 @@ export function EmbedPreview({  src,
   return <UnitEmbed value={resolved} />
 }
 
-export function ImagePreview({value}: {value?: ImageValue}) {  const src = imageUrl(value, 1200)
+export function ImagePreview({value}: {value?: ImageValue}) {
+  const src = imageUrl(value, 1200)
   if (!src) return null
+  const sizeClass = getUnitImageSizeClass(value?.size)
+  const alignClass = getUnitImageAlignClass(value?.align === 'default' ? undefined : value?.align)
   return (
-    <figure className="unit-body-figure">
-      <img src={src} alt={value?.alt ?? ''} className="unit-body-image" loading="lazy" />
+    <figure className={['unit-body-figure', alignClass].filter(Boolean).join(' ')}>
+      <div className={`unit-body-image-button${sizeClass ? ` ${sizeClass}` : ''}`}>
+        <img
+          src={src}
+          alt={value?.alt ?? ''}
+          className={`unit-body-image${sizeClass ? ` ${sizeClass}` : ''}`}
+          loading="lazy"
+        />
+      </div>
       {value?.caption ? <figcaption className="unit-body-caption">{value.caption}</figcaption> : null}
     </figure>
   )

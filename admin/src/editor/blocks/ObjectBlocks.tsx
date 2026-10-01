@@ -9,7 +9,12 @@ import {imageUrl} from '../../lib/image'
 import type {ImageValue} from '../../lib/document/types'
 
 import {useState} from 'react'
-import {isAutoEmbeddableUrl, resolveEmbedValue} from '@site/lib/embeds'
+import {
+  isAutoEmbeddableUrl,
+  extractEmbeddableUrlFromClipboard,
+  extractEmbeddableUrlFromText,
+  resolveEmbedValue,
+} from '@site/lib/embeds'
 
 import {BlockWrapper} from './BlockWrapper'
 import {ImageComparePreview, EmbedPreview, ImageGalleryPreview, ImagePreview, ImageRowPreview} from './BlockPreviews'
@@ -336,7 +341,15 @@ export function ObjectBlock({
         node={node}
         attributes={attributes}
         label="Image"
-        preview={hasImage ? <ImagePreview value={node as ImageValue} /> : null}
+        preview={
+          hasImage ? (
+            <ImagePreview value={node as ImageValue} />
+          ) : (
+            <div className="unit-image-paste" tabIndex={0}>
+              Paste an image
+            </div>
+          )
+        }
         editor={editor}
       >
         {children}
@@ -477,8 +490,9 @@ export function ObjectBlock({
 
     const handleSrcChange = (raw: string) => {
       const trimmed = raw.trim()
-      if (isAutoEmbeddableUrl(trimmed)) {
-        const resolved = resolveEmbedValue({src: trimmed, href: node.href, linkText: node.linkText})
+      const url = extractEmbeddableUrlFromText(trimmed) ?? trimmed
+      if (isAutoEmbeddableUrl(url)) {
+        const resolved = resolveEmbedValue({src: url, href: node.href, linkText: node.linkText})
         set({
           src: resolved.src,
           embedType: resolved.embedType,
@@ -498,7 +512,17 @@ export function ObjectBlock({
           <option value="audio">Audio</option>
           <option value="model">3D model</option>
         </select>
-        <input placeholder="Source URL" value={node.src ?? ''} onChange={(event) => handleSrcChange(event.target.value)} />
+        <input
+          placeholder="Source URL"
+          value={node.src ?? ''}
+          onChange={(event) => handleSrcChange(event.target.value)}
+          onPaste={(event) => {
+            const url = extractEmbeddableUrlFromClipboard(event.clipboardData)
+            if (!url) return
+            event.preventDefault()
+            handleSrcChange(url)
+          }}
+        />
         <input placeholder="Link URL" value={node.href ?? ''} onChange={(event) => set({href: event.target.value})} />
         <input placeholder="Link text" value={node.linkText ?? ''} onChange={(event) => set({linkText: event.target.value})} />
       </>
@@ -518,7 +542,21 @@ export function ObjectBlock({
               href={node.href}
               linkText={node.linkText}
             />
-          ) : null
+          ) : (
+            <input
+              className="embed-empty-hint embed-paste-zone"
+              placeholder="Paste a YouTube, Figma, or other embeddable link"
+              value=""
+              onChange={(event) => handleSrcChange(event.target.value)}
+              onPaste={(event) => {
+                const url = extractEmbeddableUrlFromClipboard(event.clipboardData)
+                if (!url) return
+                event.preventDefault()
+                event.stopPropagation()
+                handleSrcChange(url)
+              }}
+            />
+          )
         }
         editor={editor}
       >

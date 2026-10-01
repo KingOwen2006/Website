@@ -28,6 +28,7 @@ export function BlockWrapper({
   return (
     <div
       {...(attributes as Record<string, never>)}
+      data-block-key={key || undefined}
       className={`block-card${bare ? ' block-card--inline' : ''}${focused ? ' is-selected' : ''}`}
       tabIndex={bare ? 0 : undefined}
       onFocus={() => setFocused(true)}

@@ -89,9 +89,33 @@
   align-items: center;
 }
 
+.nav-active-indicator {
+  position: absolute;
+  z-index: 0;
+  border-radius: 9999px;
+  background: var(--nav-item-active-bg);
+  pointer-events: none;
+  transition:
+    left 0.38s cubic-bezier(0.4, 0, 0.2, 1),
+    top 0.38s cubic-bezier(0.4, 0, 0.2, 1),
+    width 0.38s cubic-bezier(0.4, 0, 0.2, 1),
+    height 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-active-indicator.is-instant {
+  transition: none;
+}
+
+.desktop-nav .icon-container {
+  position: relative;
+  z-index: 1;
+}
+
 .nav-icon-container,
 .nav-icon-container-selected,
 .sidebar-toggle {
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: 44px;
   min-height: 44px;
@@ -110,7 +134,7 @@
   box-sizing: border-box;
   transition:
     background-color 0.2s ease,
-    color 0.2s ease,
+    color 0.35s ease,
     transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
     width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
     padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -118,19 +142,14 @@
 
 .nav-icon-container:hover,
 .sidebar-toggle:hover {
-  background: transparent;
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
   color: var(--primary);
 }
 
+.nav-icon-container-selected,
 .nav-icon-container-selected:hover {
-  background: var(--nav-item-active-bg);
+  background: transparent;
   color: var(--nav-item-active-text);
-}
-
-.nav-icon-container-selected {
-  background: var(--nav-item-active-bg);
-  color: var(--nav-item-active-text);
-  box-shadow: none;
 }
 
 .nav-icon-container-selected .nav-label-selected {
@@ -161,9 +180,11 @@
   white-space: nowrap;
   font-size: 16px;
   font-family: var(--body);
+  color: inherit;
   opacity: 1;
   transform: translateX(0);
   transition:
+    color 0.35s ease,
     opacity 0.18s ease 0.09s,
     max-width 0.24s cubic-bezier(0.4, 0, 0.2, 1) 0.05s,
     transform 0.22s cubic-bezier(0.4, 0, 0.2, 1) 0.07s;
@@ -208,7 +229,7 @@
 }
 
 .sidebar-toggle:hover {
-  background: none;
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
 }
 
 .profile-hero {

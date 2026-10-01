@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react'
 import type { DiscordStatus, LanyardActivity } from '../hooks/useLanyardPresence'
 import { useHeroParallax } from '../hooks/useHeroParallax'
+import { useOwnProjectUpdates } from '../hooks/useOwnProjectUpdates'
 import { useRecentUnits } from '../hooks/useRecentUnits'
 import { useTwidgetChangelog } from '../hooks/useTwidgetChangelog'
 import type { FxTwitterTimelineEntry } from '../lib/fxtwitter'
@@ -57,6 +58,11 @@ export default function HomePage({
     loading: twidgetLoading,
     error: twidgetError,
   } = useTwidgetChangelog()
+  const {
+    entries: ownProjectEntries,
+    loading: ownProjectLoading,
+    error: ownProjectError,
+  } = useOwnProjectUpdates()
 
   const scrollToProfile = () => {
     document.querySelector('.home-profile')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -95,10 +101,13 @@ export default function HomePage({
           <RecentUpdatesCarousel
             units={units}
             twidgetEntries={twidgetEntries}
+            ownProjectEntries={ownProjectEntries}
             loading={unitsLoading}
             twidgetLoading={twidgetLoading}
+            ownProjectLoading={ownProjectLoading}
             error={unitsError}
             twidgetError={twidgetError}
+            ownProjectError={ownProjectError}
           />
           <QuickFeedStrip
             entries={feedEntries}
