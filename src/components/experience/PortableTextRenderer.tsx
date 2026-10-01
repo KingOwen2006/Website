@@ -4,6 +4,7 @@ import type { UnitBySlugsQueryResult } from '../../sanity.types'
 import { cleanPortableTextBody } from '../../lib/cleanText'
 import { convertPhraseEmbedsInBody } from '../../lib/portableTextEmbeds'
 import UnitEmbed from './UnitEmbed'
+import { WordCount } from './WordCount'
 import UnitImageCompare from './UnitImageCompare'
 import UnitImageFigure from './UnitImageFigure'
 import UnitImageGallery from './UnitImageGallery'
@@ -95,12 +96,16 @@ export default function PortableTextRenderer({ value }: PortableTextRendererProp
     () => cleanPortableTextBody(convertPhraseEmbedsInBody(value)),
     [value],
   )
-  if (!cleanedValue?.length) return null
   return (
-    <UnitLightboxProvider>
-      <div className="unit-body-content">
-        <PortableText value={cleanedValue} components={components} />
-      </div>
-    </UnitLightboxProvider>
+    <>
+      <WordCount body={cleanedValue} />
+      {cleanedValue?.length ? (
+        <UnitLightboxProvider>
+          <div className="unit-body-content">
+            <PortableText value={cleanedValue} components={components} />
+          </div>
+        </UnitLightboxProvider>
+      ) : null}
+    </>
   )
 }
