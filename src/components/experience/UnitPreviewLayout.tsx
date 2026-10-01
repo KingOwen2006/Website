@@ -1,4 +1,5 @@
-import PortableTextRenderer from './PortableTextRenderer'
+import {useState} from 'react'
+import UnitArticle from './UnitArticle'
 
 export type PreviewUnit = {
   title?: string
@@ -11,6 +12,7 @@ export type PreviewUnit = {
 }
 
 export function UnitPreviewLayout({unit}: {unit: PreviewUnit}) {
+  const [sectionSlug, setSectionSlug] = useState<string | undefined>()
   const thumbnailUrl = unit.thumbnail?.asset?.url || '/img/BPC.png'
 
   return (
@@ -32,7 +34,12 @@ export function UnitPreviewLayout({unit}: {unit: PreviewUnit}) {
             ) : null}
           </div>
         </div>
-        <PortableTextRenderer value={unit.body as never} />
+        <UnitArticle
+          body={unit.body}
+          sectionSlug={sectionSlug}
+          basePath=""
+          onNavigate={setSectionSlug}
+        />
         {unit.tags?.length ? (
           <div className="unit-page-tags" aria-label="Tags">
             {unit.tags.map((tag) => (

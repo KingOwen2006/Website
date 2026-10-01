@@ -20,7 +20,10 @@ function isReferencesHeading(block: CountableBlock, text: string) {
   return /^h[1-6]$/.test(block.style ?? '') && text.trim().toLowerCase() === 'references'
 }
 
-export function countPortableTextWords(body?: unknown[] | null) {
+export function countPortableTextWords(
+  body?: unknown[] | null,
+  options?: {includeReferences?: boolean},
+) {
   const blocks = (convertPhraseEmbedsInBody(body as PortableTextBodyItem[] | null | undefined) ??
     []) as CountableBlock[]
   const parts: string[] = []
@@ -28,7 +31,7 @@ export function countPortableTextWords(body?: unknown[] | null) {
 
   for (const block of blocks) {
     const text = blockText(block)
-    if (isReferencesHeading(block, text)) inReferences = true
+    if (!options?.includeReferences && isReferencesHeading(block, text)) inReferences = true
     if (inReferences || !text.trim()) continue
     parts.push(text)
   }
