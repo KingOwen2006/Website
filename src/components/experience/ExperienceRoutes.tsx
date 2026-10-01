@@ -14,9 +14,9 @@ function ChapterRoute() {
 }
 
 function UnitRoute() {
-  const { chapterSlug, unitSlug } = useParams()
+  const { chapterSlug, unitSlug, sectionSlug } = useParams()
   if (!chapterSlug || !unitSlug) return <Navigate to="/experience" replace />
-  return <UnitView chapterSlug={chapterSlug} unitSlug={unitSlug} />
+  return <UnitView chapterSlug={chapterSlug} unitSlug={unitSlug} sectionSlug={sectionSlug} />
 }
 
 export default function ExperienceRoutes({ websiteLogo }: ExperienceRoutesProps) {
@@ -25,6 +25,7 @@ export default function ExperienceRoutes({ websiteLogo }: ExperienceRoutesProps)
       <Route index element={<ExperienceSection websiteLogo={websiteLogo} />} />
       <Route path=":chapterSlug" element={<ChapterRoute />} />
       <Route path=":chapterSlug/:unitSlug" element={<UnitRoute />} />
+      <Route path=":chapterSlug/:unitSlug/:sectionSlug" element={<UnitRoute />} />
     </Routes>
   )
 }

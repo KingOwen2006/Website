@@ -89,19 +89,25 @@ const components: PortableTextComponents = {
 
 type PortableTextRendererProps = {
   value?: NonNullable<UnitBySlugsQueryResult>['body']
+  showWordCount?: boolean
+  className?: string
 }
 
-export default function PortableTextRenderer({ value }: PortableTextRendererProps) {
+export default function PortableTextRenderer({
+  value,
+  showWordCount = true,
+  className,
+}: PortableTextRendererProps) {
   const cleanedValue = useMemo(
     () => cleanPortableTextBody(convertPhraseEmbedsInBody(value)),
     [value],
   )
   return (
     <>
-      <WordCount body={cleanedValue} />
+      {showWordCount ? <WordCount body={cleanedValue} /> : null}
       {cleanedValue?.length ? (
         <UnitLightboxProvider>
-          <div className="unit-body-content">
+          <div className={['unit-body-content', className].filter(Boolean).join(' ')}>
             <PortableText value={cleanedValue} components={components} />
           </div>
         </UnitLightboxProvider>

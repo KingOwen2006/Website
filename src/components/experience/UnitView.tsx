@@ -1,14 +1,15 @@
 import { Link } from 'react-router-dom'
 import { urlForThumbnail } from '../../lib/sanity/image'
 import { useUnit } from '../../hooks/useSanityContent'
-import PortableTextRenderer from './PortableTextRenderer'
+import UnitArticle from './UnitArticle'
 
 type UnitViewProps = {
   chapterSlug: string
   unitSlug: string
+  sectionSlug?: string
 }
 
-export default function UnitView({ chapterSlug, unitSlug }: UnitViewProps) {
+export default function UnitView({ chapterSlug, unitSlug, sectionSlug }: UnitViewProps) {
   const { data: unit, loading, error } = useUnit(chapterSlug, unitSlug)
   const thumbnailUrl =
     unit?.thumbnail?.asset?.url ?? urlForThumbnail(unit?.thumbnail) ?? '/img/BPC.png'
@@ -40,7 +41,11 @@ export default function UnitView({ chapterSlug, unitSlug }: UnitViewProps) {
                 ) : null}
               </div>
             </div>
-            <PortableTextRenderer value={unit.body} />
+            <UnitArticle
+              body={unit.body}
+              sectionSlug={sectionSlug}
+              basePath={`/experience/${chapterSlug}/${unitSlug}`}
+            />
             {unit.tags?.length ? (
               <div className="unit-page-tags" aria-label="Tags">
                 {unit.tags.map((tag) => (
