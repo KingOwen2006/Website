@@ -94,7 +94,7 @@
 
 .nav-icon-container-selected {
   border-radius: 9999px;
-  background: var(--nav-item-active-bg);
+  background: transparent;
   box-shadow: none;
 }
 

@@ -69,21 +69,21 @@ export function parseTwidgetChangelog(markdown: string): TwidgetChangelogEntry[]
     const version = headerMatch[1].trim()
     const date = headerMatch[2]?.trim() ?? null
     const href = links.get(version) ?? `${TWIDGET_REPO_URL}/blob/main/CHANGELOG.md`
-    const bullets = [...section.matchAll(/^-\s+(.+)$/gm)]
+    const summaries = [...section.matchAll(/^-\s+(.+)$/gm)]
+      .map((match) => match[1])
+      .filter((raw) => TWIDGET_KINGOWEN_KEYWORD.test(raw))
+      .map((raw) => stripMarkdown(raw))
+      .filter(Boolean)
 
-    bullets.forEach((match, index) => {
-      const raw = match[1]
-      if (!TWIDGET_KINGOWEN_KEYWORD.test(raw)) return
+    if (!summaries.length) continue
 
-      const summary = stripMarkdown(raw)
-      entries.push({
-        id: `changelog-${version}-${index}`,
-        version,
-        date,
-        title: `Twidget ${version}`,
-        summary,
-        href,
-      })
+    entries.push({
+      id: `changelog-${version}`,
+      version,
+      date,
+      title: `Twidget ${version}`,
+      summary: pickSummary(summaries),
+      href,
     })
   }
 
@@ -97,28 +97,63 @@ export function parseTwidgetReleases(releases: GitHubRelease[]): TwidgetChangelo
     const body = release.body ?? ''
     if (!TWIDGET_KINGOWEN_KEYWORD.test(body)) continue
 
-    let lineIndex = 0
-    for (const line of body.split('\n')) {
-      const trimmed = line.trim()
-      if (!trimmed || !TWIDGET_KINGOWEN_KEYWORD.test(trimmed)) continue
+    const summaries = body
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line && TWIDGET_KINGOWEN_KEYWORD.test(line))
+      .map((line) => stripMarkdown(line.replace(/^[*-]\s+/, '')))
+      .filter(Boolean)
 
-      const raw = trimmed.replace(/^[*-]\s+/, '')
-      const summary = stripMarkdown(raw)
-      if (!summary) continue
+    if (!summaries.length) continue
 
-      entries.push({
-        id: `release-${release.tag_name}-${lineIndex}`,
-        version: release.tag_name.replace(/^twidget-v?/, ''),
-        date: release.published_at,
-        title: formatTwidgetTitle(release),
-        summary,
-        href: release.html_url,
-      })
-      lineIndex += 1
-    }
+    entries.push({
+      id: `release-${release.tag_name}`,
+      version: release.tag_name.replace(/^twidget-v?/, ''),
+      date: release.published_at,
+      title: formatTwidgetTitle(release),
+      summary: pickSummary(summaries),
+      href: release.html_url,
+    })
   }
 
   return entries
+}
+
+function pickSummary(summaries: string[]) {
+  return [...summaries].sort((a, b) => {
+    const aFirst = /first contribution/i.test(a) ? 1 : 0
+    const bFirst = /first contribution/i.test(b) ? 1 : 0
+    if (aFirst !== bFirst) return aFirst - bFirst
+    return b.length - a.length
+  })[0] ?? ''
+}
+
+function dayKey(date: string | null) {
+  if (!date) return 'undated'
+  const parsed = Date.parse(date)
+  if (Number.isNaN(parsed)) return date
+  return new Date(parsed).toISOString().slice(0, 10)
+}
+
+function sameChangelogKey(entry: TwidgetChangelogEntry) {
+  const version = entry.version.toLowerCase().replace(/^twidget-v?/, '').replace(/^v/, '')
+  return `${dayKey(entry.date)}|${version}`
+}
+
+function dedupeEntries(entries: TwidgetChangelogEntry[]) {
+  const grouped = new Map<string, TwidgetChangelogEntry[]>()
+
+  for (const entry of entries) {
+    const key = sameChangelogKey(entry)
+    const group = grouped.get(key)
+    if (group) group.push(entry)
+    else grouped.set(key, [entry])
+  }
+
+  return [...grouped.values()].map((group) => ({
+    ...group[0],
+    summary: pickSummary(group.map((entry) => entry.summary)),
+  }))
 }
 
 function sortEntries(entries: TwidgetChangelogEntry[]) {
@@ -148,5 +183,5 @@ export async function fetchTwidgetChangelogEntries(signal?: AbortSignal) {
     changelogEntries = parseTwidgetChangelog(markdown)
   }
 
-  return sortEntries([...releaseEntries, ...changelogEntries])
+  return sortEntries(dedupeEntries([...releaseEntries, ...changelogEntries]))
 }

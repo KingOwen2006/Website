@@ -118,6 +118,9 @@
   display: flex;
   flex-direction: column;
   gap: clamp(40px, 6vw, 64px);
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .home-profile-layout {
@@ -253,6 +256,8 @@
 .home-updates-carousel,
 .home-quick-feed {
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .home-section-title {
@@ -275,9 +280,23 @@
 
 .home-updates-track-wrap {
   position: relative;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   overflow: hidden;
-  margin: 0 calc(-1 * 24px);
-  padding: 8px 24px 16px;
+  margin: 0;
+  padding: 8px 0 16px;
+  cursor: grab;
+  touch-action: pan-y;
+}
+
+.home-updates-track-wrap::-webkit-scrollbar {
+  display: none;
+}
+
+.home-updates-track-wrap.is-dragging {
+  cursor: grabbing;
+  user-select: none;
 }
 
 .home-updates-track-wrap::before,
@@ -313,16 +332,9 @@
   width: max-content;
 }
 
-.home-updates-track--loop {
-  animation: home-updates-marquee 42s linear infinite;
-}
-
+.home-updates-track--loop,
 .home-updates-track--quick {
-  animation-duration: 52s;
-}
-
-.home-updates-track-wrap:hover .home-updates-track--loop {
-  animation-play-state: paused;
+  will-change: transform;
 }
 
 @keyframes home-updates-marquee {

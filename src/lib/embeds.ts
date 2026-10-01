@@ -160,17 +160,20 @@ export function embedExternalHref(src: string) {
 export function parseYoutubeVideoId(src: string) {
   try {
     const url = new URL(src.trim())
+    let videoId: string | null = null
     if (url.hostname === 'youtu.be') {
-      return url.pathname.replace(/^\//, '').split('/')[0] || null
+      videoId = url.pathname.replace(/^\//, '').split('/')[0] || null
+    } else if (/(^|\.)youtube\.com$/i.test(url.hostname)) {
+      if (url.pathname.startsWith('/embed/')) {
+        videoId = url.pathname.split('/')[2] || null
+      } else if (url.pathname.startsWith('/shorts/')) {
+        videoId = url.pathname.split('/')[2] || null
+      } else {
+        videoId = url.searchParams.get('v')
+      }
     }
-    if (!/(^|\.)youtube\.com$/i.test(url.hostname)) return null
-    if (url.pathname.startsWith('/embed/')) {
-      return url.pathname.split('/')[2] || null
-    }
-    if (url.pathname.startsWith('/shorts/')) {
-      return url.pathname.split('/')[2] || null
-    }
-    return url.searchParams.get('v')
+    if (!videoId) return null
+    return videoId.replace(/[),.;!?]+$/g, '') || null
   } catch {
     return null
   }
@@ -255,6 +258,54 @@ export function isAutoEmbeddableUrl(src: string) {
     isGoogleDocsEmbedUrl(src) ||
     isArchiveOrgEmbedUrl(src)
   )
+}
+
+const AUTO_EMBED_URL_RE = /https?:\/\/[^\s<>"']+/gi
+
+function trimUrlPunctuation(url: string) {
+  return url.replace(/[),.;!?]+$/g, '')
+}
+
+export function extractEmbeddableUrlFromText(text: string) {
+  const trimmed = text.trim()
+  if (!trimmed) return null
+
+  const direct = trimUrlPunctuation(trimmed)
+  if (isAutoEmbeddableUrl(direct)) return direct
+
+  for (const match of trimmed.matchAll(AUTO_EMBED_URL_RE)) {
+    const candidate = trimUrlPunctuation(match[0])
+    if (isAutoEmbeddableUrl(candidate)) return candidate
+  }
+
+  return null
+}
+
+export function extractEmbeddableUrlFromHtml(html: string) {
+  const hrefMatch = html.match(/href=["'](https?:[^"']+)["']/i)
+  if (hrefMatch?.[1]) {
+    const candidate = trimUrlPunctuation(hrefMatch[1])
+    if (isAutoEmbeddableUrl(candidate)) return candidate
+  }
+
+  return extractEmbeddableUrlFromText(html.replace(/<[^>]+>/g, ' '))
+}
+
+export function extractEmbeddableUrlFromClipboard(data: DataTransfer | null | undefined) {
+  if (!data) return null
+
+  const plain = data.getData('text/plain')
+  const fromPlain = extractEmbeddableUrlFromText(plain)
+  if (fromPlain) return fromPlain
+
+  const uriList = data.getData('text/uri-list')
+  const fromUriList = extractEmbeddableUrlFromText(uriList)
+  if (fromUriList) return fromUriList
+
+  const html = data.getData('text/html')
+  if (html) return extractEmbeddableUrlFromHtml(html)
+
+  return null
 }
 
 export function resolveEmbedValue(value: {

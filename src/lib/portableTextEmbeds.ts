@@ -1,6 +1,7 @@
 import {
   EMBED_REPLACEMENTS,
   embedExternalHref,
+  extractEmbeddableUrlFromText,
   isAutoEmbeddableUrl,
   resolveEmbedValue,
   type EmbedConfig,
@@ -42,8 +43,6 @@ type EmbedSegment = {kind: 'embed'; phrase: string}
 type UrlSegment = {kind: 'url'; url: string}
 type Segment = TextSegment | EmbedSegment | UrlSegment
 
-const AUTO_EMBED_URL_RE = /https?:\/\/[^\s<>"']+/gi
-
 const embedKeys = Object.keys(EMBED_REPLACEMENTS).sort((a, b) => b.length - a.length)
 
 function newKey(prefix: string) {
@@ -77,7 +76,7 @@ function findEmbeddableUrlAt(text: string, startIndex: number) {
   const slice = text.slice(startIndex)
   const match = slice.match(/^https?:\/\/[^\s<>"']+/i)
   if (!match) return null
-  return isAutoEmbeddableUrl(match[0]) ? match[0] : null
+  return extractEmbeddableUrlFromText(match[0])
 }
 
 function findAutoEmbedAt(text: string, startIndex: number): {kind: 'embed' | 'url'; value: string} | null {
@@ -91,11 +90,7 @@ function findAutoEmbedAt(text: string, startIndex: number): {kind: 'embed' | 'ur
 }
 
 export function textContainsEmbeddableUrl(text: string) {
-  for (const match of text.matchAll(AUTO_EMBED_URL_RE)) {
-    if (match.index == null) continue
-    if (isAutoEmbeddableUrl(match[0])) return true
-  }
-  return false
+  return extractEmbeddableUrlFromText(text) !== null
 }
 
 export function textContainsEmbedPhrase(text: string) {
@@ -156,11 +151,11 @@ function createUnitEmbedBlock(phrase: string): UnitEmbedBlock | null {
   }
 }
 
-function createUrlEmbedBlock(rawUrl: string): UnitEmbedBlock {
+function createUrlEmbedBlock(rawUrl: string, preserveKey?: string): UnitEmbedBlock {
   const resolved = resolveEmbedValue({src: rawUrl})
   return {
     _type: 'unitEmbed',
-    _key: newKey('embed'),
+    _key: preserveKey ?? newKey('embed'),
     embedType: (resolved.embedType ?? 'embed') as EmbedConfig['type'],
     src: resolved.src ?? rawUrl,
     href: resolved.href,
@@ -176,7 +171,8 @@ function getBlockPlainText(block: PortableTextBlock) {
 
 function extractStandaloneEmbeddableUrl(block: PortableTextBlock) {
   const plain = getBlockPlainText(block).trim()
-  if (isAutoEmbeddableUrl(plain)) return plain
+  const extracted = extractEmbeddableUrlFromText(plain)
+  if (extracted) return extracted
 
   const markDefs = (block.markDefs ?? []) as Array<{_key?: string; href?: string}>
   for (const child of block.children ?? []) {
@@ -241,6 +237,27 @@ function convertBlock(block: PortableTextBlock): PortableTextBodyItem[] {
   }
 
   return converted.length ? converted : [block]
+}
+
+export function convertStandaloneUrlBlocksInBody<T extends PortableTextBodyItem>(
+  body: T[] | null | undefined,
+): T[] | null | undefined {
+  if (!body?.length) return body
+
+  let changed = false
+  const next = body.flatMap((item) => {
+    if (item._type !== 'block' || !('children' in item) || !Array.isArray(item.children)) {
+      return [item]
+    }
+
+    const standalone = extractStandaloneEmbeddableUrl(item as PortableTextBlock)
+    if (!standalone) return [item]
+
+    changed = true
+    return [createUrlEmbedBlock(standalone, item._key) as T]
+  })
+
+  return changed ? next : body
 }
 
 export function convertPhraseEmbedsInBody<T extends PortableTextBodyItem>(

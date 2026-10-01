@@ -1,5 +1,6 @@
 import type { FxTwitterTimelineEntry } from '../../lib/fxtwitter'
 import QuickPostCard from './QuickPostCard'
+import UpdateMarquee from './UpdateMarquee'
 
 type QuickFeedStripProps = {
   entries: FxTwitterTimelineEntry[]
@@ -34,13 +35,13 @@ export default function QuickFeedStrip({
       ) : null}
 
       {posts.length > 0 ? (
-        <div className="home-updates-track-wrap">
+        <UpdateMarquee looping={posts.length > 1} duration={52}>
           <div className={`home-updates-track${posts.length > 1 ? ' home-updates-track--loop home-updates-track--quick' : ''}`}>
             {loop.map((status, index) => (
               <QuickPostCard key={`${status.id}-${index}`} status={status} />
             ))}
           </div>
-        </div>
+        </UpdateMarquee>
       ) : null}
 
       {!loading && !error && posts.length === 0 ? (

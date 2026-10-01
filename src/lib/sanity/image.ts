@@ -11,7 +11,13 @@ const builder =
 
 export function urlForImage(source: unknown, width = 800) {
   if (!source || !builder) return undefined
-  return builder.image(source).width(width).auto('format').quality(85).url()
+  if (typeof source === 'object' && 'asset' in source && !source.asset) return undefined
+
+  try {
+    return builder.image(source).width(width).auto('format').quality(85).url()
+  } catch {
+    return undefined
+  }
 }
 
 export function urlForThumbnail(source: unknown) {

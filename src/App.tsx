@@ -1,4 +1,4 @@
-import { useEffect, useState, type ComponentType } from 'react'
+import { useEffect, useRef, useState, type ComponentType } from 'react'
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { Drawer, Home, Work, News, Shopping, Contact } from '@thatjoshguy/oneui-icons'
 import ContactPanel from './components/ContactPanel'
@@ -7,6 +7,7 @@ import ExperienceRoutes from './components/experience/ExperienceRoutes'
 import PortfolioGrid from './components/PortfolioGrid'
 import TwitterFeed from './components/TwitterFeed'
 import { TWITTER_HANDLE } from './config/twitter'
+import { useDesktopNavIndicator } from './hooks/useDesktopNavIndicator'
 import { useLanyardPresence, formatActivityLabel, formatDiscordStatus } from './hooks/useLanyardPresence'
 import { useTwitterFeed } from './hooks/useTwitterFeed'
 import { useTwitterProfile } from './hooks/useTwitterProfile'
@@ -98,6 +99,10 @@ export default function MyApp() {
   const [activeTab, setActiveTab] = useState<NavTab>(readInitialTab)
   const [collapsed, setCollapsed] = useState(readCollapsedPreference)
   const isMobileNav = useMobileBottomNav()
+  const navRef = useRef<HTMLElement>(null)
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
+  const activeIndex = MAIN_NAV_TABS.findIndex((tab) => tab.id === activeTab)
+  const { layout, state: navIndicator } = useDesktopNavIndicator(activeIndex, collapsed, navRef, tabRefs)
   const { profile, avatarUrl } = useTwitterProfile()
   const feed = useTwitterFeed(TWITTER_HANDLE)
   const {
@@ -138,11 +143,14 @@ export default function MyApp() {
       ? formatActivityLabel(discordActivity)
       : ''
 
-  const renderNavButton = (id: NavTab, Icon: NavIcon) => {
+  const renderNavButton = (id: NavTab, Icon: NavIcon, index: number) => {
     const selected = activeTab === id
     return (
       <button
         key={id}
+        ref={(node) => {
+          tabRefs.current[index] = node
+        }}
         type="button"
         role="tab"
         aria-selected={selected}
@@ -151,7 +159,7 @@ export default function MyApp() {
         onClick={() => openTab(id)}
       >
         <span className="desktop-nav-content">
-          <Icon size={24} color="var(--nav-icon-color)" />
+          <Icon size={24} color="currentColor" />
           <span className={selected ? 'nav-label-selected' : 'nav-label'}>{id}</span>
         </span>
       </button>
@@ -163,9 +171,22 @@ export default function MyApp() {
       <div className="viewport-bg" aria-hidden="true" />
 
       <nav
+        ref={navRef}
         className={`desktop-nav${collapsed ? ' collapsed' : ''}`}
         aria-label="Site sections"
       >
+        {navIndicator.hasMounted && layout.width > 0 ? (
+          <span
+            className={`nav-active-indicator${navIndicator.instant ? ' is-instant' : ''}`}
+            style={{
+              left: layout.left,
+              top: layout.top,
+              width: layout.width,
+              height: layout.height,
+            }}
+            aria-hidden="true"
+          />
+        ) : null}
         <div className="icon-container">
           {!isMobileNav && (
             <button
@@ -184,7 +205,7 @@ export default function MyApp() {
             role="tablist"
             aria-orientation={isMobileNav ? 'horizontal' : 'vertical'}
           >
-            {MAIN_NAV_TABS.map(({ id, icon }) => renderNavButton(id, icon))}
+            {MAIN_NAV_TABS.map(({ id, icon }, index) => renderNavButton(id, icon, index))}
           </div>
         </div>
       </nav>
