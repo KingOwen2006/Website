@@ -426,6 +426,12 @@
   transform: translateX(3px);
 }
 
+.word-count {
+  margin: 24px 0 0;
+  font-size: 0.9rem;
+  color: var(--secondary);
+}
+
 .unit-body-content {
   margin-top: 24px;
   padding: clamp(20px, 4vw, 40px);

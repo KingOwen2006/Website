@@ -6,6 +6,7 @@ import {PrePublishChecklist} from '../editor/publish/PrePublishChecklist'
 import {EditorShell} from '../editor/shell/EditorShell'
 import {EditorSidebar} from '../editor/shell/EditorSidebar'
 import {useDocumentEditor} from '../lib/document/useDocumentEditor'
+import {WordCount} from '@site/components/experience/WordCount'
 import {imageUrl} from '../lib/image'
 import {restoreDocument, trashDocument} from '../lib/api'
 
@@ -101,6 +102,7 @@ export function PostEditPage() {
                   ) : null}
                 </div>
               </div>
+              <WordCount body={post.body} />
               <BodyEditor
                 key={post._id}
                 value={post.body}

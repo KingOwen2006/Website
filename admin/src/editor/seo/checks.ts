@@ -1,3 +1,4 @@
+import {countPortableTextWords} from '@site/lib/wordCount'
 import type {PostDoc} from '../../lib/document/types'
 
 export type SeoCheck = {
@@ -28,7 +29,7 @@ export function analyzeSeo(post: PostDoc): SeoCheck[] {
   const title = post.seo?.metaTitle || post.title || ''
   const description = post.seo?.metaDescription || post.summary || ''
   const bodyText = textFromBody(post.body)
-  const words = bodyText.split(/\s+/).filter(Boolean)
+  const words = countPortableTextWords(post.body)
   const headings = (post.body ?? []).filter((block) => {
     const style = block && typeof block === 'object' ? String((block as {style?: string}).style || '') : ''
     return /^h[1-6]$/.test(style)
@@ -78,8 +79,8 @@ export function analyzeSeo(post: PostDoc): SeoCheck[] {
     {
       id: 'length',
       label: 'Content length',
-      status: words.length >= 300 ? 'good' : words.length >= 80 ? 'ok' : 'bad',
-      detail: `${words.length} words`,
+      status: words >= 300 ? 'good' : words >= 80 ? 'ok' : 'bad',
+      detail: `${words} words`,
     },
     {
       id: 'slug',
@@ -90,7 +91,7 @@ export function analyzeSeo(post: PostDoc): SeoCheck[] {
     {
       id: 'readability',
       label: 'Readability',
-      status: words.length && headings > 0 ? 'good' : 'ok',
+      status: words && headings > 0 ? 'good' : 'ok',
       detail: 'Shorter paragraphs and headings usually read better.',
     },
   ]
