@@ -1,13 +1,14 @@
 import {useEditor} from '@portabletext/editor'
-import {useEffect, useState} from 'react'
+import {useEffect, useState, type RefObject} from 'react'
 
-export function LinkPopover() {
+export function LinkPopover({rootRef}: {rootRef: RefObject<HTMLDivElement | null>}) {
   const editor = useEditor()
   const [open, setOpen] = useState(false)
   const [href, setHref] = useState('https://')
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
+      if (!(event.target instanceof HTMLElement) || event.target.closest('.pt-editor') !== rootRef.current) return
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault()
         setOpen(true)
@@ -15,7 +16,7 @@ export function LinkPopover() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [])
+  }, [rootRef])
 
   if (!open) return null
 

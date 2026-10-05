@@ -1,5 +1,5 @@
 import {defineConfig} from 'sanity'
-import {schemaTypes} from './schema'
+import {schemaTypes} from './schema/index'
 
 export default defineConfig({
   name: 'kingowen',

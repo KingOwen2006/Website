@@ -1,5 +1,4 @@
 import {useEditor} from '@portabletext/editor'
-import type {ImageValue} from '../../lib/document/types'
 
 export const IMAGE_DRAG_MIME = 'application/x-kingowen-image'
 
@@ -44,45 +43,6 @@ export function useBlockActions() {
     },
     select(key: string) {
       editor.send({type: 'select.block', at: at(key)})
-    },
-    mergeIntoRow(targetKey: string, source: ImageValue & {_key?: string}) {
-      const snapshot = editor.getSnapshot()
-      const blocks = snapshot.context.value as Array<Record<string, unknown> & {_key?: string; _type?: string}>
-      const target = blocks.find((block) => block._key === targetKey)
-      if (!target) return
-
-      const sourceImage: ImageValue = {
-        _type: 'image',
-        asset: source.asset,
-        alt: source.alt ?? '',
-        caption: source.caption,
-        size: source.size,
-        align: source.align,
-      }
-
-      if (target._type === 'imageRow' && Array.isArray(target.images)) {
-        editor.send({
-          type: 'block.set',
-          at: at(targetKey),
-          props: {images: [...(target.images as ImageValue[]), sourceImage]},
-        })
-      } else if (target._type === 'image') {
-        editor.send({
-          type: 'set',
-          at: at(targetKey),
-          value: {
-            _type: 'imageRow',
-            _key: targetKey,
-            images: [target as ImageValue, sourceImage],
-          },
-        })
-      } else {
-        return
-      }
-
-      if (source._key && source._key !== targetKey) {
-        editor.send({type: 'delete.block', at: at(source._key)})
-      }
     },
   }
 }

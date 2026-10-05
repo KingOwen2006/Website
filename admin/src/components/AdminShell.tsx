@@ -1,4 +1,5 @@
-import {useEffect, useState, type ComponentType, type ReactNode} from 'react'
+import {useEffect, useRef, useState, type ComponentType, type ReactNode, type RefCallback} from 'react'
+import {useDesktopNavIndicator} from '@site/hooks/useDesktopNavIndicator'
 import {NavLink, Outlet, useLocation, useNavigate} from 'react-router-dom'
 import {
   DeleteOutline,
@@ -48,9 +49,10 @@ function renderNavMark(link: PostNavLink): ReactNode {
   return <Icon size={24} color="currentColor" />
 }
 
-function PostNavItem({link}: {link: PostNavLink}) {
+function PostNavItem({link, tabRef}: {link: PostNavLink; tabRef: RefCallback<HTMLAnchorElement>}) {
   return (
     <NavLink
+      ref={tabRef}
       className={({isActive}) => `admin-nav-link${isActive ? ' is-active' : ''}`}
       to={link.to}
       end={link.to === '/posts'}
@@ -70,6 +72,12 @@ export function AdminShell() {
   const location = useLocation()
   const [navCollapsed, setNavCollapsed] = useState(readCollapsed)
   const showLogout = !isPostEditPath(location.pathname)
+  const navRef = useRef<HTMLElement>(null)
+  const tabRefs = useRef<(HTMLElement | null)[]>([])
+  const links = [...MAIN_POST_LINKS, TRASH_LINK]
+  const activeIndex = links.findIndex((link) => link.to === '/posts'
+    ? location.pathname === '/posts' : location.pathname === link.to || location.pathname.startsWith(`${link.to}/`))
+  const {layout, state: indicator} = useDesktopNavIndicator(activeIndex, navCollapsed, navRef, tabRefs)
 
   useEffect(() => {
     void runScheduledPublish().catch(() => undefined)
@@ -93,15 +101,19 @@ export function AdminShell() {
             <Drawer size={24} color="currentColor" />
           </button>
         </div>
-        <nav className="admin-nav">
+        <nav className="admin-nav" ref={navRef} aria-label="Admin sections">
+          {indicator.hasMounted && activeIndex >= 0 && layout.width > 0 ? <span
+            className={`admin-nav-indicator${indicator.instant ? ' is-instant' : ''}`}
+            style={{left: layout.left, top: layout.top, width: layout.width, height: layout.height}}
+            aria-hidden="true" /> : null}
           <div className="admin-nav-main">
             <div className="nav-group">Posts</div>
-            {MAIN_POST_LINKS.map((link) => (
-              <PostNavItem key={link.to} link={link} />
+            {MAIN_POST_LINKS.map((link, index) => (
+              <PostNavItem key={link.to} link={link} tabRef={(node) => { tabRefs.current[index] = node }} />
             ))}
           </div>
           <div className="admin-nav-footer">
-            <PostNavItem link={TRASH_LINK} />
+            <PostNavItem link={TRASH_LINK} tabRef={(node) => { tabRefs.current[MAIN_POST_LINKS.length] = node }} />
           </div>
         </nav>
       </aside>

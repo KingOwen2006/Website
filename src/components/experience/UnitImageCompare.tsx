@@ -13,7 +13,6 @@ export default function UnitImageCompare({before, after, caption}: UnitImageComp
 
   const beforeSrc = getUnitImageUrl(before, 1400)
   const afterSrc = getUnitImageUrl(after, 1400)
-  if (!beforeSrc || !afterSrc) return null
 
   const updatePosition = useCallback((clientX: number) => {
     const viewport = viewportRef.current
@@ -33,6 +32,8 @@ export default function UnitImageCompare({before, after, caption}: UnitImageComp
     updatePosition(event.clientX)
   }
 
+  if (!beforeSrc || !afterSrc) return null
+
   return (
     <figure className="unit-compare">
       <div
@@ -41,18 +42,21 @@ export default function UnitImageCompare({before, after, caption}: UnitImageComp
         style={{'--pos': `${position}%`} as CSSProperties}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
+        onDragStart={(event) => event.preventDefault()}
       >
         <img
           src={beforeSrc}
           alt={before?.alt ?? 'Before'}
           className="unit-compare__img unit-compare__img--before"
           loading="lazy"
+          draggable={false}
         />
         <img
           src={afterSrc}
           alt={after?.alt ?? 'After'}
           className="unit-compare__img unit-compare__img--after"
           loading="lazy"
+          draggable={false}
         />
         <span className="unit-compare__handle" aria-hidden="true" />
       </div>

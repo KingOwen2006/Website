@@ -3,6 +3,7 @@ import { useMemo } from 'react'
 import type { UnitBySlugsQueryResult } from '../../sanity.types'
 import { cleanPortableTextBody } from '../../lib/cleanText'
 import { convertPhraseEmbedsInBody } from '../../lib/portableTextEmbeds'
+import { linkifyPortableText } from '../../lib/portableTextLinks'
 import UnitEmbed from './UnitEmbed'
 import { WordCount } from './WordCount'
 import UnitImageCompare from './UnitImageCompare'
@@ -45,6 +46,15 @@ const components: PortableTextComponents = {
   types: {
     image: ({ value }) => <UnitImageFigure value={value} />,
     imageRow: ({ value }) => <UnitImageRow images={value?.images} />,
+    layoutRow: ({ value }) => (
+      <div className="unit-layout-row">
+        {(value?.items ?? []).map((item: {_key: string; body: NonNullable<PortableTextRendererProps['value']>}) => (
+          <div key={item._key} className="unit-layout-cell">
+            <PortableText value={item.body} components={components} />
+          </div>
+        ))}
+      </div>
+    ),
     imageGallery: ({ value }) => (
       <UnitImageGallery layout={value?.layout} columns={value?.columns} images={value?.images} />
     ),
@@ -99,7 +109,7 @@ export default function PortableTextRenderer({
   className,
 }: PortableTextRendererProps) {
   const cleanedValue = useMemo(
-    () => cleanPortableTextBody(convertPhraseEmbedsInBody(value)),
+    () => cleanPortableTextBody(linkifyPortableText(convertPhraseEmbedsInBody(value))),
     [value],
   )
   return (

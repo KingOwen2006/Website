@@ -70,6 +70,11 @@ function sanitizeBlock(block: unknown): unknown {
   if (!block || typeof block !== 'object') return block
   const value = block as Record<string, unknown> & {_type?: string}
   if (value._type === 'image') return asImage(value)
+  if (value._type === 'layoutRow' && Array.isArray(value.items)) {
+    return {...value, items: value.items.map((item: Record<string, unknown>) => ({
+      ...item, body: Array.isArray(item.body) ? item.body.map(sanitizeBlock) : item.body,
+    }))}
+  }
   if (value._type === 'imageRow' || value._type === 'imageGallery') {
     const images = Array.isArray(value.images) ? value.images.map(asImage) : value.images
     return {...value, images}
