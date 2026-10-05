@@ -42,5 +42,6 @@ export const postEditorSchema = defineSchema({
     {name: 'spacer', fields: [numberField('height')]},
     {name: 'buttonBlock', fields: [stringField('label'), stringField('href'), stringField('style')]},
     {name: 'columns', fields: [arrayField('items')]},
+    {name: 'layoutRow', fields: [arrayField('items')]},
   ],
 })

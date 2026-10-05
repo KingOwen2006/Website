@@ -8,6 +8,7 @@ const BODY_EXPAND = `
     ...,
     _type == "image" => { ${IMAGE_EXPAND} },
     _type == "imageRow" => { ..., images[]{ ${IMAGE_EXPAND} } },
+    _type == "layoutRow" => { ..., items[]{ ..., body[]{ ..., _type == "image" => { ${IMAGE_EXPAND} } } } },
     _type == "imageGallery" => { ..., images[]{ ${IMAGE_EXPAND} } },
     _type == "imageCompare" => {
       ...,

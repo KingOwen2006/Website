@@ -17,9 +17,12 @@ import {
 } from '@site/lib/embeds'
 
 import {BlockWrapper} from './BlockWrapper'
-import {ImageComparePreview, EmbedPreview, ImageGalleryPreview, ImagePreview, ImageRowPreview} from './BlockPreviews'
+import {ImageComparePreview, EmbedPreview, ImageGalleryPreview, ImagePreview} from './BlockPreviews'
 
 import {IMAGE_DRAG_MIME, useBlockActions} from './useBlockActions'
+import {LayoutRow} from './LayoutRow'
+import {ImageCompareEditor} from './ImageCompareEditor'
+import {editableRow, type LayoutBlock} from '../rows'
 
 
 
@@ -241,30 +244,6 @@ function PickButton({onPick, label}: {onPick: (asset: MediaAsset) => void; label
 
 
 
-function imageDragPayload(node: Node): string {
-
-  return JSON.stringify({
-
-    _type: 'image',
-
-    _key: node._key,
-
-    asset: node.asset ?? (node as ImageValue).asset,
-
-    alt: node.alt ?? '',
-
-    caption: node.caption,
-
-    size: node.size,
-
-    align: node.align,
-
-  })
-
-}
-
-
-
 export function ObjectBlock({
 
   node,
@@ -295,32 +274,18 @@ export function ObjectBlock({
 
 
 
+  if (node._type === 'layoutRow' || node._type === 'imageRow') {
+    return <BlockWrapper node={node} attributes={attributes} label="Row">
+      {children}
+      <LayoutRow node={editableRow(node as LayoutBlock)} />
+    </BlockWrapper>
+  }
+
   if (node._type === 'image') {
     const hasImage = Boolean(imageUrl(node))
     const editor = (
       <>
-        <div
-          draggable
-          onDragStart={(event) => {
-            event.dataTransfer.setData(IMAGE_DRAG_MIME, imageDragPayload(node))
-            event.dataTransfer.effectAllowed = 'copyMove'
-          }}
-          onDragOver={allowDrop}
-          onDrop={(event) => {
-            event.preventDefault()
-            event.stopPropagation()
-            const payload = event.dataTransfer.getData(IMAGE_DRAG_MIME)
-            if (!payload || !key) return
-            try {
-              const source = JSON.parse(payload) as ImageValue & {_key?: string}
-              if (source._key && source._key !== key) {
-                actions.mergeIntoRow(key, source)
-              }
-            } catch {
-              /* ignore invalid drag payload */
-            }
-          }}
-        >
+        <div>
           <ImageFields value={node as ImageValue} onChange={(next) => set(next)} dropHint="Drop an image here" />
         </div>
         {!hasImage ? (
@@ -357,7 +322,7 @@ export function ObjectBlock({
     )
   }
 
-  if (node._type === 'imageRow' || node._type === 'imageGallery') {
+  if (node._type === 'imageGallery') {
     const images = node.images ?? []
     const editor = (
       <>
@@ -392,13 +357,9 @@ export function ObjectBlock({
         bare
         node={node}
         attributes={attributes}
-        label={node._type === 'imageRow' ? 'Image row' : 'Gallery'}
+        label="Gallery"
         preview={
-          node._type === 'imageRow' ? (
-            <ImageRowPreview images={images} />
-          ) : (
-            <ImageGalleryPreview images={images} layout={node.layout} columns={node.columns} />
-          )
+          <ImageGalleryPreview images={images} layout={node.layout} columns={node.columns} />
         }
         editor={editor}
       >
@@ -408,30 +369,11 @@ export function ObjectBlock({
   }
 
   if (node._type === 'imageCompare') {
+    const complete = Boolean(imageUrl(node.before) && imageUrl(node.after))
     const editor = (
       <>
-        <div className="compare-edit">
-          <div>
-            <p>Before</p>
-            <ImageFields
-              value={node.before}
-              onChange={(before) => set({before})}
-              dropHint="Drop before image"
-              onDropImage={(before) => set({before})}
-            />
-            <PickButton label="Choose before" onPick={(asset) => set({before: asAssetImage(asset)})} />
-          </div>
-          <div>
-            <p>After</p>
-            <ImageFields
-              value={node.after}
-              onChange={(after) => set({after})}
-              dropHint="Drop after image"
-              onDropImage={(after) => set({after})}
-            />
-            <PickButton label="Choose after" onPick={(asset) => set({after: asAssetImage(asset)})} />
-          </div>
-        </div>
+        <ImageCompareEditor before={node.before} after={node.after}
+          onBefore={(before) => set({before})} onAfter={(after) => set({after})} />
         <input placeholder="Caption" value={node.caption ?? ''} onChange={(event) => set({caption: event.target.value})} />
       </>
     )
@@ -442,8 +384,8 @@ export function ObjectBlock({
         node={node}
         attributes={attributes}
         label="Image compare"
-        preview={<ImageComparePreview before={node.before} after={node.after} caption={node.caption} />}
-        editor={editor}
+        preview={complete ? <ImageComparePreview before={node.before} after={node.after} caption={node.caption} /> : editor}
+        editor={complete ? editor : undefined}
       >
         {children}
       </BlockWrapper>

@@ -7,13 +7,18 @@ import {
   keyGenerator,
   PortableTextEditable,
   useEditor,
+  useEditorSelector,
   type OnPasteFn,
+  type TextBlockRenderProps,
 } from '@portabletext/editor'
-import {getFocusBlockObject} from '@portabletext/editor/selectors'
+import {getFocusBlockObject, getFocusTextBlock} from '@portabletext/editor/selectors'
 import {EventListenerPlugin, NodePlugin} from '@portabletext/editor/plugins'
 import {useCallback, useEffect, useRef, useState, type ClipboardEvent, type ReactElement} from 'react'
 import {MediaPicker, type MediaAsset} from '../components/MediaPicker'
 import {ObjectBlock} from './blocks/ObjectBlocks'
+import {DragHandle} from './blocks/DragHandle'
+import {imageFilesFromClipboard, imageFilesFromHtml} from './clipboardImages'
+import {BLOCK_DRAG_MIME, moveIntoLayout, type BlockLocation, type DropSide, type LayoutBlock} from './rows'
 import {BlockInserter} from './blocks/BlockInserter'
 import {LinkPopover} from './LinkPopover'
 import {postEditorSchema} from './schema'
@@ -22,6 +27,7 @@ import {uploadAsset} from '../lib/api'
 import {imageUrl} from '../lib/image'
 import {extractEmbeddableUrlFromClipboard, resolveEmbedValue} from '@site/lib/embeds'
 import {convertStandaloneUrlBlocksInBody, type PortableTextBodyItem} from '@site/lib/portableTextEmbeds'
+import {linkifyPortableText} from '@site/lib/portableTextLinks'
 
 type BodyEditorProps = {
   value?: unknown[]
@@ -29,6 +35,7 @@ type BodyEditorProps = {
   onSave?: () => void
   inserterOpen?: boolean
   onInserterClose?: () => void
+  cellEditor?: boolean
 }
 
 function emptyBlock() {
@@ -43,79 +50,52 @@ function emptyBlock() {
   ]
 }
 
-function imageFilesFromClipboard(data: DataTransfer | null) {
-  if (!data) return []
-  const files = Array.from(data.files ?? []).filter((file) => file.type.startsWith('image/'))
-  if (files.length) return files
-
-  return Array.from(data.items ?? []).flatMap((item) => {
-    if (!item.type.startsWith('image/')) return []
-    const file = item.getAsFile()
-    return file ? [file] : []
-  })
-}
-
-function fileFromDataUrl(dataUrl: string) {
-  const match = dataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/)
-  if (!match) return null
-  const binary = atob(match[2])
-  const bytes = new Uint8Array(binary.length)
-  for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index)
-  const extension = match[1].split('/')[1] || 'png'
-  return new File([bytes], `pasted-image.${extension}`, {type: match[1]})
-}
-
-function imageFilesFromHtml(html: string) {
-  const files: File[] = []
-  for (const match of html.matchAll(/<img\b[^>]*src=["']([^"']+)["']/gi)) {
-    const file = fileFromDataUrl(match[1])
-    if (file) files.push(file)
-  }
-  return files
+function TextBlockContent({attributes, children, node}: TextBlockRenderProps) {
+    const editor = useEditor()
+    const selected = useEditorSelector(editor, (snapshot) => getFocusTextBlock(snapshot)?.node._key === node._key)
+    const style = 'style' in node ? String(node.style) : 'normal'
+    const list = 'listItem' in node ? String(node.listItem) : ''
+    const content =
+      style === 'h1' ? (
+        <h1 className="unit-body-h1">
+          {children}
+        </h1>
+      ) : style === 'h2' ? (
+        <h2 className="unit-body-h2">
+          {children}
+        </h2>
+      ) : style === 'h3' ? (
+        <h3 className="unit-body-h3">
+          {children}
+        </h3>
+      ) : style === 'h4' ? (
+        <h4 className="unit-body-h4">
+          {children}
+        </h4>
+      ) : style === 'h5' ? (
+        <h5 className="unit-body-h5">
+          {children}
+        </h5>
+      ) : style === 'h6' ? (
+        <h6 className="unit-body-h6">
+          {children}
+        </h6>
+      ) : style === 'blockquote' ? (
+        <blockquote className="unit-body-quote">
+          {children}
+        </blockquote>
+      ) : (
+        <p>{children}</p>
+      )
+    return <div {...(attributes as Record<string, never>)} className={`layout-text-block${selected ? ' is-selected' : ''}`} data-block-key={node._key}>
+      <DragHandle location={{blockKey: node._key}} />
+      {list === 'bullet' ? <ul><li>{content}</li></ul> : list === 'number' ? <ol><li>{content}</li></ol> : content}
+    </div>
 }
 
 const textBlock = defineTextBlock({
   type: 'block',
-  render: ({attributes, children, node}) => {
-    const style = 'style' in node ? String(node.style) : 'normal'
-    const list = 'listItem' in node ? String(node.listItem) : ''
-    const attrs = attributes as Record<string, never>
-    const content =
-      style === 'h1' ? (
-        <h1 className="unit-body-h1" {...attrs}>
-          {children}
-        </h1>
-      ) : style === 'h2' ? (
-        <h2 className="unit-body-h2" {...attrs}>
-          {children}
-        </h2>
-      ) : style === 'h3' ? (
-        <h3 className="unit-body-h3" {...attrs}>
-          {children}
-        </h3>
-      ) : style === 'h4' ? (
-        <h4 className="unit-body-h4" {...attrs}>
-          {children}
-        </h4>
-      ) : style === 'h5' ? (
-        <h5 className="unit-body-h5" {...attrs}>
-          {children}
-        </h5>
-      ) : style === 'h6' ? (
-        <h6 className="unit-body-h6" {...attrs}>
-          {children}
-        </h6>
-      ) : style === 'blockquote' ? (
-        <blockquote className="unit-body-quote" {...attrs}>
-          {children}
-        </blockquote>
-      ) : (
-        <p {...attrs}>{children}</p>
-      )
-    if (list === 'bullet') return <ul><li>{content}</li></ul>
-    if (list === 'number') return <ol><li>{content}</li></ol>
-    return content
-  },
+  render: (props) => <TextBlockContent {...props} />,
 })
 
 const objectTypes = [
@@ -129,6 +109,7 @@ const objectTypes = [
   'spacer',
   'buttonBlock',
   'columns',
+  'layoutRow',
 ] as const
 
 const editorNodes = [
@@ -168,15 +149,54 @@ function EditorChrome({
   onSave,
   inserterOpen,
   onInserterClose,
+  cellEditor,
+  externalValue,
 }: {
   onChange: (value: unknown[]) => void
   onSave?: () => void
   inserterOpen?: boolean
   onInserterClose?: () => void
+  cellEditor?: boolean
+  externalValue?: unknown[]
 }) {
   const editor = useEditor()
   const rootRef = useRef<HTMLDivElement>(null)
   const [picker, setPicker] = useState(false)
+  const [dropError, setDropError] = useState('')
+  const dropTargetRef = useRef<HTMLElement | null>(null)
+
+  const normalizeLinks = useCallback(() => {
+    const value = editor.getSnapshot().context.value as PortableTextBodyItem[]
+    const linked = linkifyPortableText(value)
+    if (linked !== value) editor.send({type: 'set', at: [], value: linked})
+  }, [editor])
+
+  useEffect(() => { normalizeLinks() }, [normalizeLinks])
+
+  useEffect(() => {
+    if (cellEditor) editor.send({type: 'update value', value: externalValue as never})
+  }, [cellEditor, editor, externalValue])
+
+  const clearDropTarget = () => {
+    dropTargetRef.current?.removeAttribute('data-drop-side')
+    dropTargetRef.current = null
+  }
+
+  const getDropTarget = (target: EventTarget | null, x: number, y: number) => {
+    if (!(target instanceof HTMLElement)) return null
+    const cell = target.closest<HTMLElement>('[data-layout-cell]')
+    const element = cell ?? target.closest<HTMLElement>('[data-block-key]')
+    if (!element || !rootRef.current?.contains(element)) return null
+    const rect = element.getBoundingClientRect()
+    const horizontal = (x - rect.left) / rect.width
+    const side: DropSide = horizontal < 0.25 ? 'left' : horizontal > 0.75 ? 'right'
+      : cell ? horizontal < 0.5 ? 'left' : 'right'
+      : y < rect.top + rect.height / 2 ? 'before' : 'after'
+    return {element, side, location: {
+      blockKey: cell?.dataset.layoutRow ?? element.dataset.blockKey!,
+      cellKey: cell?.dataset.layoutCell,
+    } as BlockLocation}
+  }
 
   useEffect(() => {
     const editable = rootRef.current?.querySelector<HTMLElement>('[data-pt-editor]')
@@ -347,6 +367,7 @@ function EditorChrome({
 
   const handlePaste: OnPasteFn = useCallback(
     ({event}) => {
+      if (cellEditor) return undefined
       const url = extractEmbeddableUrlFromClipboard(event.clipboardData)
       if (!url) return undefined
 
@@ -362,15 +383,16 @@ function EditorChrome({
 
       return {insert: [createEmbedBlock(url)]}
     },
-    [editor, createEmbedBlock, fillEmptyEmbedBlock],
+    [editor, createEmbedBlock, fillEmptyEmbedBlock, cellEditor],
   )
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
+      if (!(event.target instanceof HTMLElement) || !rootRef.current?.contains(event.target)) return
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 's') {
-        event.preventDefault()
-        onSave?.()
+        if (onSave) { event.preventDefault(); onSave() }
       }
+      if (event.target.closest('.pt-editor') !== rootRef.current) return
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'z') {
         event.preventDefault()
         editor.send({type: event.shiftKey ? 'history.redo' : 'history.undo'})
@@ -386,7 +408,12 @@ function EditorChrome({
       className="pt-editor unit-body-content"
       lang="en-GB"
       spellCheck
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node)) normalizeLinks()
+      }}
       onPasteCapture={(event) => {
+        if ((event.target as HTMLElement).closest('.compare-edit')) return
+        if ((event.target as HTMLElement).closest('.pt-editor') !== event.currentTarget) return
         const clipboardFiles = imageFilesFromClipboard(event.clipboardData)
         const files = clipboardFiles.length
           ? clipboardFiles
@@ -398,24 +425,67 @@ function EditorChrome({
           return
         }
 
-        handleEmbedUrlPaste(event, event.target)
+        if (!cellEditor) handleEmbedUrlPaste(event, event.target)
       }}
-      onDragOver={(event) => {
-        if (event.dataTransfer.types.includes('Files')) event.preventDefault()
-      }}
-      onDrop={(event) => {
-        const file = event.dataTransfer.files[0]
-        if (!file?.type.startsWith('image/')) return
+      onDragOverCapture={(event) => {
+        if ((event.target as HTMLElement).closest('.compare-edit')) return
+        if (!event.dataTransfer.types.includes(BLOCK_DRAG_MIME) && !event.dataTransfer.types.includes('Files')) return
         event.preventDefault()
-        void insertImageFile(file)
+        event.stopPropagation()
+        clearDropTarget()
+        const target = getDropTarget(event.target, event.clientX, event.clientY)
+        if (target) {
+          target.element.dataset.dropSide = target.side
+          dropTargetRef.current = target.element
+        }
+        event.dataTransfer.dropEffect = event.dataTransfer.types.includes(BLOCK_DRAG_MIME) ? 'move' : 'copy'
+      }}
+      onDragLeave={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node)) clearDropTarget()
+      }}
+      onDragEnd={clearDropTarget}
+      onDropCapture={(event) => {
+        if ((event.target as HTMLElement).closest('.compare-edit')) return
+        const payload = event.dataTransfer.getData(BLOCK_DRAG_MIME)
+        const files = Array.from(event.dataTransfer.files).filter((file) => file.type.startsWith('image/'))
+        if (!payload && !files.length) return
+        event.preventDefault()
+        event.stopPropagation()
+        clearDropTarget()
+        setDropError('')
+        const target = getDropTarget(event.target, event.clientX, event.clientY)
+        const place = (source: BlockLocation | LayoutBlock[]) => {
+          if (!target) return
+          const blocks = editor.getSnapshot().context.value as LayoutBlock[]
+          const next = moveIntoLayout(blocks, source, target.location, target.side, keyGenerator)
+          if (next !== blocks) {
+            editor.send({type: 'set', at: [], value: next})
+            const focus = next.find((block) => block._key === target.location.blockKey) ?? next[0]
+            if (focus) editor.send({type: 'select.block', at: [{_key: focus._key}]})
+            editor.send({type: 'focus'})
+          }
+        }
+        if (payload) {
+          try { place(JSON.parse(payload) as BlockLocation) } catch { setDropError('This block could not be moved.') }
+        } else {
+          void (async () => {
+            if (!target) { await placeImageFiles(files, null); return }
+            const images = await Promise.all(files.map(async (file): Promise<LayoutBlock> => {
+              const {asset} = await uploadAsset(file)
+              return {_type: 'image', _key: keyGenerator(), asset: {_type: 'reference', _ref: asset._id}, alt: ''}
+            }))
+            place(images)
+          })().catch(() => setDropError('The image could not be uploaded. Please try again.'))
+        }
       }}
     >
       <NodePlugin nodes={editorNodes} />
+      {dropError ? <p role="alert" contentEditable={false}>{dropError}</p> : null}
       <EventListenerPlugin
         on={(event) => {
           if (event.type === 'mutation' && 'value' in event && Array.isArray(event.value)) {
             const value = event.value as PortableTextBodyItem[]
-            const converted = convertStandaloneUrlBlocksInBody(value) ?? value
+            const converted = cellEditor ? value : convertStandaloneUrlBlocksInBody(value) ?? value
 
             for (let index = 0; index < value.length; index += 1) {
               const block = value[index] as {_type?: string; _key?: string}
@@ -442,31 +512,33 @@ function EditorChrome({
         onPaste={handlePaste}
         renderPlaceholder={() => <span>Type / for blocks, or paste a YouTube/Figma link…</span>}
       />
-      <SlashMenu onInsertImage={() => setPicker(true)} />
-      <LinkPopover />
+      {!cellEditor ? <SlashMenu onInsertImage={() => setPicker(true)} /> : null}
+      <LinkPopover rootRef={rootRef} />
       <MediaPicker open={picker} onClose={() => setPicker(false)} onSelect={insertImage} />
     </div>
   )
 }
 
-export function BodyEditor({value, onChange, onSave, inserterOpen, onInserterClose}: BodyEditorProps) {
+export function BodyEditor({value, onChange, onSave, inserterOpen, onInserterClose, cellEditor}: BodyEditorProps) {
   const [initialValue] = useState(() => {
     if (!value?.length) return emptyBlock()
-    return (convertStandaloneUrlBlocksInBody(value as PortableTextBodyItem[]) ?? value) as unknown[]
+    return linkifyPortableText((cellEditor ? value : convertStandaloneUrlBlocksInBody(value as PortableTextBodyItem[]) ?? value) as PortableTextBodyItem[]) as unknown[]
   })
   const syncedEmbeds = useRef(false)
 
   useEffect(() => {
-    if (syncedEmbeds.current || !value?.length) return
+    if (cellEditor || syncedEmbeds.current || !value?.length) return
     syncedEmbeds.current = true
-    const converted = convertStandaloneUrlBlocksInBody(value as PortableTextBodyItem[])
+    const converted = linkifyPortableText(convertStandaloneUrlBlocksInBody(value as PortableTextBodyItem[]))
     if (converted && converted !== value) onChange(converted as unknown[])
-  }, [onChange, value])
+  }, [onChange, value, cellEditor])
 
   return (
     <EditorProvider
       initialConfig={{
-        schemaDefinition: postEditorSchema,
+        schemaDefinition: cellEditor ? {...postEditorSchema,
+          blockObjects: postEditorSchema.blockObjects?.filter((block) => block.name === 'image'),
+        } : postEditorSchema,
         initialValue: initialValue as never,
       }}
     >
@@ -475,6 +547,8 @@ export function BodyEditor({value, onChange, onSave, inserterOpen, onInserterClo
         onSave={onSave}
         inserterOpen={inserterOpen}
         onInserterClose={onInserterClose}
+        cellEditor={cellEditor}
+        externalValue={value}
       />
     </EditorProvider>
   )
