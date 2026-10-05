@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "test:editor": "tsx --test admin/src/editor/rows.test.ts admin/src/editor/referenceLinks.test.ts",
     "test:formatting": "tsx --test tests/formatting.test.ts",
+    "test:updates": "tsx --test tests/ownProjectUpdates.test.ts",
     "admin": "npm run dev --prefix admin",
     "typegen": "npm run typegen --prefix sanity",
     "schema:deploy": "npm run schema:deploy --prefix sanity",

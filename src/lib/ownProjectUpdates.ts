@@ -65,7 +65,7 @@ type GitHubCommit = {
   }
 }
 
-const SECTION_HEADER = /^##\s+(?:\[([^\]]+)\]|([^\n]+?))(?:\s*[-–—]\s*(.+))?$/m
+const SECTION_HEADER = /^##[ \t]+(?:\[([^\]\n]+)\]|([^\n]+?))(?:[ \t]+[-–—][ \t]+(.+))?$/m
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 const LINK_REFERENCE = /^\[([^\]]+)\]:\s*(\S+)\s*$/gm
 
@@ -112,7 +112,7 @@ function changelogHref(source: OwnProjectSource) {
   return `https://github.com/${source.owner}/${source.repo}/blob/main/CHANGELOG.md`
 }
 
-function parseChangelog(source: OwnProjectSource, markdown: string): OwnProjectUpdate[] {
+export function parseChangelog(source: OwnProjectSource, markdown: string): OwnProjectUpdate[] {
   const normalized = markdown.replace(/\r\n/g, '\n')
   const links = parseLinkMap(normalized)
   const sections = normalized.split(/\n(?=##\s+)/).filter((section) => section.startsWith('##'))
@@ -203,13 +203,14 @@ async function readJson<T>(response: Response | null): Promise<T | null> {
 
 async function fetchChangelogMarkdown(source: OwnProjectSource, signal?: AbortSignal) {
   const repo = `${source.owner}/${source.repo}`
-  const rawResponse = await fetch(`https://raw.githubusercontent.com/${repo}/main/CHANGELOG.md`, { signal }).catch(
+  const rawResponse = await fetch(`https://raw.githubusercontent.com/${repo}/main/CHANGELOG.md`, { signal, cache: 'no-cache' }).catch(
     () => null,
   )
   if (rawResponse?.ok) return rawResponse.text()
 
   const apiResponse = await fetch(`https://api.github.com/repos/${repo}/contents/CHANGELOG.md`, {
     signal,
+    cache: 'no-cache',
     headers: {
       Accept: 'application/vnd.github.raw+json',
       'User-Agent': 'KingOwen-Website',
