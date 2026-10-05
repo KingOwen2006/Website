@@ -42,18 +42,21 @@ export default function UnitImageCompare({before, after, caption}: UnitImageComp
         style={{'--pos': `${position}%`} as CSSProperties}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
+        onDragStart={(event) => event.preventDefault()}
       >
         <img
           src={beforeSrc}
           alt={before?.alt ?? 'Before'}
           className="unit-compare__img unit-compare__img--before"
           loading="lazy"
+          draggable={false}
         />
         <img
           src={afterSrc}
           alt={after?.alt ?? 'After'}
           className="unit-compare__img unit-compare__img--after"
           loading="lazy"
+          draggable={false}
         />
         <span className="unit-compare__handle" aria-hidden="true" />
       </div>

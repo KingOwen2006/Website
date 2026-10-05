@@ -11,7 +11,11 @@ export const sanityClient: SanityClient | null = isSanityConfigured
       projectId: projectId!,
       dataset,
       apiVersion,
-      useCdn: true,
+      useCdn: !import.meta.env.DEV,
+      ...(import.meta.env.DEV && typeof window !== 'undefined' ? {
+        apiHost: `${window.location.origin}/api/sanity-public`,
+        useProjectHostname: false,
+      } : {}),
     })
   : null
 
