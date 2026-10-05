@@ -82,6 +82,13 @@ export const unitBySlugsQuery = defineQuery(`
           asset->{ _id, url }
         }
       },
+      _type == "layoutRow" => {
+        ...,
+        items[]{
+          ...,
+          body[]{..., _type == "image" => {..., asset->{_id, url}}}
+        }
+      },
       _type == "imageGallery" => {
         ...,
         images[]{

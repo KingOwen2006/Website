@@ -15,11 +15,78 @@
 export declare const internalGroqTypeReferenceTo: unique symbol;
 
 // Source: schema.json
-export type ChapterReference = {
+export type Transform = {
+  rotate?: number;
+  flipH?: boolean;
+  flipV?: boolean;
+};
+
+export type ImageTransform = {
+  rotate?: number;
+  flipH?: boolean;
+  flipV?: boolean;
+};
+
+export type BeforeTransform = {
+  rotate?: number;
+  flipH?: boolean;
+  flipV?: boolean;
+};
+
+export type AfterTransform = {
+  rotate?: number;
+  flipH?: boolean;
+  flipV?: boolean;
+};
+
+export type BodyImageTransform = {
+  rotate?: number;
+  flipH?: boolean;
+  flipV?: boolean;
+};
+
+export type UnitEmbed = {
+  _type: "unitEmbed";
+  embedType: "embed" | "figma" | "audio" | "model";
+  src: string;
+  href?: string;
+  linkText?: string;
+};
+
+export type TaxonomyReference = {
   _ref: string;
   _type: "reference";
   _weak?: boolean;
-  [internalGroqTypeReferenceTo]?: "chapter";
+  [internalGroqTypeReferenceTo]?: "taxonomy";
+};
+
+export type Taxonomy = {
+  _id: string;
+  _type: "taxonomy";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  title: string;
+  slug: Slug;
+  kind: "category" | "tag";
+  description?: string;
+  parent?: TaxonomyReference;
+};
+
+export type Slug = {
+  _type: "slug";
+  current: string;
+  source?: string;
+};
+
+export type Spacer = {
+  _type: "spacer";
+  height?: number;
+};
+
+export type Separator = {
+  _type: "separator";
+  style?: string;
 };
 
 export type SanityImageAssetReference = {
@@ -29,18 +96,64 @@ export type SanityImageAssetReference = {
   [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
 };
 
+export type Seo = {
+  _type: "seo";
+  metaTitle?: string;
+  metaDescription?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImage?: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    alt?: string;
+    _type: "image";
+  };
+  twitterTitle?: string;
+  twitterDescription?: string;
+  twitterImage?: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    alt?: string;
+    _type: "image";
+  };
+  noIndex?: boolean;
+};
+
+export type UnitReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "unit";
+};
+
+export type PostRevision = {
+  _id: string;
+  _type: "postRevision";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  post: UnitReference;
+  createdAt: string;
+  label?: string;
+  snapshot?: string;
+};
+
+export type ChapterReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "chapter";
+};
+
 export type AuthorReference = {
   _ref: string;
   _type: "reference";
   _weak?: boolean;
   [internalGroqTypeReferenceTo]?: "author";
-};
-
-export type TaxonomyReference = {
-  _ref: string;
-  _type: "reference";
-  _weak?: boolean;
-  [internalGroqTypeReferenceTo]?: "taxonomy";
 };
 
 export type Unit = {
@@ -60,7 +173,6 @@ export type Unit = {
     alt: string;
     _type: "image";
   };
-  summary?: string;
   body?: Array<
     | {
         children?: Array<{
@@ -69,7 +181,8 @@ export type Unit = {
           _type: "span";
           _key: string;
         }>;
-        style?: "normal" | "h2" | "h3" | "h4" | "blockquote";
+        style?:
+          "normal" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "blockquote";
         listItem?: "bullet" | "number";
         markDefs?: Array<{
           href?: string;
@@ -88,16 +201,48 @@ export type Unit = {
         crop?: SanityImageCrop;
         alt: string;
         caption?: string;
+        size?: "default" | "wide" | "narrow";
+        align?: "default" | "left" | "center" | "right";
+        transform?: {
+          rotate?: number;
+          flipH?: boolean;
+          flipV?: boolean;
+        };
         _type: "image";
         _key: string;
       }
+    | ({
+        _key: string;
+      } & ImageRow)
+    | ({
+        _key: string;
+      } & ImageGallery)
+    | ({
+        _key: string;
+      } & ImageCompare)
     | ({
         _key: string;
       } & CodeBlock)
     | ({
         _key: string;
       } & UnitEmbed)
+    | ({
+        _key: string;
+      } & Separator)
+    | ({
+        _key: string;
+      } & Spacer)
+    | ({
+        _key: string;
+      } & ButtonBlock)
+    | ({
+        _key: string;
+      } & Columns)
+    | ({
+        _key: string;
+      } & LayoutRow)
   >;
+  summary?: string;
   author?: AuthorReference;
   categories?: Array<
     {
@@ -109,27 +254,15 @@ export type Unit = {
       _key: string;
     } & TaxonomyReference
   >;
-  status: "draft" | "published";
+  status: "draft" | "published" | "scheduled";
   publishedAt?: string;
+  scheduledAt?: string;
+  visibility?: "public" | "private";
+  trashedAt?: string;
   seo?: Seo;
   unitNumber?: number;
   order?: number;
   legacyWordPressId?: number;
-};
-
-export type Seo = {
-  _type: "seo";
-  metaTitle?: string;
-  metaDescription?: string;
-  ogImage?: {
-    asset?: SanityImageAssetReference;
-    media?: unknown;
-    hotspot?: SanityImageHotspot;
-    crop?: SanityImageCrop;
-    alt?: string;
-    _type: "image";
-  };
-  noIndex?: boolean;
 };
 
 export type SanityImageCrop = {
@@ -148,30 +281,120 @@ export type SanityImageHotspot = {
   width: number;
 };
 
-export type Slug = {
-  _type: "slug";
-  current: string;
-  source?: string;
+export type ImageRow = {
+  _type: "imageRow";
+  images?: Array<{
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    alt: string;
+    caption?: string;
+    size?: "default" | "wide" | "narrow";
+    align?: "default" | "left" | "center" | "right";
+    transform?: Transform;
+    _type: "image";
+    _key: string;
+  }>;
 };
 
-export type UnitEmbed = {
-  _type: "unitEmbed";
-  embedType: "embed" | "figma" | "audio" | "model";
-  src: string;
-  href?: string;
-  linkText?: string;
+export type ImageGallery = {
+  _type: "imageGallery";
+  layout: "grid" | "slider";
+  columns?: 2 | 3;
+  images?: Array<{
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    alt: string;
+    caption?: string;
+    size?: "default" | "wide" | "narrow";
+    align?: "default" | "left" | "center" | "right";
+    transform?: ImageTransform;
+    _type: "image";
+    _key: string;
+  }>;
 };
 
-export type Taxonomy = {
-  _id: string;
-  _type: "taxonomy";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  title: string;
-  slug: Slug;
-  kind: "category" | "tag";
-  description?: string;
+export type ImageCompare = {
+  _type: "imageCompare";
+  before: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    alt: string;
+    caption?: string;
+    size?: "default" | "wide" | "narrow";
+    align?: "default" | "left" | "center" | "right";
+    transform?: BeforeTransform;
+    _type: "image";
+  };
+  after: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    alt: string;
+    caption?: string;
+    size?: "default" | "wide" | "narrow";
+    align?: "default" | "left" | "center" | "right";
+    transform?: AfterTransform;
+    _type: "image";
+  };
+  caption?: string;
+};
+
+export type LayoutRow = {
+  _type: "layoutRow";
+  items: Array<{
+    body?: Array<
+      | {
+          children?: Array<{
+            marks?: Array<string>;
+            text?: string;
+            _type: "span";
+            _key: string;
+          }>;
+          style?:
+            "normal" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "blockquote";
+          listItem?: "bullet" | "number";
+          markDefs?: Array<{
+            href?: string;
+            openInNewTab?: boolean;
+            _type: "link";
+            _key: string;
+          }>;
+          level?: number;
+          _type: "block";
+          _key: string;
+        }
+      | {
+          asset?: SanityImageAssetReference;
+          media?: unknown;
+          hotspot?: SanityImageHotspot;
+          crop?: SanityImageCrop;
+          alt: string;
+          caption?: string;
+          size?: "default" | "wide" | "narrow";
+          align?: "default" | "left" | "center" | "right";
+          transform?: BodyImageTransform;
+          _type: "image";
+          _key: string;
+        }
+    >;
+    _type: "layoutCell";
+    _key: string;
+  }>;
+};
+
+export type Columns = {
+  _type: "columns";
+  items?: Array<{
+    text?: string;
+    _key: string;
+  }>;
 };
 
 export type CodeBlock = {
@@ -212,6 +435,14 @@ export type Chapter = {
   };
   legacyWordPressCategoryId?: number;
   order?: number;
+};
+
+export type ButtonBlock = {
+  _type: "buttonBlock";
+  label: string;
+  href: string;
+  style?: "primary" | "secondary";
+  openInNewTab?: boolean;
 };
 
 export type Author = {
@@ -331,19 +562,34 @@ export type Geopoint = {
 };
 
 export type AllSanitySchemaTypes =
-  | ChapterReference
-  | SanityImageAssetReference
-  | AuthorReference
+  | Transform
+  | ImageTransform
+  | BeforeTransform
+  | AfterTransform
+  | BodyImageTransform
+  | UnitEmbed
   | TaxonomyReference
-  | Unit
+  | Taxonomy
+  | Slug
+  | Spacer
+  | Separator
+  | SanityImageAssetReference
   | Seo
+  | UnitReference
+  | PostRevision
+  | ChapterReference
+  | AuthorReference
+  | Unit
   | SanityImageCrop
   | SanityImageHotspot
-  | Slug
-  | UnitEmbed
-  | Taxonomy
+  | ImageRow
+  | ImageGallery
+  | ImageCompare
+  | LayoutRow
+  | Columns
   | CodeBlock
   | Chapter
+  | ButtonBlock
   | Author
   | SanityImagePaletteSwatch
   | SanityImagePalette
@@ -354,7 +600,7 @@ export type AllSanitySchemaTypes =
   | SanityImageAsset
   | Geopoint;
 
-// Source: ../../src/lib/sanity/queries.ts
+// Source: ../src/lib/sanity/queries.ts
 // Variable: chapterBySlugQuery
 // Query: *[_type == "chapter" && slug.current == $slug][0]{    _id,    title,    "slug": slug.current,    subtitle,    summary,    dateRange,    logo {      asset->{ _id, url },      alt    }  }
 export type ChapterBySlugQueryResult = {
@@ -373,9 +619,9 @@ export type ChapterBySlugQueryResult = {
   } | null;
 } | null;
 
-// Source: ../../src/lib/sanity/queries.ts
+// Source: ../src/lib/sanity/queries.ts
 // Variable: unitsByChapterSlugQuery
-// Query: *[    _type == "unit" &&    chapter->slug.current == $slug &&    coalesce(status, "published") == "published"  ]    | order(coalesce(order, 999) asc, coalesce(unitNumber, 999) asc, title asc) {    _id,    title,    "slug": slug.current,    summary,    order,    unitNumber,    publishedAt,    status,    thumbnail {      asset->{ _id, url },      alt    },    categories[]->{      _id,      title,      "slug": slug.current,      kind    }  }
+// Query: *[    _type == "unit" &&    chapter->slug.current == $slug &&    coalesce(status, "published") == "published"  ]    | order(coalesce(order, 999) asc, coalesce(unitNumber, 999) asc, title asc) {    _id,    title,    "slug": slug.current,    summary,    order,    unitNumber,    publishedAt,    status,    visibility,    thumbnail {      asset->{ _id, url },      alt    },    categories[]->{      _id,      title,      "slug": slug.current,      kind    }  }
 export type UnitsByChapterSlugQueryResult = Array<{
   _id: string;
   title: string;
@@ -384,7 +630,8 @@ export type UnitsByChapterSlugQueryResult = Array<{
   order: number | null;
   unitNumber: number | null;
   publishedAt: string | null;
-  status: "draft" | "published";
+  status: "draft" | "published" | "scheduled";
+  visibility: "private" | "public" | null;
   thumbnail: {
     asset: {
       _id: string;
@@ -400,9 +647,9 @@ export type UnitsByChapterSlugQueryResult = Array<{
   }> | null;
 }>;
 
-// Source: ../../src/lib/sanity/queries.ts
+// Source: ../src/lib/sanity/queries.ts
 // Variable: unitBySlugsQuery
-// Query: *[    _type == "unit" &&    slug.current == $unitSlug &&    chapter->slug.current == $chapterSlug &&    coalesce(status, "published") == "published"  ][0]{    _id,    title,    "slug": slug.current,    summary,    order,    unitNumber,    publishedAt,    status,    body[]{      ...,      _type == "image" => {        ...,        asset->{ _id, url }      },      _type == "imageRow" => {        ...,        images[]{          ...,          asset->{ _id, url }        }      },      _type == "imageGallery" => {        ...,        images[]{          ...,          asset->{ _id, url }        }      },      _type == "imageCompare" => {        ...,        before{          ...,          asset->{ _id, url }        },        after{          ...,          asset->{ _id, url }        }      },      _type == "unitEmbed" => {        ...      }    },    thumbnail {      asset->{ _id, url },      alt    },    author->{      name,      "slug": slug.current,      bio,      avatar {        asset->{ _id, url },        alt      }    },    categories[]->{      _id,      title,      "slug": slug.current,      kind    },    tags[]->{      _id,      title,      "slug": slug.current,      kind    },    "seo": {      "title": coalesce(seo.metaTitle, title, ""),      "description": coalesce(seo.metaDescription, summary, ""),      "image": coalesce(seo.ogImage, thumbnail) {        asset->{ _id, url },        alt      },      "noIndex": seo.noIndex == true    },    chapter->{      _id,      title,      "slug": slug.current    }  }
+// Query: *[    _type == "unit" &&    slug.current == $unitSlug &&    chapter->slug.current == $chapterSlug &&    coalesce(status, "published") == "published"  ][0]{    _id,    title,    "slug": slug.current,    summary,    order,    unitNumber,    publishedAt,    status,    visibility,    body[]{      ...,      _type == "image" => {        ...,        asset->{ _id, url }      },      _type == "imageRow" => {        ...,        images[]{          ...,          asset->{ _id, url }        }      },      _type == "layoutRow" => {        ...,        items[]{          ...,          body[]{..., _type == "image" => {..., asset->{_id, url}}}        }      },      _type == "imageGallery" => {        ...,        images[]{          ...,          asset->{ _id, url }        }      },      _type == "imageCompare" => {        ...,        before{          ...,          asset->{ _id, url }        },        after{          ...,          asset->{ _id, url }        }      },      _type == "unitEmbed" => {        ...      }    },    thumbnail {      asset->{ _id, url },      alt    },    author->{      name,      "slug": slug.current,      bio,      avatar {        asset->{ _id, url },        alt      }    },    categories[]->{      _id,      title,      "slug": slug.current,      kind    },    tags[]->{      _id,      title,      "slug": slug.current,      kind    },    "seo": {      "title": coalesce(seo.metaTitle, title, ""),      "description": coalesce(seo.metaDescription, summary, ""),      "image": coalesce(seo.ogImage, thumbnail) {        asset->{ _id, url },        alt      },      "noIndex": seo.noIndex == true    },    chapter->{      _id,      title,      "slug": slug.current    }  }
 export type UnitBySlugsQueryResult = {
   _id: string;
   title: string;
@@ -411,7 +658,8 @@ export type UnitBySlugsQueryResult = {
   order: number | null;
   unitNumber: number | null;
   publishedAt: string | null;
-  status: "draft" | "published";
+  status: "draft" | "published" | "scheduled";
+  visibility: "private" | "public" | null;
   body: Array<
     | {
         children?: Array<{
@@ -420,7 +668,8 @@ export type UnitBySlugsQueryResult = {
           _type: "span";
           _key: string;
         }>;
-        style?: "blockquote" | "h2" | "h3" | "h4" | "normal";
+        style?:
+          "blockquote" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "normal";
         listItem?: "bullet" | "number";
         markDefs?: Array<{
           href?: string;
@@ -431,6 +680,14 @@ export type UnitBySlugsQueryResult = {
         level?: number;
         _type: "block";
         _key: string;
+      }
+    | {
+        _key: string;
+        _type: "buttonBlock";
+        label: string;
+        href: string;
+        style?: "primary" | "secondary";
+        openInNewTab?: boolean;
       }
     | {
         _key: string;
@@ -451,6 +708,14 @@ export type UnitBySlugsQueryResult = {
         filename?: string;
       }
     | {
+        _key: string;
+        _type: "columns";
+        items?: Array<{
+          text?: string;
+          _key: string;
+        }>;
+      }
+    | {
         asset: {
           _id: string;
           url: string;
@@ -460,8 +725,155 @@ export type UnitBySlugsQueryResult = {
         crop?: SanityImageCrop;
         alt: string;
         caption?: string;
+        size?: "default" | "narrow" | "wide";
+        align?: "center" | "default" | "left" | "right";
+        transform?: {
+          rotate?: number;
+          flipH?: boolean;
+          flipV?: boolean;
+        };
         _type: "image";
         _key: string;
+      }
+    | {
+        _key: string;
+        _type: "imageCompare";
+        before: {
+          asset: {
+            _id: string;
+            url: string;
+          } | null;
+          media?: unknown;
+          hotspot?: SanityImageHotspot;
+          crop?: SanityImageCrop;
+          alt: string;
+          caption?: string;
+          size?: "default" | "narrow" | "wide";
+          align?: "center" | "default" | "left" | "right";
+          transform?: BeforeTransform;
+          _type: "image";
+        };
+        after: {
+          asset: {
+            _id: string;
+            url: string;
+          } | null;
+          media?: unknown;
+          hotspot?: SanityImageHotspot;
+          crop?: SanityImageCrop;
+          alt: string;
+          caption?: string;
+          size?: "default" | "narrow" | "wide";
+          align?: "center" | "default" | "left" | "right";
+          transform?: AfterTransform;
+          _type: "image";
+        };
+        caption?: string;
+      }
+    | {
+        _key: string;
+        _type: "imageGallery";
+        layout: "grid" | "slider";
+        columns?: 2 | 3;
+        images: Array<{
+          asset: {
+            _id: string;
+            url: string;
+          } | null;
+          media?: unknown;
+          hotspot?: SanityImageHotspot;
+          crop?: SanityImageCrop;
+          alt: string;
+          caption?: string;
+          size?: "default" | "narrow" | "wide";
+          align?: "center" | "default" | "left" | "right";
+          transform?: ImageTransform;
+          _type: "image";
+          _key: string;
+        }> | null;
+      }
+    | {
+        _key: string;
+        _type: "imageRow";
+        images: Array<{
+          asset: {
+            _id: string;
+            url: string;
+          } | null;
+          media?: unknown;
+          hotspot?: SanityImageHotspot;
+          crop?: SanityImageCrop;
+          alt: string;
+          caption?: string;
+          size?: "default" | "narrow" | "wide";
+          align?: "center" | "default" | "left" | "right";
+          transform?: Transform;
+          _type: "image";
+          _key: string;
+        }> | null;
+      }
+    | {
+        _key: string;
+        _type: "layoutRow";
+        items: Array<{
+          body: Array<
+            | {
+                children?: Array<{
+                  marks?: Array<string>;
+                  text?: string;
+                  _type: "span";
+                  _key: string;
+                }>;
+                style?:
+                  | "blockquote"
+                  | "h1"
+                  | "h2"
+                  | "h3"
+                  | "h4"
+                  | "h5"
+                  | "h6"
+                  | "normal";
+                listItem?: "bullet" | "number";
+                markDefs?: Array<{
+                  href?: string;
+                  openInNewTab?: boolean;
+                  _type: "link";
+                  _key: string;
+                }>;
+                level?: number;
+                _type: "block";
+                _key: string;
+              }
+            | {
+                asset: {
+                  _id: string;
+                  url: string;
+                } | null;
+                media?: unknown;
+                hotspot?: SanityImageHotspot;
+                crop?: SanityImageCrop;
+                alt: string;
+                caption?: string;
+                size?: "default" | "narrow" | "wide";
+                align?: "center" | "default" | "left" | "right";
+                transform?: BodyImageTransform;
+                _type: "image";
+                _key: string;
+              }
+          > | null;
+          _type: "layoutCell";
+          _key: string;
+        }>;
+      }
+    | {
+        _key: string;
+        _type: "separator";
+        style?: string;
+      }
+    | {
+        _key: string;
+        _type: "spacer";
+        height?: number;
       }
     | {
         _key: string;
@@ -531,15 +943,16 @@ export type UnitBySlugsQueryResult = {
   };
 } | null;
 
-// Source: ../../src/lib/sanity/queries.ts
+// Source: ../src/lib/sanity/queries.ts
 // Variable: recentUnitsQuery
-// Query: *[    _type == "unit" &&    coalesce(status, "published") == "published" &&    defined(slug.current) &&    defined(chapter->slug.current)  ]    | order(coalesce(publishedAt, _createdAt) desc) [0...8] {    _id,    title,    "slug": slug.current,    summary,    publishedAt,    "chapterSlug": chapter->slug.current,    thumbnail {      asset->{ _id, url },      alt    }  }
+// Query: *[    _type == "unit" &&    coalesce(status, "published") == "published" &&    defined(slug.current) &&    defined(chapter->slug.current)  ]    | order(coalesce(publishedAt, _createdAt) desc) [0...8] {    _id,    title,    "slug": slug.current,    summary,    publishedAt,    visibility,    "chapterSlug": chapter->slug.current,    thumbnail {      asset->{ _id, url },      alt    }  }
 export type RecentUnitsQueryResult = Array<{
   _id: string;
   title: string;
   slug: string;
   summary: string | null;
   publishedAt: string | null;
+  visibility: "private" | "public" | null;
   chapterSlug: string;
   thumbnail: {
     asset: {
@@ -554,9 +967,9 @@ export type RecentUnitsQueryResult = Array<{
 declare global {
   interface SanityQueries {
     '\n  *[_type == "chapter" && slug.current == $slug][0]{\n    _id,\n    title,\n    "slug": slug.current,\n    subtitle,\n    summary,\n    dateRange,\n    logo {\n      asset->{ _id, url },\n      alt\n    }\n  }\n': ChapterBySlugQueryResult;
-    '\n  *[\n    _type == "unit" &&\n    chapter->slug.current == $slug &&\n    coalesce(status, "published") == "published"\n  ]\n    | order(coalesce(order, 999) asc, coalesce(unitNumber, 999) asc, title asc) {\n    _id,\n    title,\n    "slug": slug.current,\n    summary,\n    order,\n    unitNumber,\n    publishedAt,\n    status,\n    thumbnail {\n      asset->{ _id, url },\n      alt\n    },\n    categories[]->{\n      _id,\n      title,\n      "slug": slug.current,\n      kind\n    }\n  }\n': UnitsByChapterSlugQueryResult;
-    '\n  *[\n    _type == "unit" &&\n    slug.current == $unitSlug &&\n    chapter->slug.current == $chapterSlug &&\n    coalesce(status, "published") == "published"\n  ][0]{\n    _id,\n    title,\n    "slug": slug.current,\n    summary,\n    order,\n    unitNumber,\n    publishedAt,\n    status,\n    body[]{\n      ...,\n      _type == "image" => {\n        ...,\n        asset->{ _id, url }\n      },\n      _type == "imageRow" => {\n        ...,\n        images[]{\n          ...,\n          asset->{ _id, url }\n        }\n      },\n      _type == "imageGallery" => {\n        ...,\n        images[]{\n          ...,\n          asset->{ _id, url }\n        }\n      },\n      _type == "imageCompare" => {\n        ...,\n        before{\n          ...,\n          asset->{ _id, url }\n        },\n        after{\n          ...,\n          asset->{ _id, url }\n        }\n      },\n      _type == "unitEmbed" => {\n        ...\n      }\n    },\n    thumbnail {\n      asset->{ _id, url },\n      alt\n    },\n    author->{\n      name,\n      "slug": slug.current,\n      bio,\n      avatar {\n        asset->{ _id, url },\n        alt\n      }\n    },\n    categories[]->{\n      _id,\n      title,\n      "slug": slug.current,\n      kind\n    },\n    tags[]->{\n      _id,\n      title,\n      "slug": slug.current,\n      kind\n    },\n    "seo": {\n      "title": coalesce(seo.metaTitle, title, ""),\n      "description": coalesce(seo.metaDescription, summary, ""),\n      "image": coalesce(seo.ogImage, thumbnail) {\n        asset->{ _id, url },\n        alt\n      },\n      "noIndex": seo.noIndex == true\n    },\n    chapter->{\n      _id,\n      title,\n      "slug": slug.current\n    }\n  }\n': UnitBySlugsQueryResult;
-    '\n  *[\n    _type == "unit" &&\n    coalesce(status, "published") == "published" &&\n    defined(slug.current) &&\n    defined(chapter->slug.current)\n  ]\n    | order(coalesce(publishedAt, _createdAt) desc) [0...8] {\n    _id,\n    title,\n    "slug": slug.current,\n    summary,\n    publishedAt,\n    "chapterSlug": chapter->slug.current,\n    thumbnail {\n      asset->{ _id, url },\n      alt\n    }\n  }\n': RecentUnitsQueryResult;
+    '\n  *[\n    _type == "unit" &&\n    chapter->slug.current == $slug &&\n    coalesce(status, "published") == "published"\n  ]\n    | order(coalesce(order, 999) asc, coalesce(unitNumber, 999) asc, title asc) {\n    _id,\n    title,\n    "slug": slug.current,\n    summary,\n    order,\n    unitNumber,\n    publishedAt,\n    status,\n    visibility,\n    thumbnail {\n      asset->{ _id, url },\n      alt\n    },\n    categories[]->{\n      _id,\n      title,\n      "slug": slug.current,\n      kind\n    }\n  }\n': UnitsByChapterSlugQueryResult;
+    '\n  *[\n    _type == "unit" &&\n    slug.current == $unitSlug &&\n    chapter->slug.current == $chapterSlug &&\n    coalesce(status, "published") == "published"\n  ][0]{\n    _id,\n    title,\n    "slug": slug.current,\n    summary,\n    order,\n    unitNumber,\n    publishedAt,\n    status,\n    visibility,\n    body[]{\n      ...,\n      _type == "image" => {\n        ...,\n        asset->{ _id, url }\n      },\n      _type == "imageRow" => {\n        ...,\n        images[]{\n          ...,\n          asset->{ _id, url }\n        }\n      },\n      _type == "layoutRow" => {\n        ...,\n        items[]{\n          ...,\n          body[]{..., _type == "image" => {..., asset->{_id, url}}}\n        }\n      },\n      _type == "imageGallery" => {\n        ...,\n        images[]{\n          ...,\n          asset->{ _id, url }\n        }\n      },\n      _type == "imageCompare" => {\n        ...,\n        before{\n          ...,\n          asset->{ _id, url }\n        },\n        after{\n          ...,\n          asset->{ _id, url }\n        }\n      },\n      _type == "unitEmbed" => {\n        ...\n      }\n    },\n    thumbnail {\n      asset->{ _id, url },\n      alt\n    },\n    author->{\n      name,\n      "slug": slug.current,\n      bio,\n      avatar {\n        asset->{ _id, url },\n        alt\n      }\n    },\n    categories[]->{\n      _id,\n      title,\n      "slug": slug.current,\n      kind\n    },\n    tags[]->{\n      _id,\n      title,\n      "slug": slug.current,\n      kind\n    },\n    "seo": {\n      "title": coalesce(seo.metaTitle, title, ""),\n      "description": coalesce(seo.metaDescription, summary, ""),\n      "image": coalesce(seo.ogImage, thumbnail) {\n        asset->{ _id, url },\n        alt\n      },\n      "noIndex": seo.noIndex == true\n    },\n    chapter->{\n      _id,\n      title,\n      "slug": slug.current\n    }\n  }\n': UnitBySlugsQueryResult;
+    '\n  *[\n    _type == "unit" &&\n    coalesce(status, "published") == "published" &&\n    defined(slug.current) &&\n    defined(chapter->slug.current)\n  ]\n    | order(coalesce(publishedAt, _createdAt) desc) [0...8] {\n    _id,\n    title,\n    "slug": slug.current,\n    summary,\n    publishedAt,\n    visibility,\n    "chapterSlug": chapter->slug.current,\n    thumbnail {\n      asset->{ _id, url },\n      alt\n    }\n  }\n': RecentUnitsQueryResult;
   }
 }
 // Lets @sanity/client releases that predate the global registry read it too

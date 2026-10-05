@@ -15,7 +15,8 @@
     "clean:summaries": "tsx --env-file=.env scripts/clean-unit-summaries.ts",
     "migrate:embeds": "tsx --env-file=.env scripts/migrate-embeds-to-sanity.ts",
     "group:images": "tsx --env-file=.env scripts/group-unit-images.ts",
-    "backfill:editorial": "tsx --env-file=.env scripts/backfill-editorial-fields.ts"
+    "backfill:editorial": "tsx --env-file=.env scripts/backfill-editorial-fields.ts",
+    "test:formatting": "tsx --test tests/formatting.test.ts"
   },
   "dependencies": {
     "@portabletext/react": "^8.0.1",

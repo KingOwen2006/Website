@@ -121,6 +121,7 @@ export const unit = defineType({
         defineArrayMember({type: 'spacer'}),
         defineArrayMember({type: 'buttonBlock'}),
         defineArrayMember({type: 'columns'}),
+        defineArrayMember({type: 'layoutRow'}),
       ],
     }),
     defineField({

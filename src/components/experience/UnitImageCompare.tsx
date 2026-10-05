@@ -13,7 +13,6 @@ export default function UnitImageCompare({before, after, caption}: UnitImageComp
 
   const beforeSrc = getUnitImageUrl(before, 1400)
   const afterSrc = getUnitImageUrl(after, 1400)
-  if (!beforeSrc || !afterSrc) return null
 
   const updatePosition = useCallback((clientX: number) => {
     const viewport = viewportRef.current
@@ -32,6 +31,8 @@ export default function UnitImageCompare({before, after, caption}: UnitImageComp
     if (!event.currentTarget.hasPointerCapture(event.pointerId)) return
     updatePosition(event.clientX)
   }
+
+  if (!beforeSrc || !afterSrc) return null
 
   return (
     <figure className="unit-compare">

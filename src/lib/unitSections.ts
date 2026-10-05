@@ -14,10 +14,11 @@ type SectionBlock = PortableTextBodyItem & {
   children?: Array<{text?: string}>
   code?: string
   label?: string
-  items?: Array<{text?: string}>
+  items?: Array<{text?: string; body?: SectionBlock[]}>
 }
 
-function blockText(block: SectionBlock) {
+function blockText(block: SectionBlock): string {
+  if (block._type === 'layoutRow') return (block.items ?? []).flatMap((item) => (item.body ?? []).map(blockText)).join(' ')
   if (block._type === 'codeBlock') return block.code ?? ''
   if (block._type === 'buttonBlock') return block.label ?? ''
   if (block._type === 'columns') return (block.items ?? []).map((item) => item.text ?? '').join(' ')

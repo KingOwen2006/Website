@@ -3,6 +3,7 @@ import {buttonBlock} from './buttonBlock'
 import {chapter} from './chapter'
 import {codeBlock} from './codeBlock'
 import {columns} from './columns'
+import {layoutRow} from './layoutRow'
 import {imageCompare} from './imageCompare'
 import {imageGallery} from './imageGallery'
 import {imageRow} from './imageRow'
@@ -20,6 +21,7 @@ export const schemaTypes = [
   chapter,
   codeBlock,
   columns,
+  layoutRow,
   imageCompare,
   imageGallery,
   imageRow,

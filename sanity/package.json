@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "typegen": "sanity schema extract --enforce-required-fields && sanity typegen generate",
+    "typegen": "sanity schema extract --enforce-required-fields --force && sanity typegen generate",
     "schema:extract": "sanity schema extract --enforce-required-fields",
     "schema:deploy": "sanity schema deploy"
   },

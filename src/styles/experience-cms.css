@@ -1264,6 +1264,12 @@
   margin: 20px 0;
 }
 
+.unit-layout-row { display: flex; gap: 24px; align-items: flex-start; margin: 24px 0; }
+.unit-layout-cell { flex: 1 1 0; min-width: 0; }
+.unit-layout-cell > :first-child { margin-top: 0; }
+.unit-layout-cell .unit-body-figure { margin: 0; }
+@media (max-width: 600px) { .unit-layout-row { flex-direction: column; } .unit-layout-cell { width: 100%; } }
+
 .unit-column {
   white-space: pre-wrap;
 }
