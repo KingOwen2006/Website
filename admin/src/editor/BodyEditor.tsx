@@ -11,17 +11,18 @@ import {
   type OnPasteFn,
   type TextBlockRenderProps,
 } from '@portabletext/editor'
-import {getFocusBlockObject, getFocusTextBlock} from '@portabletext/editor/selectors'
+import {getFocusBlockObject, getSelectedBlocks} from '@portabletext/editor/selectors'
 import {EventListenerPlugin, NodePlugin} from '@portabletext/editor/plugins'
 import {useCallback, useEffect, useRef, useState, type ClipboardEvent, type ReactElement} from 'react'
 import {MediaPicker, type MediaAsset} from '../components/MediaPicker'
 import {ObjectBlock} from './blocks/ObjectBlocks'
 import {DragHandle} from './blocks/DragHandle'
 import {imageFilesFromClipboard, imageFilesFromHtml} from './clipboardImages'
-import {BLOCK_DRAG_MIME, moveIntoLayout, type BlockLocation, type DropSide, type LayoutBlock} from './rows'
+import {BLOCK_DRAG_MIME, moveIntoLayout, moveSelectionIntoLayout, type BlockDragSource, type DropSide, type LayoutBlock, type BlockLocation} from './rows'
 import {BlockInserter} from './blocks/BlockInserter'
 import {LinkPopover} from './LinkPopover'
 import {postEditorSchema} from './schema'
+import {useDragAutoScroll} from './useDragAutoScroll'
 import {SlashMenu} from './SlashMenu'
 import {uploadAsset} from '../lib/api'
 import {imageUrl} from '../lib/image'
@@ -52,7 +53,7 @@ function emptyBlock() {
 
 function TextBlockContent({attributes, children, node}: TextBlockRenderProps) {
     const editor = useEditor()
-    const selected = useEditorSelector(editor, (snapshot) => getFocusTextBlock(snapshot)?.node._key === node._key)
+    const selected = useEditorSelector(editor, (snapshot) => getSelectedBlocks(snapshot).some((block) => block.node._key === node._key))
     const style = 'style' in node ? String(node.style) : 'normal'
     const list = 'listItem' in node ? String(node.listItem) : ''
     const content =
@@ -161,6 +162,7 @@ function EditorChrome({
 }) {
   const editor = useEditor()
   const rootRef = useRef<HTMLDivElement>(null)
+  useDragAutoScroll(rootRef, !cellEditor)
   const [picker, setPicker] = useState(false)
   const [dropError, setDropError] = useState('')
   const dropTargetRef = useRef<HTMLElement | null>(null)
@@ -464,10 +466,12 @@ function EditorChrome({
         clearDropTarget()
         setDropError('')
         const target = getDropTarget(event.target, event.clientX, event.clientY)
-        const place = (source: BlockLocation | LayoutBlock[]) => {
+        const place = (source: BlockDragSource | LayoutBlock[]) => {
           if (!target) return
           const blocks = editor.getSnapshot().context.value as LayoutBlock[]
-          const next = moveIntoLayout(blocks, source, target.location, target.side, keyGenerator)
+          const next = !Array.isArray(source) && 'locations' in source
+            ? moveSelectionIntoLayout(blocks, source.locations, target.location, target.side, keyGenerator)
+            : moveIntoLayout(blocks, source, target.location, target.side, keyGenerator)
           if (next !== blocks) {
             editor.send({type: 'set', at: [], value: next})
             const focus = next.find((block) => block._key === target.location.blockKey) ?? next[0]
@@ -476,7 +480,7 @@ function EditorChrome({
           }
         }
         if (payload) {
-          try { place(JSON.parse(payload) as BlockLocation) } catch { setDropError('This block could not be moved.') }
+          try { place(JSON.parse(payload) as BlockDragSource) } catch { setDropError('This block could not be moved.') }
         } else {
           void (async () => {
             if (!target) { await placeImageFiles(files, null); return }
