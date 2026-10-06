@@ -185,16 +185,18 @@ function EditorChrome({
   const getDropTarget = (target: EventTarget | null, x: number, y: number) => {
     if (!(target instanceof HTMLElement)) return null
     const cell = target.closest<HTMLElement>('[data-layout-cell]')
-    const element = cell ?? target.closest<HTMLElement>('[data-block-key]')
+    const child = target.closest<HTMLElement>('[data-block-key]')
+    const end = target.closest<HTMLElement>('[data-column-end]')
+    const element = end ?? (cell && child && cell.contains(child) ? child : cell ?? child)
     if (!element || !rootRef.current?.contains(element)) return null
     const rect = element.getBoundingClientRect()
     const horizontal = (x - rect.left) / rect.width
-    const side: DropSide = horizontal < 0.25 ? 'left' : horizontal > 0.75 ? 'right'
-      : cell ? horizontal < 0.5 ? 'left' : 'right'
+    const side: DropSide = end ? 'after' : horizontal < 0.25 ? 'left' : horizontal > 0.75 ? 'right'
       : y < rect.top + rect.height / 2 ? 'before' : 'after'
     return {element, side, location: {
       blockKey: cell?.dataset.layoutRow ?? element.dataset.blockKey!,
       cellKey: cell?.dataset.layoutCell,
+      childKey: cell && element === child ? child?.dataset.blockKey : undefined,
     } as BlockLocation}
   }
 
@@ -303,6 +305,14 @@ function EditorChrome({
   )
 
   const insertImage = (asset: MediaAsset) => {
+    if (cellEditor) {
+      const blocks = editor.getSnapshot().context.value
+      editor.send({type: 'set', at: [], value: [...blocks, {
+        _type: 'image', _key: keyGenerator(), asset: {_type: 'reference', _ref: asset._id}, alt: '',
+      }] as never})
+      editor.send({type: 'focus'})
+      return
+    }
     editor.send({
       type: 'insert.block object',
       placement: 'auto',
@@ -512,6 +522,16 @@ function EditorChrome({
         onPaste={handlePaste}
         renderPlaceholder={() => <span>Type / for blocks, or paste a YouTube/Figma link…</span>}
       />
+      {cellEditor ? <div className="layout-cell-add-actions" contentEditable={false}>
+        <button type="button" onClick={() => {
+          const blocks = editor.getSnapshot().context.value
+          const block = {...emptyBlock()[0], _key: keyGenerator()}
+          editor.send({type: 'set', at: [], value: [...blocks, block] as never})
+          editor.send({type: 'select.block', at: [{_key: block._key}]})
+          editor.send({type: 'focus'})
+        }}>+ Text</button>
+        <button type="button" onClick={() => setPicker(true)}>+ Image</button>
+      </div> : null}
       {!cellEditor ? <SlashMenu onInsertImage={() => setPicker(true)} /> : null}
       <LinkPopover rootRef={rootRef} />
       <MediaPicker open={picker} onClose={() => setPicker(false)} onSelect={insertImage} />

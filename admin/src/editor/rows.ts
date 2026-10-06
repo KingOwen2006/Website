@@ -2,7 +2,7 @@ export const BLOCK_DRAG_MIME = 'application/x-kingowen-block'
 
 export type LayoutBlock = Record<string, unknown> & {_key: string; _type: string; items?: LayoutCell[]}
 export type LayoutCell = {_type: 'layoutCell'; _key: string; body: LayoutBlock[]}
-export type BlockLocation = {blockKey: string; cellKey?: string}
+export type BlockLocation = {blockKey: string; cellKey?: string; childKey?: string}
 export type DropSide = 'left' | 'right' | 'before' | 'after'
 
 export function editableRow(block: LayoutBlock): LayoutBlock {
@@ -18,7 +18,10 @@ function locate(blocks: LayoutBlock[], location: BlockLocation) {
   if (!block) return undefined
   if (!location.cellKey) return {block, body: [block]}
   const cell = block.items?.find((entry) => entry._key === location.cellKey)
-  return cell ? {block, cell, body: cell.body} : undefined
+  if (!cell) return undefined
+  const child = location.childKey ? cell.body.find((entry) => entry._key === location.childKey) : undefined
+  if (location.childKey && !child) return undefined
+  return {block, cell, child, body: child ? [child] : cell.body}
 }
 
 /** Move content in a single value update so undo restores the complete layout. */
@@ -33,9 +36,11 @@ export function moveIntoLayout(
   const origin = Array.isArray(source) ? undefined : locate(blocks, source)
   if (!destination || (!Array.isArray(source) && !origin)) return original
   if (!Array.isArray(source) && source.blockKey === target.blockKey &&
-      (!source.cellKey || source.cellKey === target.cellKey)) return original
+      (!source.cellKey || (source.cellKey === target.cellKey &&
+        (!source.childKey || source.childKey === target.childKey)))) return original
   const body = Array.isArray(source) ? source : origin!.body
   const horizontal = side === 'left' || side === 'right'
+  if (target.cellKey && body.some((entry) => !['image', 'block'].includes(entry._type))) return original
   if (horizontal && (body.some((entry) => !['image', 'block'].includes(entry._type)) ||
       !['image', 'block', 'layoutRow'].includes(destination.block._type))) return original
 
@@ -43,15 +48,31 @@ export function moveIntoLayout(
   let next = blocks.flatMap((block) => {
     if (!origin || block._key !== origin.block._key) return [block]
     if (!origin.cell) return []
-    return [{...block, items: block.items!.filter((cell) => cell._key !== origin.cell!._key)}]
+    return [{...block, items: block.items!.flatMap((cell) => {
+      if (cell._key !== origin.cell!._key) return [cell]
+      if (!origin.child) return []
+      return [{...cell, body: cell.body.filter((entry) => entry._key !== origin.child!._key)}]
+    })}]
   })
   const targetIndex = next.findIndex((block) => block._key === target.blockKey)
   if (targetIndex < 0) return original
   if (!horizontal) {
-    next.splice(targetIndex + (side === 'after' ? 1 : 0), 0, ...body)
+    if (target.cellKey) {
+      const block = next[targetIndex]
+      const cell = block.items?.find((entry) => entry._key === target.cellKey)
+      if (!cell) return original
+      const index = target.childKey ? cell.body.findIndex((entry) => entry._key === target.childKey)
+        : side === 'before' ? 0 : cell.body.length - 1
+      if (target.childKey && index < 0) return original
+      const contents = [...cell.body]
+      contents.splice(index + (side === 'after' ? 1 : 0), 0, ...body)
+      next[targetIndex] = {...block, items: block.items!.map((entry) =>
+        entry._key === cell._key ? {...entry, body: contents} : entry)}
+    } else next.splice(targetIndex + (side === 'after' ? 1 : 0), 0, ...body)
   } else {
     const block = next[targetIndex]
-    const cell: LayoutCell = origin?.cell ?? {_type: 'layoutCell', _key: makeKey(), body}
+    const cell: LayoutCell = origin?.cell && !origin.child ? origin.cell
+      : {_type: 'layoutCell', _key: makeKey(), body}
     const items: LayoutCell[] = block._type === 'layoutRow'
       ? [...(block.items ?? [])]
       : [{_type: 'layoutCell', _key: makeKey(), body: [block]}]
@@ -61,6 +82,8 @@ export function moveIntoLayout(
     items.splice(index + (side === 'right' ? 1 : 0), 0, cell)
     next[targetIndex] = {_type: 'layoutRow', _key: block._key, items}
   }
+  next = next.map((block) => block._type === 'layoutRow'
+    ? {...block, items: block.items?.filter((cell) => cell.body.length)} : block)
   next = next.flatMap((block) => block._type === 'layoutRow' && (block.items?.length ?? 0) < 2
     ? block.items?.flatMap((cell) => cell.body) ?? [] : [block])
   return next

@@ -1270,6 +1270,7 @@
 .unit-layout-cell { flex: 1 1 0; min-width: 0; }
 .unit-layout-cell > :first-child { margin-top: 0; }
 .unit-layout-cell .unit-body-figure { margin: 0; }
+.unit-layout-cell > .unit-body-figure + .unit-body-figure { margin-top: 20px; }
 @media (max-width: 600px) { .unit-layout-row { flex-direction: column; } .unit-layout-cell { width: 100%; } }
 
 .unit-column {

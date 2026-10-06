@@ -81,3 +81,51 @@ test('saving rows converts expanded image assets back into Sanity references', (
   assert.deepEqual(saved[0].items![1].body[0].asset, {_type: 'reference', _ref: 'image-one'})
   assert.deepEqual(saved[0].items![0].body[0], text)
 })
+
+const stackedRow = (): LayoutBlock => ({_type: 'layoutRow', _key: 'row', items: [
+  {_type: 'layoutCell', _key: 'left', body: [image('one'), image('two')]},
+  {_type: 'layoutCell', _key: 'right', body: [text]},
+]})
+
+test('drop below a block adds to its column without adding a column', () => {
+  const row = stackedRow()
+  const [result] = moveIntoLayout([row, image('three')], {blockKey: 'three'},
+    {blockKey: 'row', cellKey: 'right', childKey: 'text'}, 'after', makeKey)
+  assert.equal(result.items!.length, 2)
+  assert.deepEqual(result.items![1].body, [text, image('three')])
+  assert.deepEqual(row, stackedRow())
+})
+
+test('blocks reorder inside a column while retaining their formatting', () => {
+  const [result] = moveIntoLayout([stackedRow()], {blockKey: 'row', cellKey: 'left', childKey: 'two'},
+    {blockKey: 'row', cellKey: 'left', childKey: 'one'}, 'before', makeKey)
+  assert.deepEqual(result.items![0].body, [image('two'), image('one')])
+})
+
+test('a single block moves between columns without moving its siblings', () => {
+  const [result] = moveIntoLayout([stackedRow()], {blockKey: 'row', cellKey: 'left', childKey: 'two'},
+    {blockKey: 'row', cellKey: 'right'}, 'after', makeKey)
+  assert.deepEqual(result.items![0].body, [image('one')])
+  assert.deepEqual(result.items![1].body, [text, image('two')])
+})
+
+test('moving a block out of a stacked column preserves the remaining row', () => {
+  const [row, moved] = moveIntoLayout([stackedRow()], {blockKey: 'row', cellKey: 'left', childKey: 'two'},
+    {blockKey: 'row'}, 'after', makeKey)
+  assert.deepEqual(row.items![0].body, [image('one')])
+  assert.deepEqual(moved, image('two'))
+})
+
+test('empty columns are removed after moving their last block', () => {
+  const result = moveIntoLayout([stackedRow()], {blockKey: 'row', cellKey: 'right', childKey: 'text'},
+    {blockKey: 'row', cellKey: 'left', childKey: 'two'}, 'after', makeKey)
+  assert.deepEqual(result, [image('one'), image('two'), text])
+})
+
+test('stale child locations and unsupported column blocks are no-ops', () => {
+  const blocks = [stackedRow(), {_type: 'unitEmbed', _key: 'embed'}]
+  assert.equal(moveIntoLayout(blocks, {blockKey: 'row', cellKey: 'left', childKey: 'missing'},
+    {blockKey: 'row', cellKey: 'right'}, 'after', makeKey), blocks)
+  assert.equal(moveIntoLayout(blocks, {blockKey: 'embed'},
+    {blockKey: 'row', cellKey: 'right'}, 'after', makeKey), blocks)
+})
