@@ -3,6 +3,7 @@ import type { ExperienceEntry } from '../../data/experience'
 import { ownProjectCards } from '../../lib/ownProjectUpdates'
 import type { OwnProjectUpdate } from '../../lib/ownProjectUpdates'
 import { itemSortTime } from '../../lib/recentWindow'
+import { twidgetLogo } from '../../lib/projectAssets'
 import { urlForThumbnail } from '../../lib/sanity/image'
 import type { RecentUnit } from '../../lib/sanity/queries'
 import type { TwidgetChangelogEntry } from '../../lib/twidgetChangelog'
@@ -194,7 +195,7 @@ export default function RecentUpdatesCarousel({
                   <ExternalUpdateCard
                     key={`${item.entry.id}-${index}`}
                     href={item.entry.href}
-                    logo="/img/Twidget.png"
+                    logo={twidgetLogo}
                     logoAlt="Twidget"
                     date={item.entry.date}
                     title={item.entry.title}
