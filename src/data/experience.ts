@@ -1,3 +1,5 @@
+import {twidgetLogo} from '../lib/projectAssets'
+
 export type ExperienceGroup = 'currently' | 'previously' | 'projects'
 
 export type ExperienceEntry = {
@@ -65,7 +67,7 @@ export const EXPERIENCE_ENTRIES: ExperienceEntry[] = [
     title: 'Twidget',
     detail: 'Open-source analytics app — contributor and idea generator. Built with Josh.',
     date: 'July 2026 — Present',
-    logo: '/img/Twidget.png',
+    logo: twidgetLogo,
     logoAlt: 'Twidget',
     href: 'https://github.com/thatjoshguy67/twidget',
     external: true,
