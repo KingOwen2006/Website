@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import {test} from 'node:test'
-import {editableRow, moveIntoLayout, type LayoutBlock} from './rows'
+import {editableRow, moveIntoLayout, moveSelectionIntoLayout, type LayoutBlock} from './rows'
 import {countPortableTextWords} from '../../../src/lib/wordCount'
 import {toWritableDocument} from '../../api/_lib/handlers'
 
@@ -128,4 +128,35 @@ test('stale child locations and unsupported column blocks are no-ops', () => {
     {blockKey: 'row', cellKey: 'right'}, 'after', makeKey), blocks)
   assert.equal(moveIntoLayout(blocks, {blockKey: 'embed'},
     {blockKey: 'row', cellKey: 'right'}, 'after', makeKey), blocks)
+})
+
+test('selected standalone blocks move together in document order', () => {
+  const result = moveSelectionIntoLayout([image('one'), text, image('two')],
+    [{blockKey: 'text'}, {blockKey: 'one'}], {blockKey: 'two'}, 'after', makeKey)
+  assert.deepEqual(result, [image('two'), image('one'), text])
+})
+
+test('selected blocks can stack beside a target as one column', () => {
+  const [result] = moveSelectionIntoLayout([image('one'), text, image('two')],
+    [{blockKey: 'one'}, {blockKey: 'text'}], {blockKey: 'two'}, 'right', makeKey)
+  assert.deepEqual(result.items![0].body, [image('two')])
+  assert.deepEqual(result.items![1].body, [image('one'), text])
+})
+
+test('selected column blocks move together without losing siblings', () => {
+  const row = stackedRow()
+  row.items![0].body.push(image('three'))
+  const [result] = moveSelectionIntoLayout([row],
+    [{blockKey: 'row', cellKey: 'left', childKey: 'two'}, {blockKey: 'row', cellKey: 'left', childKey: 'one'}],
+    {blockKey: 'row', cellKey: 'right', childKey: 'text'}, 'after', makeKey)
+  assert.deepEqual(result.items![0].body, [image('three')])
+  assert.deepEqual(result.items![1].body, [text, image('one'), image('two')])
+})
+
+test('dropping onto the selection or using stale selected blocks leaves content intact', () => {
+  const blocks = [image('one'), text, image('two')]
+  assert.equal(moveSelectionIntoLayout(blocks, [{blockKey: 'one'}, {blockKey: 'text'}],
+    {blockKey: 'text'}, 'after', makeKey), blocks)
+  assert.equal(moveSelectionIntoLayout(blocks, [{blockKey: 'missing'}],
+    {blockKey: 'two'}, 'after', makeKey), blocks)
 })

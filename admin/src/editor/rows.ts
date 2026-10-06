@@ -4,6 +4,7 @@ export type LayoutBlock = Record<string, unknown> & {_key: string; _type: string
 export type LayoutCell = {_type: 'layoutCell'; _key: string; body: LayoutBlock[]}
 export type BlockLocation = {blockKey: string; cellKey?: string; childKey?: string}
 export type DropSide = 'left' | 'right' | 'before' | 'after'
+export type BlockDragSource = BlockLocation | {locations: BlockLocation[]}
 
 export function editableRow(block: LayoutBlock): LayoutBlock {
   if (block._type !== 'imageRow' || !Array.isArray(block.images)) return block
@@ -87,4 +88,40 @@ export function moveIntoLayout(
   next = next.flatMap((block) => block._type === 'layoutRow' && (block.items?.length ?? 0) < 2
     ? block.items?.flatMap((cell) => cell.body) ?? [] : [block])
   return next
+}
+
+/** Move an entire selection together, preserving document order and one undo step. */
+export function moveSelectionIntoLayout(
+  blocks: LayoutBlock[], sources: BlockLocation[], target: BlockLocation,
+  side: DropSide, makeKey: () => string,
+): LayoutBlock[] {
+  if (!sources.length) return blocks
+  const normalized = blocks.map(editableRow)
+  const unique = new Map(sources.map((source) => [JSON.stringify(source), source]))
+  const selected = [...unique.values()]
+  if (selected.some((source) => source.blockKey === target.blockKey &&
+    (!source.cellKey || (source.cellKey === target.cellKey && (!source.childKey || source.childKey === target.childKey))))) return blocks
+  const origins = selected.map((source) => locate(normalized, source))
+  if (origins.some((origin) => !origin)) return blocks
+  // Read in document order, even if the user selected backwards.
+  const body: LayoutBlock[] = []
+  const remaining = normalized.flatMap((block) => {
+    if (selected.some((source) => source.blockKey === block._key && !source.cellKey)) {
+      body.push(block)
+      return []
+    }
+    if (!block.items) return [block]
+    return [{...block, items: block.items.flatMap((cell) => {
+      const matches = selected.filter((source) => source.blockKey === block._key && source.cellKey === cell._key)
+      if (!matches.length) return [cell]
+      if (matches.some((source) => !source.childKey)) { body.push(...cell.body); return [] }
+      return [{...cell, body: cell.body.filter((child) => {
+        if (!matches.some((source) => source.childKey === child._key)) return true
+        body.push(child)
+        return false
+      })}]
+    })}]
+  })
+  const moved = moveIntoLayout(remaining, body, target, side, makeKey)
+  return moved === remaining ? blocks : moved
 }
