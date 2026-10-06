@@ -41,6 +41,7 @@ export function BlockWrapper({
         const cell = event.currentTarget.closest<HTMLElement>('[data-layout-cell]')
         event.dataTransfer.setData(BLOCK_DRAG_MIME, JSON.stringify({
           blockKey: cell?.dataset.layoutRow ?? key, cellKey: cell?.dataset.layoutCell,
+          childKey: cell ? key : undefined,
         }))
         event.dataTransfer.setData(IMAGE_DRAG_MIME, JSON.stringify(node))
         event.dataTransfer.effectAllowed = 'move'

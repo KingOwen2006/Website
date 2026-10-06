@@ -1,6 +1,6 @@
 import {BodyEditor} from '../BodyEditor'
 import {editableRow, type LayoutBlock} from '../rows'
-import {DragHandle} from './DragHandle'
+import {DragHandle, RowCellContext} from './DragHandle'
 import {useBlockActions} from './useBlockActions'
 
 export function LayoutRow({node}: {node: LayoutBlock}) {
@@ -23,16 +23,19 @@ export function LayoutRow({node}: {node: LayoutBlock}) {
           setItems(next)
         }}>→</button>
       </div>
-      <BodyEditor cellEditor value={cell.body} onChange={(body) => {
-        // Read the current row: another cell may have changed since this render.
-        const current = (actions.editor.getSnapshot().context.value as LayoutBlock[])
-          .find((block) => block._key === node._key)
-        if (current) {
-          const row = editableRow(current)
-          actions.replace(node._key, {...row, items: row.items?.map((item) =>
-            item._key === cell._key ? {...item, body} : item)})
-        }
-      }} />
+      <RowCellContext.Provider value={{blockKey: node._key, cellKey: cell._key}}>
+        <BodyEditor cellEditor value={cell.body} onChange={(body) => {
+          // Read the current row: another cell may have changed since this render.
+          const current = (actions.editor.getSnapshot().context.value as LayoutBlock[])
+            .find((block) => block._key === node._key)
+          if (current) {
+            const row = editableRow(current)
+            actions.replace(node._key, {...row, items: row.items?.map((item) =>
+              item._key === cell._key ? {...item, body} : item)})
+          }
+        }} />
+      </RowCellContext.Provider>
+      <div className="layout-cell-drop-area" data-column-end="true">Drop a block here to add it below</div>
     </div>)}
   </div>
 }

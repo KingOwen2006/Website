@@ -290,8 +290,25 @@ button, input, select, textarea {
 }
 .layout-cell-actions > button:disabled { opacity: .35; }
 .layout-cell .pt-editor { padding: 0; min-height: 60px; }
-.layout-cell .pt-editor .layout-drag-handle { display: none; }
+.layout-cell .pt-editor .layout-drag-handle { display: inline-block; }
+.layout-cell-drop-area {
+  min-height: 48px; padding: 12px; margin-top: 12px; border: 1px dashed var(--wp-border);
+  border-radius: 8px; color: var(--wp-muted); font-size: 12px; text-align: center;
+}
+.modal-backdrop.media-picker-backdrop { z-index: 300; }
+.layout-cell-add-actions { display: flex; gap: 8px; margin-top: 12px; }
+.layout-cell-add-actions button {
+  border: 1px solid var(--wp-border); border-radius: 6px; background: var(--wp-surface);
+  color: var(--wp-text); padding: 6px 10px; cursor: pointer;
+}
+.layout-cell-drop-area, .layout-cell-add-actions { opacity: 0; pointer-events: none; }
+.block-card--row.is-selected .layout-cell-drop-area,
+.block-card--row.is-selected .layout-cell-add-actions,
+.block-card--row:focus-within .layout-cell-drop-area,
+.block-card--row:focus-within .layout-cell-add-actions,
+.layout-cell-drop-area[data-drop-side] { opacity: 1; pointer-events: auto; }
 .layout-cell .block-card { margin-top: 0; }
+.layout-cell .block-card + .block-card { margin-top: 20px; }
 .block-card.block-card--row {
   position: relative;
   padding: 0;

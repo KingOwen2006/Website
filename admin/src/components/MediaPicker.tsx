@@ -1,5 +1,6 @@
 import {MediaLibrary} from './MediaLibrary'
 import type {MediaAsset} from '../lib/api'
+import {createPortal} from 'react-dom'
 
 export type {MediaAsset}
 
@@ -14,8 +15,8 @@ type MediaPickerProps = {
 export function MediaPicker({open, onClose, onSelect, multiple, onSelectMany}: MediaPickerProps) {
   if (!open) return null
 
-  return (
-    <div className="modal-backdrop" onClick={onClose}>
+  return createPortal(
+    <div className="modal-backdrop media-picker-backdrop" onClick={onClose}>
       <div className="modal media-modal" onClick={(event) => event.stopPropagation()} role="dialog" aria-label="Media library">
         <div className="page-title">
           <span>Select from Media</span>
@@ -33,6 +34,7 @@ export function MediaPicker({open, onClose, onSelect, multiple, onSelectMany}: M
           }}
         />
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
