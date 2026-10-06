@@ -342,6 +342,39 @@ button, input, select, textarea {
 [data-drop-side="right"]::after { right: -8px; top: 0; bottom: 0; width: 4px; }
 [data-drop-side="before"]::after { top: -8px; left: 0; right: 0; height: 4px; }
 [data-drop-side="after"]::after { bottom: -8px; left: 0; right: 0; height: 4px; }
+.layout-row { align-items: stretch; gap: 24px; }
+.layout-cell {
+  display: flex; flex-direction: column; padding: 42px 20px 54px;
+  border: 1px solid transparent; border-radius: 10px;
+}
+.layout-cell-content { flex: 1; display: flex; align-items: center; min-width: 0; }
+.layout-cell-content > .pt-editor { width: 100%; min-height: 0; position: static; }
+.layout-cell-content .pt-editor [data-pt-editor] > :first-child { margin-top: 0; }
+.layout-cell-content .pt-editor [data-pt-editor] > :last-child { margin-bottom: 0; }
+.layout-cell .layout-text-block > .layout-drag-handle { left: -20px; font-size: 16px; padding: 3px; }
+.layout-cell-actions { top: 6px; left: 12px; right: 12px; background: transparent; }
+.layout-cell-label { flex: 1; font-size: 11px; color: var(--wp-muted); }
+.layout-cell-add-actions { position: absolute; bottom: 10px; left: 16px; margin: 0; }
+.layout-cell-add-actions button { font-size: 12px; padding: 5px 9px; }
+.layout-cell-drop-area {
+  display: none; position: absolute; bottom: 8px; left: 12px; right: 12px;
+  min-height: 36px; padding: 8px; margin: 0;
+}
+.is-block-dragging .layout-cell-drop-area { display: block; opacity: 1; pointer-events: auto; }
+.is-block-dragging .layout-cell-add-actions { visibility: hidden; }
+.block-card--row.is-selected .layout-cell,
+.block-card--row:focus-within .layout-cell { border-color: var(--wp-border); }
+.block-card--row > .block-card-head {
+  position: static; min-height: 32px; margin: 0 0 10px; padding: 0 8px;
+  align-items: center; border-radius: 8px; background: var(--wp-surface);
+}
+.block-card--row > .block-card-head > strong { display: inline; font-size: 12px; color: var(--wp-muted); }
+.block-card--row.is-selected { outline: none; }
+.layout-cell .pt-editor:has(> [data-pt-editor]:focus-visible) { box-shadow: none; }
+@media (max-width: 600px) {
+  .layout-row { flex-direction: column; }
+  .layout-cell { width: 100%; }
+}
 @media (prefers-reduced-motion: reduce) { .admin-nav-indicator { transition: none; } }
 
 .admin-nav .nav-group {

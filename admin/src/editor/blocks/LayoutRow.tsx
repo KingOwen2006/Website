@@ -11,6 +11,7 @@ export function LayoutRow({node}: {node: LayoutBlock}) {
     {items.map((cell, index) => <div className="layout-cell" key={cell._key}
       data-layout-cell={cell._key} data-layout-row={node._key}>
       <div className="layout-cell-actions">
+        <span className="layout-cell-label">Column {index + 1}</span>
         <DragHandle location={{blockKey: node._key, cellKey: cell._key}} label="Drag row item" />
         <button type="button" disabled={index === 0} aria-label="Move item left" onClick={() => {
           const next = items.slice()
@@ -23,6 +24,7 @@ export function LayoutRow({node}: {node: LayoutBlock}) {
           setItems(next)
         }}>→</button>
       </div>
+      <div className="layout-cell-content">
       <RowCellContext.Provider value={{blockKey: node._key, cellKey: cell._key}}>
         <BodyEditor cellEditor value={cell.body} onChange={(body) => {
           // Read the current row: another cell may have changed since this render.
@@ -35,6 +37,7 @@ export function LayoutRow({node}: {node: LayoutBlock}) {
           }
         }} />
       </RowCellContext.Provider>
+      </div>
       <div className="layout-cell-drop-area" data-column-end="true">Drop a block here to add it below</div>
     </div>)}
   </div>

@@ -12,6 +12,7 @@ export function useDragAutoScroll(root: RefObject<HTMLElement | null>, enabled: 
 
     const stop = () => {
       active = false
+      root.current?.classList.remove('is-block-dragging')
       cancelAnimationFrame(frame)
       frame = 0
       previousTime = 0
@@ -48,12 +49,16 @@ export function useDragAutoScroll(root: RefObject<HTMLElement | null>, enabled: 
       if (!(target instanceof HTMLElement) || !root.current?.contains(target) ||
         !target.closest('.layout-drag-handle, [data-block-key] img') || target.closest('.compare-edit')) return
       active = true
+      root.current.classList.add('is-block-dragging')
       pointerY = event.clientY
     }
     const move = (event: DragEvent) => {
       if (!event.dataTransfer?.types.some((type) => type === BLOCK_DRAG_MIME || type === 'Files')) return
       // Also support images dragged in from the desktop.
-      if (!active && root.current?.contains(event.target as Node) && event.dataTransfer?.types.includes('Files')) active = true
+      if (!active && root.current?.contains(event.target as Node) && event.dataTransfer?.types.includes('Files')) {
+        active = true
+        root.current.classList.add('is-block-dragging')
+      }
       if (!active) return
       pointerY = event.clientY
       if (!frame) frame = requestAnimationFrame(tick)
