@@ -1,0 +1,111 @@
+@font-face {
+  font-family: "Google Sans Flex Variable";
+  src: url("/fonts/google-sans-flex.woff2") format("woff2");
+  font-display: swap;
+  font-weight: 1 1000;
+  font-stretch: 25% 151%;
+}
+
+.admin-theme {
+  color-scheme: dark;
+  --body: "Google Sans Flex Variable", system-ui, sans-serif;
+  --background: #080808;
+  --container-background: #14151a;
+  --surface-raised: #17181c;
+  --primary: #fff;
+  --secondary: #c5c7ce;
+  --accent: #3783d6;
+  --accent-blue: #9dceff;
+  --border: #292b30;
+  --divider: #2d2e32;
+  --selected: #25272d;
+  --nav-border: #363940;
+  --nav-glass-bg: rgb(29 29 30 / 95%);
+  --nav-item-active-bg: #2e2e30;
+  --nav-item-hover: #232324;
+  --nav-hover: #232324;
+  --nav-icon-color: #fff;
+  --nav-inset-y: clamp(14px, 4.39svh, 45px);
+  --nav-width-collapsed: 88px;
+  --nav-width-expanded: 218px;
+  --nav-radius-right: 28px;
+  --nav-blur: 12px;
+  --glass-bg: #17181c;
+  --input-bg: #17181c;
+  --card-radius: 24px;
+  --card-shadow: 0 16px 40px #0005;
+  --admin-focus: #8fc6ff;
+  background: var(--background);
+}
+
+.admin-theme :is(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--admin-focus);
+  outline-offset: 2px;
+}
+
+.admin-theme :is(.login-screen, .admin-shell) {
+  background: linear-gradient(#000, #101010);
+}
+
+.admin-theme .login-screen {
+  min-height: 100svh;
+  padding: 24px 16px;
+}
+
+.admin-theme .login-card {
+  width: min(100%, 440px);
+  display: grid;
+  gap: 12px;
+  padding: clamp(24px, 5vw, 40px);
+  border-radius: 28px;
+  background: linear-gradient(145deg, #171c24, #131419);
+}
+
+.admin-theme :is(.login-card h1, .page-title h1) {
+  font-variation-settings: "wdth" 125;
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.admin-theme .login-card h1 {
+  margin-bottom: 12px;
+  font-size: clamp(1.55rem, 6vw, 2rem);
+  text-align: center;
+}
+
+.admin-theme .login-card label {
+  margin: 0;
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: .875rem;
+}
+
+.admin-theme .login-card input {
+  min-height: 46px;
+  margin: 0;
+  border-radius: 14px;
+}
+
+.admin-theme .login-card .wp-button {
+  min-height: 44px;
+  margin-top: 6px;
+  background: #9dceff;
+  border-color: #9dceff;
+  color: #101821;
+  font-weight: 700;
+}
+
+.admin-theme .login-card .wp-button:hover { background: #c4e2ff; }
+
+.admin-theme :is(.admin-nav-link, .admin-nav-toggle, .admin-nav-indicator) { border-radius: 9px; }
+.admin-theme .admin-nav-link:not(.is-active):is(:hover, :focus-visible) { background: var(--nav-item-hover); }
+.admin-theme .admin-shell.nav-collapsed .admin-sidebar { background: rgb(40 40 40 / 50%); }
+.admin-theme :is(.wp-table, .card, .media-tile) { border-radius: var(--card-radius); }
+.admin-theme .media-tile { background: var(--wp-surface); }
+.admin-theme :is(.admin-input, .field input:not([type="checkbox"]), .field select, .field textarea) { border-radius: 14px; }
+.admin-theme .wp-button { min-height: 36px; border-radius: 10px; }
+.admin-theme .status-draft { color: #f4c27a; }
+
+@media (max-width: 767px) {
+  .admin-theme { --nav-inset-y: 14px; --nav-width-collapsed: 62px; }
+}
