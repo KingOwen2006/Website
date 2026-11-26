@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#050505">
+    <meta name="description" content="Owen Moore's portfolio of 3D car models, characters and 3D prints.">
+    <title>King Owen | 3D Modelling Portfolio</title>
+    <script type="module" src="/src/main.ts"></script>
+  </head>
+  <body class="home-page">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <aside class="rail" aria-label="Sidebar">
+      <button class="rail-toggle rail-item" type="button" aria-label="Expand navigation" aria-expanded="false" aria-controls="site-navigation"></button>
+      <nav id="site-navigation" aria-label="Main navigation"></nav>
+    </aside>
+    <main id="main">
+      <section class="panel hero" id="home" aria-labelledby="hero-title">
+        <div class="hero-composition">
+          <div class="hero-art">
+            <h1 class="display-title" id="hero-title">King Owen</h1>
+            <div class="hero-car">
+              <img
+                src="/assets/bmw-e30-hero-1440.webp"
+                srcset="/assets/bmw-e30-hero-1440.webp 1440w, /assets/bmw-e30-hero-2880.webp 2880w"
+                sizes="(max-width: 720px) 124vw, (max-width: 1085px) calc(126vw - 128px), 1207px"
+                width="1440" height="810" fetchpriority="high"
+                alt="Blue BMW E30 M3 model shown from the front and side">
+            </div>
+          </div>
+          <ul class="hero-categories" aria-label="Portfolio categories">
+            <li>Cars</li>
+            <li>Characters</li>
+            <li>3D prints</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="panel about" id="about" aria-label="About Owen Moore">
+        <div class="about-grid">
+          <div class="about-row">
+            <div id="about-portrait"></div>
+            <div class="about-copy">
+              <p>My name is <strong>Owen Moore</strong>, a 3D modeller with a passion for cars, character design, and whatever flows through my imagination. I seek to create the best models I can with the occasional 3D print. I have over <strong>4 years’ experience</strong> in the space and am always willing to learn.</p>
+            </div>
+          </div>
+          <div class="about-row about-row-process">
+            <div class="about-copy about-process">
+              <p>I use a range of tools to take a model from its first design through to the finished product, whether it ends up as a physical print or as an asset in a game. I also like to switch things up and use <strong>Unreal Engine 5</strong> to make small games from time to time.</p>
+              <p>I create designs in Figma to model from, and I make all my models in Blender. I work with two game engines and am most active on X.</p>
+            </div>
+            <div class="tools-panel" id="tools" role="group" aria-label="Tools I use"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel showcase" id="projects" aria-labelledby="projects-title">
+        <div class="showcase-content">
+          <h2 class="display-title" id="projects-title">Projects</h2>
+          <div class="card-window">
+            <div class="card-track" id="project-cards" role="region" aria-label="Project cards" tabindex="0"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel showcase" id="feed" aria-labelledby="feed-title">
+        <div class="showcase-content">
+          <h2 class="display-title" id="feed-title">Feed</h2>
+          <p class="feed-meta" id="feed-status" role="status">Loading posts…</p>
+          <div class="card-window">
+            <div class="card-track" id="feed-cards" role="region" aria-label="Feed cards" tabindex="0" hidden></div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <dialog class="detail-dialog" aria-labelledby="detail-title">
+      <div class="dialog-inner">
+        <form method="dialog">
+          <button class="icon-button dialog-close" aria-label="Close details"></button>
+        </form>
+        <div id="detail-content"></div>
+      </div>
+    </dialog>
+  </body>
+</html>

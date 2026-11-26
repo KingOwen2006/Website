@@ -9,6 +9,7 @@ import {
   Upload,
 } from '@thatjoshguy/oneui-icons'
 import {logout, runScheduledPublish} from '../lib/api'
+import {useAuth} from '../lib/auth'
 
 type NavIcon = ComponentType<{size?: number | string; color?: string}>
 
@@ -69,6 +70,7 @@ function PostNavItem({link, tabRef}: {link: PostNavLink; tabRef: RefCallback<HTM
 
 export function AdminShell() {
   const navigate = useNavigate()
+  const {refresh} = useAuth()
   const location = useLocation()
   const [navCollapsed, setNavCollapsed] = useState(readCollapsed)
   const showLogout = !isPostEditPath(location.pathname)
@@ -132,7 +134,8 @@ export function AdminShell() {
             type="button"
             onClick={async () => {
               await logout()
-              navigate('/login')
+              await refresh()
+              navigate('/login', {replace: true})
             }}
           >
             Log out

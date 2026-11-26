@@ -1,6 +1,7 @@
 import {useEffect, useState} from 'react'
 import {checkSlug} from '../../lib/api'
 import type {PostDoc, References} from '../../lib/document/types'
+import {inBetaPortfolio, publicPostPath} from '../../lib/public-site'
 
 type PostPanelProps = {
   post: PostDoc
@@ -12,8 +13,9 @@ type PostPanelProps = {
 
 export function PostPanel({post, refs, onChange, onSlug, onTrash}: PostPanelProps) {
   const [duplicate, setDuplicate] = useState(false)
-  const chapterSlug = post.chapter?.slug || 'course'
-  const preview = `/experience/${chapterSlug}/${post.slug || ''}`
+  const preview = publicPostPath(post.chapter?.slug, post.slug)
+  const publicPost = inBetaPortfolio && preview && (post.status ?? 'published') === 'published' &&
+    (post.visibility ?? 'public') === 'public' && !post.trashedAt
 
   useEffect(() => {
     if (!post.slug) return
@@ -68,7 +70,10 @@ export function PostPanel({post, refs, onChange, onSlug, onTrash}: PostPanelProp
       </div>
       <div className="field">
         <label>Permalink</label>
-        <p className="permalink-preview">{preview}</p>
+        <p className="permalink-preview">
+          {publicPost ? <a href={preview} target="_blank" rel="noopener noreferrer">{preview}</a>
+            : preview ?? 'Choose a course year and enter a slug'}
+        </p>
         <input
           value={post.slug ?? ''}
           onChange={(event) => {

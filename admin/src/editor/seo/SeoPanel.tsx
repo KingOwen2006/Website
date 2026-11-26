@@ -2,6 +2,7 @@ import {useState} from 'react'
 import {MediaPicker} from '../../components/MediaPicker'
 import {imageUrl} from '../../lib/image'
 import type {PostDoc} from '../../lib/document/types'
+import {inBetaPortfolio, publicPostPath} from '../../lib/public-site'
 import {analyzeSeo} from './checks'
 
 type SeoPanelProps = {
@@ -17,6 +18,7 @@ export function SeoPanel({post, onChange, onSlug}: SeoPanelProps) {
   const title = seo.metaTitle || post.title || 'Untitled'
   const description = seo.metaDescription || post.summary || ''
   const checks = analyzeSeo(post)
+  const path = publicPostPath(post.chapter?.slug, post.slug)
 
   return (
     <div className="panel seo-panel">
@@ -35,7 +37,7 @@ export function SeoPanel({post, onChange, onSlug}: SeoPanelProps) {
         <>
           <div className="serp-preview" aria-label="Search preview">
             <div className="serp-title">{title}</div>
-            <div className="serp-url">kingowen.fyi/experience/{post.chapter?.slug || 'course'}/{post.slug || ''}</div>
+            <div className="serp-url">{inBetaPortfolio ? window.location.host : 'kingowen.fyi'}{path}</div>
             <div className="serp-desc">{description || 'Add a meta description to control this snippet.'}</div>
           </div>
           <div className="field">

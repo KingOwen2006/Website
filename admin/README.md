@@ -11,9 +11,25 @@ WordPress-style CMS for the portfolio site. Sanity stays the content backend (`b
 
 The write token never ships to the browser. Vite proxies `/api/*` to local handlers that call Sanity with `SANITY_API_TOKEN`.
 
+## Beta portfolio
+
+The beta branch builds the public portfolio and this editor together. The portfolio is at `/`, coursework is at `/education/`, and the editor is at `/admin/`. The post settings link public units to their Education pages.
+
+From the repository root:
+
+```sh
+npm ci --legacy-peer-deps
+npm ci --prefix admin --legacy-peer-deps
+npm ci --prefix portfolio
+npm run build:beta
+npm run preview:beta
+```
+
+For local editing, put the credentials from [the admin environment template](.env.example) in an ignored `admin/.env` or root `.env`. For hosted beta editing, configure `SANITY_API_TOKEN`, `ADMIN_PASSWORD`, and `SESSION_SECRET` in the Vercel environment for that branch. Use a Sanity token with write access to the same dataset the portfolio reads. The public Education endpoint reads published content without the token.
+
 ## Deploy
 
-The admin Vercel project uses [`vercel.admin.json`](../vercel.admin.json) (build `admin/`, serverless routes in `/api`). Set:
+The standalone admin Vercel project uses [`vercel.admin.json`](../vercel.admin.json). The combined beta build uses [`vercel.json`](../vercel.json). Set:
 
 - `SANITY_PROJECT_ID`
 - `SANITY_DATASET`

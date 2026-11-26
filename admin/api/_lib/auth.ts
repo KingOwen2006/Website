@@ -1,5 +1,5 @@
 import {createHmac, timingSafeEqual} from 'node:crypto'
-import {json, parseCookies, type ApiRequest, type ApiResponse} from './http'
+import {json, parseCookies, type ApiRequest, type ApiResponse} from './http.js'
 
 const COOKIE = 'ko_admin_session'
 const MAX_AGE = 60 * 60 * 24 * 7

@@ -1,10 +1,20 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
-  "installCommand": "npm ci --legacy-peer-deps --prefix admin",
+  "installCommand": "npm ci --legacy-peer-deps && npm ci --legacy-peer-deps --prefix admin",
   "buildCommand": "npm run build --prefix admin",
   "outputDirectory": "admin/dist",
+  "functions": {
+    "api/index.ts": {
+      "maxDuration": 60,
+      "memory": 1024
+    }
+  },
   "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index?__path=$1"
+    },
     {
       "source": "/((?!api/|assets/).*)",
       "destination": "/index.html"

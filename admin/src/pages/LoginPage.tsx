@@ -2,6 +2,7 @@ import {useState} from 'react'
 import {Navigate, useNavigate} from 'react-router-dom'
 import {login} from '../lib/api'
 import {useAuth} from '../lib/auth'
+import {inBetaPortfolio} from '../lib/public-site'
 
 export function LoginPage() {
   const navigate = useNavigate()
@@ -41,6 +42,7 @@ export function LoginPage() {
         <button className="wp-button" type="submit">
           Log in
         </button>
+        {inBetaPortfolio ? <a href="/">Back to portfolio</a> : null}
       </form>
     </div>
   )

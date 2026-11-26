@@ -28,7 +28,8 @@ export default defineConfig(({mode}) => {
   loadDotEnv(resolve(root, '.env'))
 
   return {
-    publicDir: resolve(root, '../public'),
+    base: process.env.BETA_ADMIN === 'true' ? '/admin/' : '/',
+    publicDir: process.env.BETA_ADMIN === 'true' ? false : resolve(root, '../public'),
     plugins: [react(), adminApiPlugin()],
     server: {
       port: 3333,

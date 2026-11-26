@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#050505">
+    <meta name="description" content="Owen Moore's Bournemouth and Poole College course years and projects.">
+    <title>Education | King Owen</title>
+    <script type="module" src="/src/education-page.ts"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <aside class="rail" aria-label="Sidebar">
+      <button class="rail-toggle rail-item" type="button" aria-label="Expand navigation" aria-expanded="false" aria-controls="site-navigation"></button>
+      <nav id="site-navigation" aria-label="Main navigation"></nav>
+    </aside>
+    <main class="panel education" id="main">
+      <div class="listing-content">
+        <section id="education-listing" aria-labelledby="education-title">
+          <h1 class="display-title" id="education-title">Education</h1>
+          <p class="listing-intro">Coursework and projects from <strong>Bournemouth and Poole College</strong>.</p>
+          <div class="listing-filters">
+            <label for="education-search">Search posts</label>
+            <input id="education-search" type="search" placeholder="Search coursework">
+            <label for="education-grade">Grade</label>
+            <select id="education-grade">
+              <option value="">All grades</option>
+              <option value="pass">Pass</option>
+              <option value="merit">Merit</option>
+              <option value="distinction">Distinction</option>
+            </select>
+          </div>
+          <p id="education-status" class="education-status" role="status"></p>
+          <div id="education-posts"></div>
+        </section>
+        <section id="education-unit" class="education-article" hidden>
+          <a class="education-article-action" href="#education-title">Back to Education</a>
+          <article aria-labelledby="education-unit-title">
+            <header class="education-unit-header">
+              <img id="education-unit-image" alt="" width="96" height="96" hidden>
+              <div>
+                <p id="education-unit-course" class="education-unit-course"></p>
+                <h1 id="education-unit-title" tabindex="-1"></h1>
+              </div>
+            </header>
+            <p id="education-unit-status" role="status"></p>
+            <p id="education-word-count" class="education-word-count" hidden></p>
+            <div id="education-unit-body"></div>
+          </article>
+        </section>
+      </div>
+    </main>
+    <dialog id="unit-lightbox" class="unit-lightbox" aria-label="Enlarged image">
+      <form method="dialog"><button aria-label="Close image" autofocus>×</button></form>
+      <img id="unit-lightbox-image" alt="">
+    </dialog>
+  </body>
+</html>
