@@ -1,12 +1,9 @@
 import {defineConfig, loadEnv} from 'vite'
-import handleApi from './api'
-import type {ApiRequest, ApiResponse} from './admin/api/_lib/http'
+import {handlePublicEducation} from './server/public-education'
 
 export default defineConfig(({mode}) => {
-  for (const directory of [process.cwd(), `${process.cwd()}/admin`]) {
-    for (const [key, value] of Object.entries(loadEnv(mode, directory, ''))) {
-      process.env[key] ??= value
-    }
+  for (const [key, value] of Object.entries(loadEnv(mode, process.cwd(), ''))) {
+    process.env[key] ??= value
   }
 
   return {
@@ -17,12 +14,9 @@ export default defineConfig(({mode}) => {
       configurePreviewServer(server) {
         server.middlewares.use((req, res, next) => {
           const path = req.url?.split('?')[0] ?? '/'
-          if (path.startsWith('/api/')) {
-            void handleApi(req as ApiRequest, res as ApiResponse)
+          if (path === '/api/education' || /^\/api\/sanity-public\/v[^/]+\/data\/query\/[^/]+$/.test(path)) {
+            void handlePublicEducation(req, res)
             return
-          }
-          if (path === '/admin' || (path.startsWith('/admin/') && !path.includes('.'))) {
-            req.url = '/admin/index.html'
           }
           next()
         })

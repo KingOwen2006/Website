@@ -1,13 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
-  "installCommand": "npm ci --legacy-peer-deps && npm ci --legacy-peer-deps --prefix admin && npm ci --prefix portfolio",
+  "installCommand": "npm ci --legacy-peer-deps && npm ci --prefix portfolio",
   "buildCommand": "npm run build:beta",
   "outputDirectory": "portfolio/dist",
   "functions": {
-    "api/index.ts": {
-      "maxDuration": 60,
-      "memory": 1024
+    "api/education.ts": {
+      "maxDuration": 15
     }
   },
   "rewrites": [
@@ -16,12 +15,8 @@
       "destination": "https://api.fxtwitter.com/:path*"
     },
     {
-      "source": "/api/:path*",
-      "destination": "/api/index?__path=:path*"
-    },
-    {
-      "source": "/admin/:path*",
-      "destination": "/admin/index.html"
+      "source": "/api/sanity-public/:version/data/query/:dataset",
+      "destination": "/api/education"
     }
   ]
 }

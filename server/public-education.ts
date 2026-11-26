@@ -1,13 +1,19 @@
+import type {IncomingMessage, ServerResponse} from 'node:http'
 import {createClient} from '@sanity/client'
 import {educationQuery, educationUnitQuery} from '../portfolio/src/education-queries.js'
-import {json, queryValue, type ApiHandler} from '../admin/api/_lib/http.js'
 
 const slug = /^[a-z0-9][a-z0-9_-]{0,149}$/i
 
-export const handlePublicEducation: ApiHandler = async (req, res) => {
-  const query = queryValue(req.query, 'query')
-  const chapterSlug = parseSlug(queryValue(req.query, '$chapterSlug'))
-  const unitSlug = parseSlug(queryValue(req.query, '$unitSlug'))
+export async function handlePublicEducation(req: IncomingMessage, res: ServerResponse) {
+  if (req.method !== 'GET') {
+    res.setHeader('Allow', 'GET')
+    json(res, 405, {error: 'Method not allowed'})
+    return
+  }
+  const {searchParams} = new URL(req.url ?? '/', 'http://localhost')
+  const query = searchParams.get('query')
+  const chapterSlug = parseSlug(searchParams.get('$chapterSlug'))
+  const unitSlug = parseSlug(searchParams.get('$unitSlug'))
 
   if (query !== educationQuery && (query !== educationUnitQuery || !chapterSlug || !unitSlug)) {
     json(res, 400, {error: 'Invalid Education request'})
@@ -30,7 +36,12 @@ export const handlePublicEducation: ApiHandler = async (req, res) => {
   }
 }
 
-function parseSlug(parameter: string | undefined) {
+function json(res: ServerResponse, status: number, payload: unknown) {
+  res.writeHead(status, {'Content-Type': 'application/json; charset=utf-8'})
+  res.end(JSON.stringify(payload))
+}
+
+function parseSlug(parameter: string | null) {
   if (!parameter) return
   try {
     const value: unknown = JSON.parse(parameter)
