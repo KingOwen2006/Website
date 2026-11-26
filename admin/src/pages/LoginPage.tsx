@@ -29,7 +29,7 @@ export function LoginPage() {
           }
         }}
       >
-        <h1>KingOwen Admin</h1>
+        <h1>{inBetaPortfolio ? 'King Owen Admin' : 'KingOwen Admin'}</h1>
         {error ? <p className="notice error">{error}</p> : null}
         <label htmlFor="password">Password</label>
         <input
@@ -42,7 +42,7 @@ export function LoginPage() {
         <button className="wp-button" type="submit">
           Log in
         </button>
-        {inBetaPortfolio ? <a href="/">Back to portfolio</a> : null}
+        {inBetaPortfolio ? <a className="login-portfolio-link" href="/">Back to portfolio</a> : null}
       </form>
     </div>
   )

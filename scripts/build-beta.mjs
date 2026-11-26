@@ -24,4 +24,8 @@ build("portfolio", {
 });
 build("admin", { ...process.env, BETA_ADMIN: "true" });
 cpSync("public", "portfolio/dist", { recursive: true, force: false });
+cpSync(
+  "portfolio/node_modules/@fontsource-variable/google-sans-flex/files/google-sans-flex-latin-wdth-normal.woff2",
+  "portfolio/dist/fonts/google-sans-flex.woff2",
+);
 cpSync("admin/dist", "portfolio/dist/admin", { recursive: true });
