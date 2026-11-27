@@ -9,9 +9,12 @@ export type Product = {
 }
 type Settings = {title?: string; intro?: string; delivery?: string; returns?: string; shippingPrice?: number; shippingCountries?: string[]}
 export const catalogQuery = `{
-  "products": *[_type == "shopProduct"] | order(sortOrder asc, title asc) {
-    _id, title, "slug": slug.current, summary, description, category, price, availability,
-    requiresShipping, details, "images": images[]{"url": asset->url, alt}
+  "products": *[_type == "shopProduct" && (!defined(status) || status == "published")] | order(coalesce(sortOrder, order, 0) asc, title asc) {
+    _id, title, "slug": coalesce(slug.current, _id), summary, description, category,
+    "price": coalesce(price, priceMinor / 100),
+    "availability": coalesce(availability, "coming-soon"),
+    requiresShipping, "details": coalesce(details[], []),
+    "images": coalesce(images[]{"url": asset->url, alt}, [thumbnail{"url": asset->url, alt}])[defined(url)]
   },
   "settings": *[_type == "shopSettings"] | order(_updatedAt desc)[0] {
     title, intro, delivery, returns, shippingPrice, shippingCountries
