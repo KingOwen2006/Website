@@ -47,11 +47,11 @@
       <nav id="site-navigation" aria-label="Main navigation"></nav>
     </aside>
     <main id="main" class="shop-page">
+      <a class="shop-account-link" href="/account/">My account ↗</a>
       <header class="shop-heading"><p class="shop-eyebrow">Made by Owen</p><h1 class="display-title" id="shop-title">Shop</h1><p id="shop-intro">Original creations. From the screen to your space.</p></header>
       <div class="shop-toolbar"><label class="shop-search"><span class="sr-only">Search products</span><input type="search" id="shop-search" placeholder="Find something you like…"></label><label><span class="sr-only">Category</span><select id="shop-category"><option value="">All creations</option></select></label><button type="button" id="basket-open">Basket <span id="basket-count">0</span></button></div>
       <p id="shop-status" role="status">Loading the shop…</p>
       <section id="shop-products" class="shop-grid" aria-label="Products" aria-busy="true"></section>
-      <section class="shop-information"><details><summary>Delivery</summary><p id="shop-delivery">Delivery information will be available when the shop opens.</p></details><details><summary>Returns</summary><p id="shop-returns">Returns information will be available when the shop opens.</p></details></section>
     </main>
     <dialog id="product-dialog" aria-labelledby="product-title"><button class="shop-close" data-close="product-dialog" aria-label="Close product">×</button><div id="product-content"></div></dialog>
     <dialog id="basket-dialog" aria-labelledby="basket-title"><button class="shop-close" data-close="basket-dialog" aria-label="Close basket">×</button><h2 id="basket-title">Your basket</h2><div id="basket-items"></div><p id="basket-total"></p><p class="shop-muted">Delivery is calculated at checkout.</p><p id="basket-error" role="status"></p><button class="shop-primary" id="checkout-start" type="button">Checkout</button></dialog>

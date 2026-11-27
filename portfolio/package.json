@@ -13,6 +13,7 @@
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {
+    "@clerk/clerk-js": "^6.48.1",
     "@fontsource-variable/google-sans-flex": "5.3.2",
     "@portabletext/to-html": "^6.0.0",
     "@sanity/client": "^8.17.0",

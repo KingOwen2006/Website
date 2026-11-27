@@ -17,10 +17,11 @@ const navItems = [
   { id: "projects", label: "Projects", icon: "apps" },
   { id: "feed", label: "Feed", icon: "cards" },
   { id: "shop", label: "Shop", icon: "shop" },
+  { id: "account", label: "Account", icon: "profile" },
   { id: "settings", label: "Settings", icon: "tools" },
 ];
 
-type Page = "home" | "education" | "feed" | "settings" | "shop";
+type Page = "home" | "education" | "feed" | "settings" | "shop" | "account";
 const railHandoffKey = "portfolio-rail-handoff";
 
 function takeRailHandoff(): { from: Page; expanded: boolean } | undefined {
@@ -30,7 +31,7 @@ function takeRailHandoff(): { from: Page; expanded: boolean } | undefined {
     if (!stored || URL.parse(document.referrer)?.origin !== location.origin) return;
     const { from, to, time, expanded } = JSON.parse(stored);
     if (to === location.pathname && Date.now() - time < 15000 &&
-      (from === "home" || from === "education" || from === "feed" || from === "settings" || from === "shop")) {
+      (from === "home" || from === "education" || from === "feed" || from === "settings" || from === "shop" || from === "account")) {
       return { from, expanded: expanded === true };
     }
   } catch {
@@ -72,7 +73,7 @@ export function mountNavigation(page: Page) {
   const navigation = element("#site-navigation");
   toggle.innerHTML = icon("drawer");
   navigation.innerHTML = '<span class="rail-selection" aria-hidden="true" hidden></span>' + navItems.map(({ id, label, icon: name }) => {
-    const href = id === "education" || id === "feed" || id === "settings" || id === "shop" ? `/${id}/` : `${page === "home" ? "" : "/"}#${id}`;
+    const href = id === "education" || id === "feed" || id === "settings" || id === "shop" || id === "account" ? `/${id}/` : `${page === "home" ? "" : "/"}#${id}`;
     const current = id === page ? 'aria-current="page"' : "";
     return `${id === "settings" ? '<div class="rail-divider" aria-hidden="true"></div>' : ""}
       <a class="rail-item" data-nav-id="${id}" href="${href}" aria-label="${label}" ${current}>

@@ -3,6 +3,7 @@ import "./shop.css";
 import { element, mountNavigation } from "./navigation";
 import { escapeHTML as esc } from "@portabletext/to-html";
 import { loadStripe, type StripeEmbeddedCheckout } from "@stripe/stripe-js";
+import { accountFetch } from "./customer-auth";
 
 mountNavigation("shop");
 type Product = {
@@ -125,7 +126,7 @@ element("#checkout-start").addEventListener("click", async () => {
   button.disabled = true;
   button.textContent = "Opening checkout…";
   try {
-    const response = await fetch("/api/checkout", {method: "POST", headers: {"Content-Type": "application/json"},
+    const response = await accountFetch("/api/checkout", {method: "POST", headers: {"Content-Type": "application/json"},
       body: JSON.stringify({items: Object.entries(basket).map(([id, quantity]) => ({id, quantity}))})});
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || "Checkout could not start.");
@@ -148,7 +149,7 @@ async function load() {
     const data: Catalog = await response.json();
     products = data.products.filter(p => p.slug && Number.isFinite(p.price));
     ready = data.paymentsReady;
-    for (const key of ["title", "intro", "delivery", "returns"] as const) {
+    for (const key of ["title", "intro"] as const) {
       const value = data.settings?.[key];
       if (value) element(`#shop-${key}`).textContent = value;
     }

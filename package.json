@@ -23,6 +23,7 @@
     "backfill:editorial": "tsx --env-file=.env scripts/backfill-editorial-fields.ts"
   },
   "dependencies": {
+    "@clerk/backend": "^3.33.1",
     "@portabletext/react": "^8.0.1",
     "@sanity/client": "^8.5.0",
     "@sanity/image-url": "^2.1.1",

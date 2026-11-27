@@ -3,7 +3,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
   Apps, Cards, Close, Drawer, Education, FilterBy, HeartOutline, Home, MessageOutline, Open,
-  PasswordShow, Repeat, SettingsOutline, Shopping,
+  PasswordShow, Profile, Repeat, SettingsOutline, Shopping,
 } from "@thatjoshguy/oneui-icons";
 
 const directory = new URL("../public/icons/", import.meta.url);
@@ -20,6 +20,7 @@ const icons = {
   "feed-views": PasswordShow,
   home: Home,
   open: Open,
+  profile: Profile,
   shop: Shopping,
   tools: SettingsOutline,
 };

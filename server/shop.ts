@@ -1,6 +1,7 @@
 import type {IncomingMessage, ServerResponse} from 'node:http'
 import {createClient} from '@sanity/client'
 import Stripe from 'stripe'
+import {AccountError, authenticateCustomer, customerIdFor} from './customer-auth.js'
 
 export type Product = {
   _id: string; title: string; slug: string; summary?: string; description?: string;
@@ -58,6 +59,7 @@ export async function checkout(req: IncomingMessage, res: ServerResponse) {
   if (!process.env.STRIPE_PUBLISHABLE_KEY || !process.env.STRIPE_WEBHOOK_SECRET || !process.env.SANITY_API_TOKEN)
     return json(res, 503, {error: 'Payments are being set up. Please check back soon.'})
   try {
+    const identity = await authenticateCustomer(req)
     const input: unknown = JSON.parse((await rawBody(req)).toString())
     if (!input || typeof input !== 'object' || !('items' in input) || !Array.isArray(input.items) || !input.items.length || input.items.length > 20)
       return json(res, 400, {error: 'Please check your basket.'})
@@ -73,7 +75,11 @@ export async function checkout(req: IncomingMessage, res: ServerResponse) {
     if (selected.some(({product}) => !product || product.availability !== 'available' || !Number.isFinite(product.price) || product.price < .5))
       return json(res, 409, {error: 'An item is no longer available. Refresh your basket.'})
     const shipping = selected.some(({product}) => product?.requiresShipping)
-    const session = await stripe().checkout.sessions.create({
+    const api = stripe()
+    const customer = await customerIdFor(identity, api, true)
+    const session = await api.checkout.sessions.create({
+      customer, invoice_creation: {enabled: true},
+      metadata: {integration: 'kingowen-shop', accountId: identity.user.id},
       mode: 'payment', ui_mode: 'embedded_page', allowed_payment_method_types: ['card'],
       return_url: new URL('/shop/?session_id={CHECKOUT_SESSION_ID}', origin).href.replace('%7BCHECKOUT_SESSION_ID%7D', '{CHECKOUT_SESSION_ID}'),
       line_items: selected.map(({product, quantity}) => ({
@@ -86,7 +92,10 @@ export async function checkout(req: IncomingMessage, res: ServerResponse) {
       } : {}),
     })
     json(res, 200, {clientSecret: session.client_secret, publishableKey: process.env.STRIPE_PUBLISHABLE_KEY})
-  } catch { json(res, 502, {error: 'Checkout could not start. Please try again.'}) }
+  } catch (error) {
+    json(res, error instanceof AccountError ? error.status : 502,
+      {error: error instanceof AccountError ? error.message : 'Checkout could not start. Please try again.'})
+  }
 }
 export async function status(req: IncomingMessage, res: ServerResponse) {
   if (req.method !== 'GET') return json(res, 405, {error: 'Method not allowed'})

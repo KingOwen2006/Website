@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#f3f5f8" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#080808" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#080808">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="apple-touch-icon" href="/assets/king-owen-192.png">
+    <style>
+      html { background: #080808; color-scheme: dark; }
+      html[data-theme="light"] { background: #f3f5f8; color-scheme: light; }
+      @media (prefers-color-scheme: light) {
+        html:not([data-theme]) { background: #f3f5f8; color-scheme: light; }
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        @view-transition { navigation: auto; }
+      }
+    </style>
+    <title>Account | King Owen</title>
+    <meta name="description" content="View your purchases and manage your King Owen account.">
+    <script>
+      {
+        let saved;
+        try { saved = JSON.parse(localStorage.getItem("portfolio-preferences") || "null"); } catch {}
+        const theme = saved?.theme === "light" || saved?.theme === "dark"
+          ? saved.theme : (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.dataset.accent = saved?.accent ?? "blue";
+        const colour = theme === "light" ? "#f3f5f8" : "#080808";
+        document.querySelector('meta[name="color-scheme"]').content = theme;
+        document.querySelectorAll('meta[name="theme-color"]').forEach((meta) => { meta.content = colour; });
+      }
+      window.addEventListener("pagereveal", (event) => {
+        window.portfolioPageTransition = event.viewTransition ?? null;
+        event.viewTransition?.ready.catch(() => {});
+      }, { once: true });
+    </script>
+    <script type="module" src="/src/account-page.ts"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <aside class="rail" aria-label="Sidebar"><button class="rail-toggle rail-item" type="button" aria-label="Expand navigation" aria-expanded="false" aria-controls="site-navigation"></button><nav id="site-navigation" aria-label="Main navigation"></nav></aside>
+    <main id="main" class="shop-page account-page">
+      <header class="shop-heading"><h1 class="display-title">Your account</h1><p>Your creations, all in one place.</p></header>
+      <p id="account-status" role="status">Loading your account…</p>
+      <div id="account-sign-in" class="account-sign-in"></div>
+      <section id="account-dashboard" hidden aria-label="Your purchases">
+        <div class="account-toolbar"><p id="account-email"></p><button type="button" id="account-profile">Account settings</button><button type="button" id="account-billing">Manage billing</button><button type="button" id="account-sign-out">Sign out</button></div>
+        <h2>Orders</h2><div id="account-orders" class="account-orders"></div><button type="button" id="account-more" hidden>Load more orders</button>
+      </section>
+      <p><a href="/shop/">← Back to shop</a></p>
+    </main>
+    <dialog id="profile-dialog" aria-label="Account settings"><button class="shop-close" id="profile-close" type="button" aria-label="Close account settings">×</button><div id="profile-content"></div></dialog>
+  </body>
+</html>
