@@ -1,7 +1,8 @@
 .fold-motion {
   --fold-line: 50%;
-  --fold-shade: color-mix(in srgb, var(--setting-accent) 15%, transparent);
-  --fold-edge: color-mix(in srgb, var(--setting-accent) 38%, transparent);
+  --fold-surface: color-mix(in srgb, var(--page-base) 50%, var(--setting-accent));
+  --fold-shadow: rgb(0 0 0 / 28%);
+  --fold-rim: color-mix(in srgb, var(--setting-accent) 62%, transparent);
   position: fixed;
   z-index: 8;
   inset: 0;
@@ -10,27 +11,30 @@
   pointer-events: none;
 }
 [data-theme="light"] .fold-motion {
-  --fold-shade: rgb(20 28 40 / 20%);
-  --fold-edge: color-mix(in srgb, var(--setting-accent) 30%, transparent);
+  --fold-surface: color-mix(in srgb, var(--page-base) 58%, var(--setting-accent));
+  --fold-shadow: rgb(20 28 40 / 28%);
+  --fold-rim: color-mix(in srgb, var(--setting-accent) 54%, transparent);
 }
-.fold-motion-panel {
-  --fold-edge-direction: to right;
+.fold-motion-cover, .fold-motion-focus {
+  --fold-towards-hinge: to right;
   position: absolute;
   inset: 0 calc(100% - var(--fold-line)) 0 0;
-  background: linear-gradient(var(--fold-edge-direction), var(--fold-shade) calc(100% - 42px), var(--fold-edge));
 }
-.fold-motion-panel + .fold-motion-panel {
-  --fold-edge-direction: to left;
-  inset: 0 0 0 var(--fold-line);
+.fold-motion-cover {
+  transform-origin: right center;
+  background: linear-gradient(var(--fold-towards-hinge),
+    color-mix(in srgb, var(--fold-surface) 62%, transparent), transparent 91%, var(--fold-rim));
 }
-.fold-motion[data-axis="horizontal"] .fold-motion-panel {
-  --fold-edge-direction: to bottom;
+.fold-motion-focus {
+  background: var(--fold-shadow);
+  backdrop-filter: blur(6px);
+  mask-image: linear-gradient(var(--fold-towards-hinge), #000 8%, transparent 99%);
+}
+.fold-motion[data-axis="horizontal"] :is(.fold-motion-cover, .fold-motion-focus) {
+  --fold-towards-hinge: to bottom;
   inset: 0 0 calc(100% - var(--fold-line)) 0;
 }
-.fold-motion[data-axis="horizontal"] .fold-motion-panel + .fold-motion-panel {
-  --fold-edge-direction: to top;
-  inset: var(--fold-line) 0 0;
-}
+.fold-motion[data-axis="horizontal"] .fold-motion-cover { transform-origin: center bottom; }
 .fold-motion-diagnostic {
   position: fixed;
   z-index: 10;

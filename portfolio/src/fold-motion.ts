@@ -124,27 +124,34 @@ export function installFoldMotion() {
     overlay.style.setProperty("--fold-line", `${hinge.position}%`);
     overlay.setAttribute("aria-hidden", "true");
 
-    const first = document.createElement("div");
-    const second = document.createElement("div");
-    first.className = second.className = "fold-motion-panel";
-    overlay.append(first, second);
-
-    const slide = hinge.axis === "vertical" ? "translateX" : "translateY";
-    const timing: KeyframeAnimationOptions = { duration: opening ? 460 : 420, fill: "both" };
-    const animations = [first, second].map((panel, index) => {
-      const outside = `${slide}(${index ? 101 : -101}%)`;
-      const centered = `${slide}(0)`;
-      return panel.animate(opening ? [
-        { transform: centered, opacity: 0 },
-        { transform: centered, opacity: 1, offset: .12, easing: "cubic-bezier(.24,.68,.28,1)" },
-        { transform: outside, opacity: 0 },
-      ] : [
-        { transform: outside, opacity: 0, easing: "cubic-bezier(.3,0,.3,1)" },
-        { transform: centered, opacity: 1, offset: .68, easing: "ease-out" },
-        { transform: centered, opacity: 0 },
-      ], timing);
-    });
+    const focus = document.createElement("div");
+    const cover = document.createElement("div");
+    focus.className = "fold-motion-focus";
+    cover.className = "fold-motion-cover";
+    overlay.append(focus, cover);
     document.body.append(overlay);
+
+    // Keep the live page stationary. The cover pivots and the blur samples the page in place.
+    const axis = hinge.axis === "vertical" ? "Y" : "X";
+    const sign = hinge.axis === "vertical" ? -1 : 1;
+    const pivot = (degrees: number) => `perspective(900px) rotate${axis}(${sign * degrees}deg)`;
+    const timing: KeyframeAnimationOptions = { duration: opening ? 540 : 480, fill: "both" };
+    const animations = [
+      cover.animate(opening ? [
+        { transform: pivot(68), opacity: 0 },
+        { transform: pivot(55), opacity: .94, offset: .19, easing: "cubic-bezier(.18,.62,.32,1)" },
+        { transform: pivot(0), opacity: 0 },
+      ] : [
+        { transform: pivot(0), opacity: 0, easing: "cubic-bezier(.4,0,.3,1)" },
+        { transform: pivot(57), opacity: .94, offset: .7, easing: "ease-out" },
+        { transform: pivot(68), opacity: 0 },
+      ], timing),
+      focus.animate(opening ? [
+        { opacity: 0 }, { opacity: .85, offset: .19, easing: "ease-out" }, { opacity: 0 },
+      ] : [
+        { opacity: 0, easing: "ease-in" }, { opacity: .85, offset: .7 }, { opacity: 0 },
+      ], timing),
+    ];
     active = { overlay, animations };
     playbackStatus = "Playing";
     updateDiagnostic();
