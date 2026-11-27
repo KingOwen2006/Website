@@ -23,7 +23,10 @@ dialog :is(input, button) { font: inherit; }
 .shop-card-footer strong { color: var(--setting-accent); }
 #shop-status { text-align: center; margin: 26px 0; color: var(--settings-muted); }
 .shop-description { white-space: pre-line; color: var(--settings-muted); }
-.shop-account-link { display: block; width: fit-content; margin: 0 0 20px auto; color: var(--setting-accent); }
+.shop-account-link { display: flex; align-items: center; gap: 8px; width: fit-content; margin: 0 0 20px auto; color: var(--setting-accent); }
+#basket-open { display: flex; align-items: center; gap: 8px; }
+.shop-account-link .ui-icon, #basket-open .ui-icon { flex: none; }
+[data-theme="light"] :is(.shop-account-link, #basket-open) .ui-icon { filter: invert(1); }
 dialog:has(#product-content), #basket-dialog, #checkout-dialog { position: fixed; inset: 0; margin: auto; width: min(1000px, calc(100% - 32px)); max-height: calc(100dvh - 40px); overflow: auto; padding: clamp(24px, 4vw, 44px); border: 1px solid var(--settings-line); border-radius: 28px; color: inherit; background: var(--page-base); }
 dialog::backdrop { background: rgb(0 0 0 / 65%); backdrop-filter: blur(8px); }
 #basket-dialog { width: min(640px, calc(100% - 32px)); }
