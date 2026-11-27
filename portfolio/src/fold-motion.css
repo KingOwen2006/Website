@@ -1,11 +1,26 @@
 .fold-motion {
   --fold-line: 50%;
+  --fold-highlight: rgb(255 255 255 / 25%);
   position: fixed;
   z-index: 8;
   inset: 0;
   overflow: clip;
   perspective: 1050px;
   pointer-events: none;
+}
+.fold-motion::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 calc(var(--fold-line) - 18px);
+  width: 36px;
+  background: linear-gradient(90deg, transparent, var(--fold-highlight), transparent);
+}
+[data-theme="light"] .fold-motion { --fold-highlight: rgb(23 29 39 / 24%); }
+.fold-motion[data-axis="horizontal"]::after {
+  inset: calc(var(--fold-line) - 18px) 0 auto;
+  width: auto;
+  height: 36px;
+  background: linear-gradient(transparent, var(--fold-highlight), transparent);
 }
 .fold-motion-panel {
   position: absolute;
@@ -30,6 +45,21 @@
   --fold-edge: to top;
   inset: var(--fold-line) 0 0;
   transform-origin: center top;
+}
+.fold-motion-diagnostic {
+  position: fixed;
+  z-index: 10;
+  inset: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) auto auto;
+  max-width: calc(100% - 24px);
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--settings-line);
+  border-radius: 10px;
+  background: var(--settings-surface);
+  color: var(--settings-muted);
+  font: .6875rem/1.4 ui-monospace, monospace;
+  white-space: pre-wrap;
+  pointer-events: none;
 }
 @media (prefers-reduced-motion: reduce) {
   .fold-motion { display: none; }
