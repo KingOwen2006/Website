@@ -5,6 +5,8 @@ const pageSize = 12;
 const profileUrl = `https://api.fxtwitter.com/2/profile/id:${accountId}`;
 const timelineUrl = `${profileUrl}/statuses`;
 const countFormat = new Intl.NumberFormat("en-GB", { notation: "compact", maximumFractionDigits: 1 });
+const timelineCacheKey = `portfolio-feed:${accountId}:v1`;
+const timelineCacheMaxAge = 2 * 60 * 1000;
 
 function record(value: unknown): Record<string, unknown> | undefined {
   return value !== null && typeof value === "object" ? value as Record<string, unknown> : undefined;
@@ -67,19 +69,48 @@ export async function fetchFollowerCount() {
   return count(profile?.followers);
 }
 
-export async function fetchFeedPage(maximum: number, cursor?: string) {
-  const url = new URL(timelineUrl);
-  url.searchParams.set("count", String(maximum));
-  if (cursor) url.searchParams.set("cursor", cursor);
-  const response = await fetch(url, { credentials: "omit", signal: AbortSignal.timeout(10000) });
-  if (response.status === 404 || response.status === 204) return { posts: [], cursor: undefined };
-  if (!response.ok) throw new Error(`FxTwitter returned ${response.status}`);
-  const data = record(await response.json());
+function parseFeedPage(value: unknown) {
+  const data = record(value);
   if (!Array.isArray(data?.results)) throw new Error("Invalid FxTwitter timeline");
   const posts = data.results.map(parsePost).filter((post): post is FeedPost => post !== undefined);
   const next = record(data.cursor)?.bottom;
   // An empty upstream page ends the timeline even if FxTwitter includes a cursor.
   return { posts, cursor: data.results.length && typeof next === "string" && next ? next : undefined };
+}
+
+export type FeedPage = ReturnType<typeof parseFeedPage>;
+
+export function readCachedFeedPage() {
+  try {
+    const snapshot = record(JSON.parse(sessionStorage.getItem(timelineCacheKey) ?? "null"));
+    if (typeof snapshot?.savedAt !== "number") return;
+    const page = parseFeedPage(snapshot.timeline);
+    if (page.posts.length) {
+      return { page, fresh: Date.now() - snapshot.savedAt < timelineCacheMaxAge };
+    }
+  } catch {
+    // The network can still supply the feed if browser storage is unavailable.
+  }
+}
+
+export async function fetchFeedPage(cursor?: string): Promise<FeedPage> {
+  const url = new URL(timelineUrl);
+  url.searchParams.set("count", cursor ? "100" : "40");
+  if (cursor) url.searchParams.set("cursor", cursor);
+  const response = await fetch(url, { credentials: "omit", signal: AbortSignal.timeout(10000) });
+  const empty = response.status === 404 || response.status === 204;
+  if (!empty && !response.ok) throw new Error(`FxTwitter returned ${response.status}`);
+  const timeline: unknown = empty ? { results: [] } : await response.json();
+  const page = parseFeedPage(timeline);
+  if (!cursor) {
+    try {
+      if (page.posts.length) sessionStorage.setItem(timelineCacheKey, JSON.stringify({ savedAt: Date.now(), timeline }));
+      else sessionStorage.removeItem(timelineCacheKey);
+    } catch {
+      // The loaded posts are still usable if the browser cannot store them.
+    }
+  }
+  return page;
 }
 
 export function makePost(post: FeedPost, full = false) {
@@ -148,7 +179,11 @@ export function makePost(post: FeedPost, full = false) {
 
 export async function loadFeed(track: HTMLElement, status: HTMLElement, refresh: () => void) {
   try {
-    const { posts } = await fetchFeedPage(40);
+    const cached = readCachedFeedPage();
+    const { posts } = cached?.fresh ? cached.page : await fetchFeedPage().catch((error: unknown) => {
+      if (cached) return cached.page;
+      throw error;
+    });
     const unique = [...new Map(posts.map((post) => [post.id, post])).values()].slice(0, pageSize);
     if (!unique.length) {
       status.textContent = "FxTwitter has no posts available for this account.";

@@ -1,9 +1,10 @@
 import "./styles.css";
-import { fetchFeedPage, fetchFollowerCount, makePost, type FeedPost } from "./feed";
+import { fetchFeedPage, fetchFollowerCount, makePost, readCachedFeedPage, type FeedPage, type FeedPost } from "./feed";
 import { element, mountNavigation } from "./navigation";
 
 mountNavigation("feed");
 const list = element("#feed-list");
+const ghosts = [...list.children];
 const status = element("#feed-page-status");
 const followers = element("#feed-followers");
 const retry = element<HTMLButtonElement>("#feed-retry");
@@ -19,9 +20,31 @@ type Sort = "newest" | "likes" | "views" | "reposts" | "replies";
 let cursor: string | undefined;
 let loading = true;
 let failed = false;
+let refreshing = false;
 
 function date(post: FeedPost) {
   return Number.isFinite(post.date) ? post.date : 0;
+}
+
+function updateCards(shown: FeedPost[]) {
+  if (loading && !posts.size) {
+    if (list.firstElementChild !== ghosts[0]) list.replaceChildren(...ghosts);
+    list.setAttribute("aria-busy", "true");
+    return;
+  }
+
+  let next = list.firstElementChild;
+  for (const post of shown) {
+    const card = cards.get(post.id)!;
+    if (card === next) next = next.nextElementSibling;
+    else list.insertBefore(card, next);
+  }
+  while (next) {
+    const following = next.nextElementSibling;
+    next.remove();
+    next = following;
+  }
+  list.setAttribute("aria-busy", "false");
 }
 
 function renderPosts() {
@@ -34,35 +57,62 @@ function renderPosts() {
     const difference = sort === "newest" ? 0 : (right[sort] ?? -1) - (left[sort] ?? -1);
     return difference || date(right) - date(left);
   });
-  list.replaceChildren(...shown.map((post) => cards.get(post.id)!));
+  updateCards(shown);
   if (failed) {
+    if (refreshing) {
+      status.textContent = "Couldn’t refresh the feed. Showing previously loaded posts.";
+      return;
+    }
     status.textContent = posts.size ? `Showing ${shown.length} of ${posts.size} loaded posts. Older posts couldn’t be loaded.`
       : "The feed is temporarily unavailable.";
   } else if (loading) {
-    status.textContent = posts.size ? `${shown.length} shown. Loading older posts…` : "Loading posts…";
+    status.textContent = refreshing ? `${shown.length} shown. Refreshing posts…`
+      : posts.size ? `${shown.length} shown. Loading older posts…` : "Loading posts…";
   } else {
     status.textContent = shown.length ? `${shown.length} ${shown.length === 1 ? "post" : "posts"} from @KingOwenFYI`
       : posts.size ? "No posts match your search." : "FxTwitter has no posts available for this account.";
   }
 }
 
+function addPosts(incoming: FeedPost[]) {
+  for (const post of incoming) {
+    if (posts.has(post.id)) continue;
+    posts.set(post.id, post);
+    cards.set(post.id, makePost(post, true));
+  }
+}
+
+function acceptPage(page: FeedPage) {
+  if (page.cursor && seenCursors.has(page.cursor)) throw new Error("Repeated FxTwitter cursor");
+  addPosts(page.posts);
+  cursor = page.cursor;
+  if (cursor) seenCursors.add(cursor);
+  loading = Boolean(cursor);
+}
+
 async function loadPosts() {
   retry.hidden = true;
   failed = false;
   loading = true;
+  if (!cursor && !posts.size) {
+    const cached = readCachedFeedPage();
+    if (cached?.fresh) acceptPage(cached.page);
+    else if (cached) {
+      addPosts(cached.page.posts);
+      refreshing = true;
+    }
+  }
   renderPosts();
+  if (!loading) return;
   try {
     do {
-      const page = await fetchFeedPage(100, cursor);
-      for (const post of page.posts) {
-        if (posts.has(post.id)) continue;
-        posts.set(post.id, post);
-        cards.set(post.id, makePost(post, true));
+      const page = await fetchFeedPage(cursor);
+      if (refreshing) {
+        posts.clear();
+        cards.clear();
+        refreshing = false;
       }
-      if (page.cursor && seenCursors.has(page.cursor)) throw new Error("Repeated FxTwitter cursor");
-      cursor = page.cursor;
-      if (cursor) seenCursors.add(cursor);
-      loading = Boolean(cursor);
+      acceptPage(page);
       renderPosts();
     } while (cursor);
   } catch {

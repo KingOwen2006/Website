@@ -2,10 +2,32 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#050505">
+    <style>
+      html { background: #080808; color-scheme: dark; }
+      html[data-theme="light"] { background: #f3f5f8; color-scheme: light; }
+      @media (prefers-reduced-motion: no-preference) {
+        @view-transition { navigation: auto; }
+      }
+    </style>
     <meta name="description" content="Original posts from King Owen on X.">
+    <link rel="preconnect" href="https://api.fxtwitter.com" crossorigin>
+    <link rel="preconnect" href="https://pbs.twimg.com" crossorigin>
     <title>Feed | King Owen</title>
+    <script>
+      try {
+        const saved = JSON.parse(localStorage.getItem("portfolio-preferences") || "null");
+        if (saved) Object.assign(document.documentElement.dataset, {
+          accent: saved.accent ?? "blue",
+          theme: saved.theme === "auto" ? (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark") : saved.theme,
+        });
+      } catch {}
+      window.addEventListener("pagereveal", (event) => {
+        window.portfolioPageTransition = event.viewTransition ?? null;
+        event.viewTransition?.ready.catch(() => {});
+      }, { once: true });
+    </script>
     <script type="module" src="/src/feed-page.ts"></script>
   </head>
   <body>
@@ -38,7 +60,18 @@
           </div>
         </header>
         <p id="feed-page-status" role="status">Loading posts…</p>
-        <div id="feed-list" class="feed-list" aria-label="Posts"></div>
+        <div id="feed-list" class="feed-list" aria-label="Posts" aria-busy="true">
+          <article class="card feed-card feed-timeline-post feed-ghost" aria-hidden="true">
+            <div class="feed-timeline-author"><span class="ghost-shape feed-ghost-author"></span></div>
+            <div class="feed-card-body ghost-lines"><span class="ghost-shape"></span><span class="ghost-shape"></span></div>
+            <div class="feed-card-stats"><span class="ghost-shape feed-ghost-stats"></span></div>
+          </article>
+          <article class="card feed-card feed-timeline-post feed-ghost" aria-hidden="true">
+            <div class="feed-timeline-author"><span class="ghost-shape feed-ghost-author"></span></div>
+            <div class="feed-card-body ghost-lines"><span class="ghost-shape"></span><span class="ghost-shape"></span></div>
+            <div class="feed-card-stats"><span class="ghost-shape feed-ghost-stats"></span></div>
+          </article>
+        </div>
         <button id="feed-retry" class="detail-link" type="button" hidden>Try again</button>
       </div>
     </main>

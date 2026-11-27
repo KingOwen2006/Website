@@ -25,6 +25,7 @@ export default defineConfig(({ mode }) => {
           fileURLToPath(new URL("./index.html", import.meta.url)),
           fileURLToPath(new URL("./education/index.html", import.meta.url)),
           fileURLToPath(new URL("./feed/index.html", import.meta.url)),
+          fileURLToPath(new URL("./settings/index.html", import.meta.url)),
         ],
       },
     },

@@ -1,18 +1,37 @@
 import "./styles.css";
-import { figmaMark, portrait } from "./artwork";
+import { figmaMark, installPortraitGaze, portrait } from "./artwork";
 import { installCarousel } from "./carousel";
 import { categories, projects, type Artwork, type Card } from "./content";
 import { loadFeed } from "./feed";
 import { element, icon, mountNavigation } from "./navigation";
+import { accents } from "./preferences";
 
 mountNavigation("home");
 
-element("#about-portrait").innerHTML = portrait("Illustrated portrait of Owen Moore");
+const heroCar = element<HTMLImageElement>(".hero-car img");
+const root = document.documentElement;
+let carAccent = "blue";
+function syncHeroCar() {
+  const accent = accents.find((value) => value === root.dataset.accent) ?? "blue";
+  if (carAccent === accent) return;
+  carAccent = accent;
+  const prefix = accent === "blue" ? "/assets/bmw-e30-hero" : `/assets/bmw-e30-hero-${accent}`;
+  heroCar.srcset = `${prefix}-1440.webp 1440w, ${prefix}-2880.webp 2880w`;
+  heroCar.src = `${prefix}-1440.webp`;
+  const colour = accent === "mono" ? "Monochrome" : accent[0].toUpperCase() + accent.slice(1);
+  heroCar.alt = `${colour} BMW E30 M3 model shown from the front and side`;
+}
+syncHeroCar();
+new MutationObserver(syncHeroCar).observe(root, { attributes: true, attributeFilter: ["data-accent"] });
 
-function tool(name: string, style: string, artwork: string) {
+element("#about-portrait").innerHTML = portrait("Illustrated portrait of Owen Moore");
+installPortraitGaze(element("#about-portrait .portrait"));
+
+function tool(name: string, style: string, artwork: string, compactName = name) {
   return `<div class="tool tool-${style}" tabindex="0" role="img" aria-label="${name}">
     <div class="tool-art" aria-hidden="true">${artwork}</div>
     <span class="tool-label" aria-hidden="true">${name}</span>
+    <span class="tool-compact-label" aria-hidden="true">${compactName}</span>
   </div>`;
 }
 
@@ -23,14 +42,15 @@ function toolImage(file: string, width?: number, height?: number) {
 
 const toolsPanel = element("#tools");
 toolsPanel.innerHTML = `
+  <span class="tools-heading" aria-hidden="true">Tools I use</span>
   ${tool("Bambu Lab", "bambu", toolImage("image9.png", 192, 192))}
   ${tool("Blender", "blender", toolImage("image6.png", 1080, 894))}
-  ${tool("Unreal Engine", "unreal", toolImage("image7-vectorized.svg"))}
+  ${tool("Unreal Engine", "unreal", toolImage("image7-vectorized.svg"), "Unreal")}
   <div class="tool-grid">
     ${tool("UPBGE", "upbge", toolImage("image5.png", 778, 778))}
     ${tool("Figma", "figma", figmaMark())}
-    ${tool("Visual Studio Code", "vscode", toolImage("image21.png", 1080, 1080))}
-    ${tool("X / Twitter", "x", toolImage("xlogo-svg.svg"))}
+    ${tool("Visual Studio Code", "vscode", toolImage("image21.png", 1080, 1080), "VS Code")}
+    ${tool("X / Twitter", "x", toolImage("xlogo-svg.svg"), "X")}
   </div>
 `;
 
@@ -76,7 +96,8 @@ function cardMarkup(card: Card) {
 
 projectTrack.innerHTML = projects.map(cardMarkup).join("");
 refreshProjects();
-void loadFeed(feedTrack, element("#feed-status"), refreshFeed);
+const feedPreviewLoading = element("#feed-preview-loading");
+void loadFeed(feedTrack, element("#feed-status"), refreshFeed).finally(() => feedPreviewLoading.remove());
 
 const sections = [...document.querySelectorAll<HTMLElement>("main > section")];
 

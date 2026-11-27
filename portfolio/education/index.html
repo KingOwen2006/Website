@@ -2,10 +2,31 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#050505">
+    <style>
+      html { background: #080808; color-scheme: dark; }
+      html[data-theme="light"] { background: #f3f5f8; color-scheme: light; }
+      @media (prefers-reduced-motion: no-preference) {
+        @view-transition { navigation: auto; }
+      }
+    </style>
     <meta name="description" content="Owen Moore's Bournemouth and Poole College course years and projects.">
+    <link rel="preconnect" href="https://cdn.sanity.io" crossorigin>
     <title>Education | King Owen</title>
+    <script>
+      try {
+        const saved = JSON.parse(localStorage.getItem("portfolio-preferences") || "null");
+        if (saved) Object.assign(document.documentElement.dataset, {
+          accent: saved.accent ?? "blue",
+          theme: saved.theme === "auto" ? (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark") : saved.theme,
+        });
+      } catch {}
+      window.addEventListener("pagereveal", (event) => {
+        window.portfolioPageTransition = event.viewTransition ?? null;
+        event.viewTransition?.ready.catch(() => {});
+      }, { once: true });
+    </script>
     <script type="module" src="/src/education-page.ts"></script>
   </head>
   <body>
@@ -30,8 +51,16 @@
               <option value="distinction">Distinction</option>
             </select>
           </div>
-          <p id="education-status" class="education-status" role="status"></p>
-          <div id="education-posts"></div>
+          <p id="education-status" class="education-status" role="status">Loading education posts…</p>
+          <div id="education-posts" aria-busy="true">
+            <section class="education-post-group" aria-hidden="true">
+              <h2><span class="ghost-shape education-ghost-heading"></span></h2>
+              <ul class="education-posts">
+                <li><div class="education-post education-ghost"><div class="education-post-copy ghost-lines"><span class="ghost-shape"></span><span class="ghost-shape"></span></div></div></li>
+                <li><div class="education-post education-ghost"><div class="education-post-copy ghost-lines"><span class="ghost-shape"></span><span class="ghost-shape"></span></div></div></li>
+              </ul>
+            </section>
+          </div>
         </section>
         <section id="education-unit" class="education-article" hidden>
           <a class="education-article-action" href="#education-title">Back to Education</a>
@@ -50,6 +79,12 @@
         </section>
       </div>
     </main>
+    <template id="education-unit-loading">
+      <div class="education-section-grid" aria-hidden="true">
+        <div class="education-section-card ghost-lines"><span class="ghost-shape"></span><span class="ghost-shape"></span></div>
+        <div class="education-section-card ghost-lines"><span class="ghost-shape"></span><span class="ghost-shape"></span></div>
+      </div>
+    </template>
     <dialog id="unit-lightbox" class="unit-lightbox" aria-label="Enlarged image">
       <form method="dialog"><button aria-label="Close image" autofocus>×</button></form>
       <img id="unit-lightbox-image" alt="">

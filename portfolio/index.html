@@ -2,10 +2,31 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#050505">
+    <style>
+      html { background: #080808; color-scheme: dark; }
+      html[data-theme="light"] { background: #f3f5f8; color-scheme: light; }
+      @media (prefers-reduced-motion: no-preference) {
+        @view-transition { navigation: auto; }
+      }
+    </style>
     <meta name="description" content="Owen Moore's portfolio of 3D car models, characters and 3D prints.">
     <title>King Owen | 3D Modelling Portfolio</title>
+    <link rel="preconnect" href="https://api.fxtwitter.com" crossorigin>
+    <script>
+      try {
+        const saved = JSON.parse(localStorage.getItem("portfolio-preferences") || "null");
+        if (saved) Object.assign(document.documentElement.dataset, {
+          accent: saved.accent ?? "blue",
+          theme: saved.theme === "auto" ? (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark") : saved.theme,
+        });
+      } catch {}
+      window.addEventListener("pagereveal", (event) => {
+        window.portfolioPageTransition = event.viewTransition ?? null;
+        event.viewTransition?.ready.catch(() => {});
+      }, { once: true });
+    </script>
     <script type="module" src="/src/main.ts"></script>
   </head>
   <body class="home-page">
@@ -45,11 +66,11 @@
             </div>
           </div>
           <div class="about-row about-row-process">
+            <div class="tools-panel" id="tools" role="group" aria-label="Tools I use"></div>
             <div class="about-copy about-process">
               <p>I use a range of tools to take a model from its first design through to the finished product, whether it ends up as a physical print or as an asset in a game. I also like to switch things up and use <strong>Unreal Engine 5</strong> to make small games from time to time.</p>
               <p>I create designs in Figma to model from, and I make all my models in Blender. I work with two game engines and am most active on X.</p>
             </div>
-            <div class="tools-panel" id="tools" role="group" aria-label="Tools I use"></div>
           </div>
         </div>
       </section>
@@ -68,6 +89,10 @@
           <h2 class="display-title" id="feed-title">Feed</h2>
           <p class="feed-meta" id="feed-status" role="status">Loading posts…</p>
           <div class="card-window">
+            <div class="card-track feed-ghost-track" id="feed-preview-loading" aria-hidden="true">
+              <div class="card feed-card feed-ghost"><div class="ghost-lines"><span class="ghost-shape"></span><span class="ghost-shape"></span></div></div>
+              <div class="card feed-card feed-ghost"><div class="ghost-lines"><span class="ghost-shape"></span><span class="ghost-shape"></span></div></div>
+            </div>
             <div class="card-track" id="feed-cards" role="region" aria-label="Feed cards" tabindex="0" hidden></div>
           </div>
         </div>

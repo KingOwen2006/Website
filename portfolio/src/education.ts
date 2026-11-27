@@ -1,4 +1,3 @@
-import { createClient } from "@sanity/client";
 import { educationQuery, educationUnitQuery } from "./education-queries";
 import { escapeHTML, toHTML, type PortableTextOptions } from "@portabletext/to-html";
 import { countWords, splitSections, type BodyBlock } from "./education-sections";
@@ -8,22 +7,31 @@ import { element } from "./navigation";
 
 const projectId = import.meta.env.VITE_SANITY_PROJECT_ID || "bxr88bn5";
 const dataset = import.meta.env.VITE_SANITY_DATASET || "production";
+const apiVersion = (import.meta.env.VITE_SANITY_API_VERSION || "2025-01-01").replace(/^v/, "");
 const sameOrigin = import.meta.env.VITE_EDUCATION_SAME_ORIGIN === "true" ||
   ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname);
+const apiHost = sameOrigin ? `${location.origin}/api/sanity-public` : `https://${projectId}.apicdn.sanity.io`;
+const chapterCacheKey = `portfolio-education:${projectId}:${dataset}:${apiVersion}:v1`;
+const chapterCacheMaxAge = 2 * 60 * 1000;
 
-const client = createClient({
-  projectId, dataset,
-  apiVersion: import.meta.env.VITE_SANITY_API_VERSION || "2025-01-01",
-  perspective: "published",
-  useCdn: !sameOrigin,
-  ...(sameOrigin ? { apiHost: `${location.origin}/api/sanity-public`, useProjectHostname: false } : {}),
-});
+async function fetchEducation<T>(query: string, params: Record<string, string>, signal: AbortSignal): Promise<T> {
+  const url = new URL(`${apiHost}/v${apiVersion}/data/query/${encodeURIComponent(dataset)}`);
+  url.searchParams.set("query", query);
+  url.searchParams.set("perspective", "published");
+  url.searchParams.set("returnQuery", "false");
+  for (const [name, value] of Object.entries(params)) {
+    url.searchParams.set(`$${name}`, JSON.stringify(value));
+  }
+  const response = await fetch(url, { credentials: "omit", signal });
+  if (!response.ok) throw new Error(`Education request failed (${response.status})`);
+  const body = await response.json();
+  return body.result as T;
+}
 
 type Unit = {
   title: string;
   slug: string;
   summary: string | null;
-  publishedAt: string | null;
   gradeSlugs: string[];
   thumbnail: { url: string | null; alt: string | null } | null;
 };
@@ -35,6 +43,29 @@ type Chapter = {
   dateRange: string | null;
   units: Unit[];
 };
+
+function readCachedChapters() {
+  try {
+    const snapshot = JSON.parse(sessionStorage.getItem(chapterCacheKey) ?? "null") as {
+      savedAt: number;
+      chapters: Chapter[];
+    } | null;
+    if (snapshot && Number.isFinite(snapshot.savedAt) && Array.isArray(snapshot.chapters) &&
+        snapshot.chapters.every((chapter) => typeof chapter?.slug === "string" && Array.isArray(chapter.units) &&
+          chapter.units.every((unit) => typeof unit?.slug === "string" && typeof unit.title === "string" &&
+            Array.isArray(unit.gradeSlugs)))) return snapshot;
+  } catch {
+    // Use Sanity when the browser has no usable cache.
+  }
+}
+
+function cacheChapters(chapters: Chapter[]) {
+  try {
+    sessionStorage.setItem(chapterCacheKey, JSON.stringify({ savedAt: Date.now(), chapters }));
+  } catch {
+    // The listing still works if browser storage is unavailable.
+  }
+}
 
 const { imageUrl: sanityImage, figure, imageGroup, comparison } = createUnitMedia(projectId, dataset);
 
@@ -82,6 +113,7 @@ const articleView = element("#education-unit");
 const articleTitle = element("#education-unit-title");
 const articleStatus = element("#education-unit-status");
 const articleBody = element("#education-unit-body");
+const articleGhost = element<HTMLTemplateElement>("#education-unit-loading");
 bindUnitMedia(articleBody, element<HTMLDialogElement>("#unit-lightbox"), element<HTMLImageElement>("#unit-lightbox-image"));
 const articleCourse = element("#education-unit-course");
 const articleImage = element<HTMLImageElement>("#education-unit-image");
@@ -101,10 +133,15 @@ function unitCard({ unit, href }: Entry) {
   link.className = "education-post";
   const thumbnail = sanityImage(unit.thumbnail?.url, 960);
   const image = document.createElement("img");
+  if (thumbnail) {
+    image.sizes = "(max-width: 720px) calc(100vw - 36px), (max-width: 1280px) 44vw, 546px";
+    image.srcset = `${sanityImage(unit.thumbnail?.url, 480)} 480w, ${thumbnail} 960w`;
+  } else {
+    image.className = "education-post-fallback";
+  }
   image.src = thumbnail ?? collegeLogo;
   image.alt = "";
   image.loading = "lazy";
-  if (!thumbnail) image.className = "education-post-fallback";
   link.append(image);
   const text = document.createElement("div");
   text.className = "education-post-copy";
@@ -182,6 +219,7 @@ function renderArticle(blocks: BodyBlock[], href: string, section: string | unde
   const sections = splitSections(blocks);
   const selected = sections.findIndex(({ slug }) => slug === section);
   articleBody.replaceChildren();
+  articleBody.setAttribute("aria-busy", "false");
   wordCount.hidden = !blocks.length;
   articleStatus.textContent = blocks.length ? "" : "No article content is available for this post.";
   if (!blocks.length) return;
@@ -266,35 +304,57 @@ async function syncRoute() {
   articleImage.src = image ?? collegeLogo;
   articleImage.alt = image ? entry.unit.thumbnail?.alt ?? "" : "";
   articleStatus.textContent = "Loading post…";
-  articleBody.replaceChildren();
+  articleBody.replaceChildren(articleGhost.content.cloneNode(true));
+  articleBody.setAttribute("aria-busy", "true");
   wordCount.hidden = true;
   articleTitle.focus();
   try {
-    const result = await client.fetch<{ body: BodyBlock[] | null } | null>(
+    const result = await fetchEducation<{ body: BodyBlock[] | null } | null>(
       educationUnitQuery, { chapterSlug: entry.chapter.slug, unitSlug: entry.unit.slug },
-      { signal: AbortSignal.any([controller.signal, AbortSignal.timeout(12000)]) },
+      AbortSignal.any([controller.signal, AbortSignal.timeout(12000)]),
     );
     if (active !== request || controller.signal.aborted) return;
     request.blocks = result?.body ?? [];
     renderArticle(request.blocks, href, location.hash.split("/")[3]);
   } catch {
-    if (active === request && !controller.signal.aborted) articleStatus.textContent = "Couldn’t load this post. Go back and open it again.";
+    if (active === request && !controller.signal.aborted) {
+      articleBody.replaceChildren();
+      articleBody.setAttribute("aria-busy", "false");
+      articleStatus.textContent = "Couldn’t load this post. Go back and open it again.";
+    }
   }
 }
 
 window.addEventListener("hashchange", () => void syncRoute());
 
+function showChapters(chapters: Chapter[]) {
+  entries = chapters.flatMap((chapter) => chapter.units.map((unit) => ({
+    unit, chapter, href: `#post/${encodeURIComponent(chapter.slug)}/${encodeURIComponent(unit.slug)}`,
+  })));
+  loaded = true;
+  postList.setAttribute("aria-busy", "false");
+  return syncRoute();
+}
+
 export async function loadEducation() {
-  listingStatus.textContent = "Loading education posts…";
+  const cached = readCachedChapters();
   try {
-    const chapters = await client.fetch<Chapter[]>(educationQuery, {}, { signal: AbortSignal.timeout(10000) });
-    entries = chapters.flatMap((chapter) => chapter.units.map((unit) => ({
-      unit, chapter, href: `#post/${encodeURIComponent(chapter.slug)}/${encodeURIComponent(unit.slug)}`,
-    })));
-    entries.sort((a, b) => (Date.parse(b.unit.publishedAt ?? "") || 0) - (Date.parse(a.unit.publishedAt ?? "") || 0));
-    loaded = true;
-    await syncRoute();
+    if (cached) {
+      await showChapters(cached.chapters);
+      if (Date.now() - cached.savedAt < chapterCacheMaxAge) return;
+    }
+    const chapters = await fetchEducation<Chapter[]>(educationQuery, {}, AbortSignal.timeout(10000));
+    if (!Array.isArray(chapters)) throw new Error("Invalid Education listing");
+    cacheChapters(chapters);
+    if (!cached || JSON.stringify(cached.chapters) !== JSON.stringify(chapters)) {
+      await showChapters(chapters);
+    }
   } catch {
-    listingStatus.textContent = "Couldn’t load education posts. Reload the page to try again.";
+    if (!loaded) {
+      postList.replaceChildren();
+      listingStatus.textContent = "Couldn’t load education posts. Reload the page to try again.";
+    }
+  } finally {
+    postList.setAttribute("aria-busy", "false");
   }
 }

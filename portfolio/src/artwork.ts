@@ -1,3 +1,6 @@
+import eye from "./eye.svg?raw";
+import mirroredEye from "./eye1.svg?raw";
+
 type Layer = {
   file: string;
   inset: string;
@@ -56,6 +59,10 @@ function layeredImage(file: string, trim = "0") {
 }
 
 function showLayer({ file, inset, trim, transform = "none" }: Layer) {
+  if (file === "eye" || file === "eye1") {
+    const mirrored = file === "eye1";
+    return `<span class="art-layer${mirrored ? " portrait-eye-mirrored" : ""}" aria-hidden="true" style="inset:${inset};transform:${transform}"><span class="art-layer" style="inset:${trim}">${mirrored ? mirroredEye : eye}</span></span>`;
+  }
   return `<span class="art-layer" style="inset:${inset};transform:${transform}">${layeredImage(file, trim)}</span>`;
 }
 
@@ -72,4 +79,37 @@ export function portrait(label?: string) {
 
 export function figmaMark() {
   return `<span class="figma-mark" aria-hidden="true">${figmaLayers.map(showLayer).join("")}</span>`;
+}
+
+export function installPortraitGaze(portrait: HTMLElement) {
+  const [leftEye, rightEye] = portrait.querySelectorAll<SVGSVGElement>(".portrait-art svg");
+  if (!leftEye || !rightEye) return;
+  const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+
+  function reset() {
+    portrait.style.removeProperty("--gaze-x");
+    portrait.style.removeProperty("--gaze-y");
+  }
+
+  portrait.addEventListener("pointermove", (event) => {
+    if (reducedMotion.matches || event.pointerType === "touch") return;
+    const bounds = portrait.getBoundingClientRect();
+    if (!bounds.width || !bounds.height) return;
+    const left = leftEye.getBoundingClientRect();
+    const right = rightEye.getBoundingClientRect();
+    const centreX = (left.left + left.right + right.left + right.right) / 4;
+    const centreY = (left.top + left.bottom + right.top + right.bottom) / 4;
+    const dx = event.clientX - centreX;
+    const dy = event.clientY - centreY;
+    const horizontal = dx / (dx < 0 ? centreX - bounds.left : bounds.right - centreX);
+    const vertical = dy / (dy < 0 ? centreY - bounds.top : bounds.bottom - centreY);
+    const limit = Math.max(1, Math.hypot(horizontal, vertical));
+    portrait.style.setProperty("--gaze-x", `${2.9 * horizontal / limit}px`);
+    portrait.style.setProperty("--gaze-y", `${1.5 * vertical / limit}px`);
+  }, { passive: true });
+
+  portrait.addEventListener("pointerleave", reset);
+  portrait.addEventListener("pointercancel", reset);
+  reducedMotion.addEventListener("change", reset);
+  window.addEventListener("blur", reset);
 }

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#050505">
+    <style>
+      html { background: #080808; color-scheme: dark; }
+      html[data-theme="light"] { background: #f3f5f8; color-scheme: light; }
+      @media (prefers-reduced-motion: no-preference) {
+        @view-transition { navigation: auto; }
+      }
+    </style>
+    <title>Settings | King Owen</title>
+    <meta name="description" content="Choose a theme and accent colour for the King Owen portfolio.">
+    <script>
+      try {
+        const saved = JSON.parse(localStorage.getItem("portfolio-preferences") || "null");
+        if (saved) Object.assign(document.documentElement.dataset, {
+          accent: saved.accent ?? "blue",
+          theme: saved.theme === "auto" ? (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark") : saved.theme,
+        });
+      } catch {}
+      window.addEventListener("pagereveal", (event) => {
+        window.portfolioPageTransition = event.viewTransition ?? null;
+        event.viewTransition?.ready.catch(() => {});
+      }, { once: true });
+    </script>
+    <script type="module" src="/src/settings-page.ts"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <aside class="rail" aria-label="Sidebar">
+      <button class="rail-toggle rail-item" type="button" aria-label="Expand navigation" aria-expanded="false" aria-controls="site-navigation"></button>
+      <nav id="site-navigation" aria-label="Main navigation"></nav>
+    </aside>
+    <main class="panel settings-page" id="main">
+      <div class="settings-content">
+        <a class="settings-back" id="settings-back" href="/">← Back</a>
+        <h1 class="display-title">Settings</h1>
+        <form id="site-preferences" class="settings-panel">
+          <fieldset class="setting-choice">
+            <legend>Theme</legend>
+            <div class="theme-options">
+              <label><input name="theme" type="radio" value="dark" checked><span class="theme-sample theme-dark" aria-hidden="true"></span>Dark</label>
+              <label><input name="theme" type="radio" value="light"><span class="theme-sample theme-light" aria-hidden="true"></span>Light</label>
+              <label><input name="theme" type="radio" value="auto"><span class="theme-sample theme-auto" aria-hidden="true"></span>System</label>
+            </div>
+          </fieldset>
+          <fieldset class="setting-choice">
+            <legend>Accent colour</legend>
+            <div class="accent-options">
+              <label><input name="accent" type="radio" value="blue" checked><span class="accent-swatch swatch-blue" aria-hidden="true"></span>Blue</label>
+              <label><input name="accent" type="radio" value="coral"><span class="accent-swatch swatch-coral" aria-hidden="true"></span>Coral</label>
+              <label><input name="accent" type="radio" value="mint"><span class="accent-swatch swatch-mint" aria-hidden="true"></span>Mint</label>
+              <label><input name="accent" type="radio" value="lilac"><span class="accent-swatch swatch-lilac" aria-hidden="true"></span>Lilac</label>
+              <label><input name="accent" type="radio" value="mono"><span class="accent-swatch swatch-mono" aria-hidden="true"></span>Monochrome</label>
+              <label><input name="accent" type="radio" value="red"><span class="accent-swatch swatch-red" aria-hidden="true"></span>Red</label>
+              <label><input name="accent" type="radio" value="white"><span class="accent-swatch swatch-white" aria-hidden="true"></span>White</label>
+            </div>
+          </fieldset>
+        </form>
+      </div>
+    </main>
+  </body>
+</html>
