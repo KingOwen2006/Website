@@ -1,3 +1,5 @@
+import { makeFoldTiltControl } from "./fold-tilt";
+
 type Axis = "vertical" | "horizontal";
 type Direction = "fold" | "unfold";
 type Posture = EventTarget & { readonly type: "folded" | "continuous" };
@@ -115,9 +117,7 @@ export function installFoldMotion() {
     playbackStatus = "Interrupted";
   }
 
-  function animateFold({ direction, hinge }: Pick<Fold, "direction" | "hinge">) {
-    clearAnimation();
-    const opening = direction === "unfold";
+  function makeLayers(hinge: Hinge) {
     const overlay = document.createElement("div");
     overlay.className = "fold-motion";
     overlay.dataset.axis = hinge.axis;
@@ -130,6 +130,43 @@ export function installFoldMotion() {
     cover.className = "fold-motion-cover";
     overlay.append(focus, cover);
     document.body.append(overlay);
+    return { overlay, focus, cover };
+  }
+
+  let liveLayers: ReturnType<typeof makeLayers> | undefined;
+  let liveAngle: number | undefined;
+  function showAngle(angle: number | undefined) {
+    if (angle === liveAngle) return;
+    const wasLive = liveAngle !== undefined;
+    if (angle !== undefined && liveAngle === undefined) {
+      clearAnimation();
+      pending = undefined;
+      cancelAnimationFrame(playbackFrame);
+    }
+    liveAngle = angle;
+    if (wasLive !== (angle !== undefined)) updateDiagnostic();
+    if (angle === undefined || angle >= 178 || motion.matches || document.hidden) {
+      liveLayers?.overlay.remove();
+      liveLayers = undefined;
+      return;
+    }
+    const rotated = (screen.orientation?.angle ?? 0) % 180 !== 0;
+    const hinge: Hinge = previous.hinge ?? { axis: rotated ? "horizontal" : "vertical", position: 50 };
+    liveLayers ??= makeLayers(hinge);
+    const { overlay, cover, focus } = liveLayers;
+    overlay.dataset.axis = hinge.axis;
+    overlay.style.setProperty("--fold-line", `${hinge.position}%`);
+    const bend = (180 - angle) / 180;
+    const rotation = hinge.axis === "vertical" ? `rotateY(${-68 * bend}deg)` : `rotateX(${68 * bend}deg)`;
+    cover.style.transform = `perspective(900px) ${rotation}`;
+    cover.style.opacity = String(Math.min(1, bend * 2));
+    focus.style.opacity = String(.85 * bend);
+  }
+
+  function animateFold({ direction, hinge }: Pick<Fold, "direction" | "hinge">) {
+    clearAnimation();
+    const opening = direction === "unfold";
+    const { overlay, focus, cover } = makeLayers(hinge);
 
     // Keep the live page stationary. The cover pivots and the blur samples the page in place.
     const axis = hinge.axis === "vertical" ? "Y" : "X";
@@ -183,9 +220,10 @@ export function installFoldMotion() {
     replay.addEventListener("click", () => {
       if (!motion.matches) animateFold(lastFold ?? { direction: "unfold", hinge: centerHinge });
     });
-    panel.append(report, replay);
+    const tilt = makeFoldTiltControl(showAngle);
+    panel.append(report, replay, tilt.control, tilt.status);
     document.body.append(panel);
-    return { report, replay };
+    return { report, replay, tilt };
   }
 
   function saveDisplay() {
@@ -203,9 +241,10 @@ export function installFoldMotion() {
       `Screen ${previous.screenWidth}×${previous.screenHeight} · Viewport ${previous.width}×${previous.height}`,
       `Posture ${posture?.type ?? (previous.folded ? "folded (CSS)" : "unreported")} · Hinge ${previous.hinge?.axis ?? "unreported"}`,
       lastDetection,
-      `Animation ${motion.matches ? "off (reduced motion)" : playbackStatus.toLowerCase()}`,
+      `Animation ${motion.matches ? "off (reduced motion)" : liveAngle !== undefined ? "following tilt" : playbackStatus.toLowerCase()}`,
     ].join("\n");
-    diagnostic.replay.disabled = motion.matches;
+    diagnostic.replay.disabled = motion.matches || liveAngle !== undefined;
+    diagnostic.tilt.control.disabled = motion.matches;
   }
 
   function playWhenDisplaySettles() {
@@ -245,7 +284,12 @@ export function installFoldMotion() {
     previous = after;
 
     const fold = detectFold(before, after, hasTouch);
-    if (fold) queueFold(fold);
+    if (fold) {
+      if (liveAngle !== undefined && (fold.source === "screen size" || fold.source === "viewport size")) {
+        diagnostic?.tilt.stop("Display switched. Open flat to start another tilt test.");
+      }
+      if (liveAngle === undefined) queueFold(fold);
+    }
     saveDisplay();
     playWhenDisplaySettles();
     updateDiagnostic();
@@ -264,6 +308,7 @@ export function installFoldMotion() {
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
       hiddenAt = Date.now();
+      diagnostic?.tilt.stop();
       cancelAnimationFrame(playbackFrame);
       saveDisplay();
       clearAnimation();
@@ -278,6 +323,7 @@ export function installFoldMotion() {
   });
   motion.addEventListener("change", () => {
     if (motion.matches) {
+      diagnostic?.tilt.stop();
       cancelAnimationFrame(playbackFrame);
       pending = undefined;
       clearAnimation();
@@ -287,6 +333,7 @@ export function installFoldMotion() {
     updateDiagnostic();
   });
   window.addEventListener("pagehide", () => {
+    diagnostic?.tilt.stop();
     cancelAnimationFrame(playbackFrame);
     saveDisplay();
     clearAnimation();

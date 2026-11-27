@@ -51,6 +51,9 @@
   justify-items: end;
 }
 .fold-motion-diagnostic pre { margin: 0; font: .6875rem/1.4 ui-monospace, monospace; white-space: pre-wrap; }
+.fold-motion-diagnostic { grid-template-columns: auto auto; }
+.fold-motion-diagnostic :is(pre, p) { grid-column: 1 / -1; justify-self: start; }
+.fold-motion-diagnostic p { max-width: 38ch; margin: 0; font-size: .75rem; }
 .fold-motion-diagnostic button {
   min-height: 38px;
   padding: 0 10px;
