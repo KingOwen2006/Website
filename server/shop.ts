@@ -1,7 +1,7 @@
 import type {IncomingMessage, ServerResponse} from 'node:http'
 import {createClient} from '@sanity/client'
 import Stripe from 'stripe'
-import {AccountError, authenticateCustomer, customerIdFor} from './customer-auth.js'
+import {AccountError, authenticateCustomer, clerkKey, customerIdFor} from './customer-auth.js'
 
 export type Product = {
   _id: string; title: string; slug: string; summary?: string; description?: string;
@@ -14,7 +14,7 @@ export const catalogQuery = `{
     _id, title, "slug": coalesce(slug.current, _id), summary, description, category,
     "price": coalesce(price, priceMinor / 100),
     "availability": coalesce(availability, "coming-soon"),
-    requiresShipping, "details": coalesce(details[], []),
+    requiresShipping, "details": coalesce(details[], string::split(details, "\n"), []),
     "images": coalesce(images[]{"url": asset->url, alt}, [thumbnail{"url": asset->url, alt}])[defined(url)]
   },
   "settings": *[_type == "shopSettings"] | order(_updatedAt desc)[0] {
@@ -49,7 +49,8 @@ export async function catalog(req: IncomingMessage, res: ServerResponse) {
   if (req.method !== 'GET') return json(res, 405, {error: 'Method not allowed'})
   try {
     const data = await sanity().fetch<{products: Product[]; settings: Settings | null}>(catalogQuery, {}, {signal: AbortSignal.timeout(8000)})
-    json(res, 200, {...data, paymentsReady: !!(process.env.SITE_URL && process.env.STRIPE_SECRET_KEY && process.env.STRIPE_PUBLISHABLE_KEY && process.env.STRIPE_WEBHOOK_SECRET && process.env.SANITY_API_TOKEN)})
+    json(res, 200, {...data, testMode: process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_') ?? false,
+      paymentsReady: !!(process.env.SITE_URL && process.env.STRIPE_SECRET_KEY && process.env.STRIPE_PUBLISHABLE_KEY && process.env.STRIPE_WEBHOOK_SECRET && process.env.SANITY_API_TOKEN && clerkKey() && process.env.CLERK_SECRET_KEY)})
   } catch { json(res, 502, {error: 'The shop could not load. Please try again.'}) }
 }
 export async function checkout(req: IncomingMessage, res: ServerResponse) {
@@ -75,10 +76,12 @@ export async function checkout(req: IncomingMessage, res: ServerResponse) {
     if (selected.some(({product}) => !product || product.availability !== 'available' || !Number.isFinite(product.price) || product.price < .5))
       return json(res, 409, {error: 'An item is no longer available. Refresh your basket.'})
     const shipping = selected.some(({product}) => product?.requiresShipping)
+    if (shipping && (typeof data.settings?.shippingPrice !== 'number' || !Number.isFinite(data.settings.shippingPrice) || data.settings.shippingPrice < 0))
+      return json(res, 503, {error: 'Delivery is being set up. Please check back soon.'})
     const api = stripe()
     const customer = await customerIdFor(identity, api, true)
     const session = await api.checkout.sessions.create({
-      customer, invoice_creation: {enabled: true},
+      customer,
       metadata: {integration: 'kingowen-shop', accountId: identity.user.id},
       mode: 'payment', ui_mode: 'embedded_page', allowed_payment_method_types: ['card'],
       return_url: new URL('/shop/?session_id={CHECKOUT_SESSION_ID}', origin).href.replace('%7BCHECKOUT_SESSION_ID%7D', '{CHECKOUT_SESSION_ID}'),
@@ -118,7 +121,7 @@ export async function webhook(req: IncomingMessage, res: ServerResponse) {
   try {
     if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded') {
       const session = event.data.object
-      if (session.payment_status === 'paid') await sanity(true).createIfNotExists({
+      if (session.payment_status === 'paid' && session.metadata?.integration === 'kingowen-shop') await sanity(true).createIfNotExists({
         _id: 'shopOrder.' + session.id, _type: 'shopOrder', sessionId: session.id,
         paidAt: new Date(event.created * 1000).toISOString(), amount: session.amount_total, currency: session.currency,
       })

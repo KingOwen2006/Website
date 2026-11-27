@@ -11,7 +11,7 @@ type Product = {
   category?: string; price: number; availability: string;
   images?: {url: string; alt?: string}[]; details?: string[];
 };
-type Catalog = {products: Product[]; paymentsReady: boolean; settings?: {
+type Catalog = {products: Product[]; paymentsReady: boolean; testMode?: boolean; settings?: {
   title?: string; intro?: string; delivery?: string; returns?: string;
 } | null};
 let products: Product[] = [];
@@ -149,6 +149,7 @@ async function load() {
     const data: Catalog = await response.json();
     products = data.products.filter(p => p.slug && Number.isFinite(p.price));
     ready = data.paymentsReady;
+    element('#shop-test-mode').hidden = !data.testMode;
     for (const key of ["title", "intro"] as const) {
       const value = data.settings?.[key];
       if (value) element(`#shop-${key}`).textContent = value;

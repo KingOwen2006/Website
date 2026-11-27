@@ -4,6 +4,9 @@ export const shopProduct = defineType({
   name: 'shopProduct', title: 'Shop product', type: 'document',
   fields: [
     defineField({name: 'title', type: 'string', validation: r => r.required().max(100)}),
+    defineField({name: 'status', title: 'Visibility', type: 'string', initialValue: 'draft',
+      options: {list: [{title: 'Draft · hidden from shop', value: 'draft'}, {title: 'Published · visible in shop', value: 'published'}]},
+      validation: r => r.required()}),
     defineField({name: 'slug', type: 'slug', options: {source: 'title'}, validation: r => r.required()}),
     defineField({name: 'summary', type: 'text', rows: 2, validation: r => r.max(220)}),
     defineField({name: 'description', type: 'text', rows: 8}),
