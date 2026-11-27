@@ -1,3 +1,10 @@
+:root {
+  --fold-left-end: env(viewport-segment-right 0 0, 0px);
+  --fold-right-start: env(viewport-segment-left 1 0, 0px);
+  --fold-top-end: env(viewport-segment-bottom 0 0, 0px);
+  --fold-bottom-start: env(viewport-segment-top 0 1, 0px);
+}
+
 .fold-motion {
   --fold-line: 50%;
   --fold-surface: color-mix(in srgb, var(--page-base) 50%, var(--setting-accent));
