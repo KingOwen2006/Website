@@ -16,6 +16,7 @@
     "@fontsource-variable/google-sans-flex": "5.3.2",
     "@portabletext/to-html": "^6.0.0",
     "@sanity/client": "^8.17.0",
+    "@stripe/stripe-js": "^10.4.0",
     "@thatjoshguy/oneui-icons": "1.1.1",
     "groq": "^6.25.0"
   },

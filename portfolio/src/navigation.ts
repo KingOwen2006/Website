@@ -20,7 +20,7 @@ const navItems = [
   { id: "settings", label: "Settings", icon: "tools" },
 ];
 
-type Page = "home" | "education" | "feed" | "settings";
+type Page = "home" | "education" | "feed" | "settings" | "shop";
 const railHandoffKey = "portfolio-rail-handoff";
 
 function takeRailHandoff(): { from: Page; expanded: boolean } | undefined {
@@ -30,7 +30,7 @@ function takeRailHandoff(): { from: Page; expanded: boolean } | undefined {
     if (!stored || URL.parse(document.referrer)?.origin !== location.origin) return;
     const { from, to, time, expanded } = JSON.parse(stored);
     if (to === location.pathname && Date.now() - time < 15000 &&
-      (from === "home" || from === "education" || from === "feed" || from === "settings")) {
+      (from === "home" || from === "education" || from === "feed" || from === "settings" || from === "shop")) {
       return { from, expanded: expanded === true };
     }
   } catch {
@@ -72,7 +72,7 @@ export function mountNavigation(page: Page) {
   const navigation = element("#site-navigation");
   toggle.innerHTML = icon("drawer");
   navigation.innerHTML = '<span class="rail-selection" aria-hidden="true" hidden></span>' + navItems.map(({ id, label, icon: name }) => {
-    const href = id === "education" || id === "feed" || id === "settings" ? `/${id}/` : `${page === "home" ? "" : "/"}#${id}`;
+    const href = id === "education" || id === "feed" || id === "settings" || id === "shop" ? `/${id}/` : `${page === "home" ? "" : "/"}#${id}`;
     const current = id === page ? 'aria-current="page"' : "";
     return `${id === "settings" ? '<div class="rail-divider" aria-hidden="true"></div>' : ""}
       <a class="rail-item" data-nav-id="${id}" href="${href}" aria-label="${label}" ${current}>

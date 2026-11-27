@@ -1,4 +1,5 @@
 import {author} from './author'
+import {shopProduct, shopSettings, shopOrder} from './shop'
 import {buttonBlock} from './buttonBlock'
 import {chapter} from './chapter'
 import {codeBlock} from './codeBlock'
@@ -16,6 +17,7 @@ import {unit} from './unit'
 import {unitEmbed} from './unitEmbed'
 
 export const schemaTypes = [
+  shopProduct, shopSettings, shopOrder,
   author,
   buttonBlock,
   chapter,
