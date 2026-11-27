@@ -22,7 +22,6 @@ export default defineConfig(({ mode }) => {
     build: {
       rollupOptions: {
         input: [
-          fileURLToPath(new URL("./flex-demo/index.html", import.meta.url)),
           fileURLToPath(new URL("./index.html", import.meta.url)),
           fileURLToPath(new URL("./education/index.html", import.meta.url)),
           fileURLToPath(new URL("./feed/index.html", import.meta.url)),

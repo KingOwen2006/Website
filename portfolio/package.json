@@ -17,14 +17,12 @@
     "@portabletext/to-html": "^6.0.0",
     "@sanity/client": "^8.17.0",
     "@thatjoshguy/oneui-icons": "1.1.1",
-    "groq": "^6.25.0",
-    "react": "^19.3.1",
-    "react-dom": "^19.3.1"
+    "groq": "^6.25.0"
   },
   "devDependencies": {
     "@types/node": "^24.19.4",
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.4",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "typescript": "~5.9.3",
     "vite": "^7.3.1"
   }
