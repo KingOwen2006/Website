@@ -1,0 +1,26 @@
+@import "@fontsource-variable/google-sans-flex";
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--page-base);
+  color: #fafafa;
+  font: 1rem/1.45 "Google Sans Flex Variable", system-ui, sans-serif;
+}
+[data-theme="light"] body { color: #171d27; }
+a, input { accent-color: var(--setting-accent); color: var(--setting-accent); }
+:focus-visible { outline: 3px solid var(--setting-accent); outline-offset: 3px; }
+.studio, .desk { max-width: 62rem; margin: auto; padding: clamp(1rem, 3vw, 2rem); }
+.studio header { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between; }
+.studio header span, figcaption, .badge { color: var(--settings-muted); }
+h1 { margin: .55em 0 .3em; font-size: clamp(2rem, 6vw, 4rem); line-height: 1.05; }
+figure { margin: 0; background: var(--settings-surface); border-radius: 1rem; overflow: hidden; }
+figure img { width: 100%; height: clamp(6rem, 22dvh, 18rem); object-fit: contain; display: block; }
+figcaption { padding: .5rem 1rem; }
+fieldset { border: 0; padding: 0; margin: 0; }
+legend, h2 { font-size: 1.15rem; font-weight: 650; }
+fieldset label, .badge { display: inline-block; padding: .5rem .8rem; border-radius: 1rem; background: var(--settings-surface); }
+fieldset label { margin: .4rem .4rem 0 0; cursor: pointer; }
+.desk ul { padding-inline-start: 1.25rem; }
+.badge { font-size: .85rem; margin: .25rem 0 .8rem; }
+.desk > a { display: block; width: fit-content; }
