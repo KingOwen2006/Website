@@ -18,7 +18,7 @@ export function readPreferences(): Preferences {
     // Storage can be unavailable in a private browser context.
   }
   return {
-    theme: saved?.theme && themes.includes(saved.theme) ? saved.theme : "dark",
+    theme: saved?.theme && themes.includes(saved.theme) ? saved.theme : "auto",
     accent: saved?.accent && accents.includes(saved.accent) ? saved.accent : "blue",
   };
 }
@@ -31,7 +31,7 @@ function applyPreferences(preferences: Preferences) {
   const theme = resolvedTheme(preferences.theme);
   root.dataset.theme = theme;
   root.dataset.accent = preferences.accent;
-  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "light" ? "#f3f5f8" : "#050505");
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "light" ? "#f3f5f8" : "#080808");
 }
 
 let current = readPreferences();

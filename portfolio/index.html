@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#050505">
+    <meta name="theme-color" content="#080808">
     <style>
       html { background: #080808; color-scheme: dark; }
       html[data-theme="light"] { background: #f3f5f8; color-scheme: light; }
@@ -15,13 +15,15 @@
     <title>King Owen | 3D Modelling Portfolio</title>
     <link rel="preconnect" href="https://api.fxtwitter.com" crossorigin>
     <script>
-      try {
-        const saved = JSON.parse(localStorage.getItem("portfolio-preferences") || "null");
-        if (saved) Object.assign(document.documentElement.dataset, {
-          accent: saved.accent ?? "blue",
-          theme: saved.theme === "auto" ? (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark") : saved.theme,
-        });
-      } catch {}
+      {
+        let saved;
+        try { saved = JSON.parse(localStorage.getItem("portfolio-preferences") || "null"); } catch {}
+        const theme = saved?.theme === "light" || saved?.theme === "dark"
+          ? saved.theme : (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.dataset.accent = saved?.accent ?? "blue";
+        document.querySelector('meta[name="theme-color"]').content = theme === "light" ? "#f3f5f8" : "#080808";
+      }
       window.addEventListener("pagereveal", (event) => {
         window.portfolioPageTransition = event.viewTransition ?? null;
         event.viewTransition?.ready.catch(() => {});
