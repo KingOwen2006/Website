@@ -3,10 +3,18 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#f3f5f8" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#080808" media="(prefers-color-scheme: dark)">
     <meta name="theme-color" content="#080808">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="apple-touch-icon" href="/assets/king-owen-192.png">
     <style>
       html { background: #080808; color-scheme: dark; }
       html[data-theme="light"] { background: #f3f5f8; color-scheme: light; }
+      @media (prefers-color-scheme: light) {
+        html:not([data-theme]) { background: #f3f5f8; color-scheme: light; }
+      }
       @media (prefers-reduced-motion: no-preference) {
         @view-transition { navigation: auto; }
       }
@@ -22,7 +30,9 @@
           ? saved.theme : (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
         document.documentElement.dataset.theme = theme;
         document.documentElement.dataset.accent = saved?.accent ?? "blue";
-        document.querySelector('meta[name="theme-color"]').content = theme === "light" ? "#f3f5f8" : "#080808";
+        const colour = theme === "light" ? "#f3f5f8" : "#080808";
+        document.querySelector('meta[name="color-scheme"]').content = theme;
+        document.querySelectorAll('meta[name="theme-color"]').forEach((meta) => { meta.content = colour; });
       }
       window.addEventListener("pagereveal", (event) => {
         window.portfolioPageTransition = event.viewTransition ?? null;

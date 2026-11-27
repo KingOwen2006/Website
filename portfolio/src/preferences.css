@@ -4,38 +4,45 @@
   --settings-hover: #222429;
   --settings-line: #373a40;
   --settings-muted: #c5c7ce;
-  --setting-accent: light-dark(#1c64af, #9dceff);
-  --accent-ink: light-dark(#1c64af, #3783d6);
+  --setting-accent-light: #1c64af;
+  --setting-accent: #9dceff;
+  --accent-ink: #3783d6;
 }
 
 :root[data-accent="coral"] {
-  --setting-accent: light-dark(#9a3b38, #ffaeaa);
+  --setting-accent-light: #9a3b38;
+  --setting-accent: #ffaeaa;
   --accent-ink: var(--setting-accent);
   --portrait-gradient: linear-gradient(#b95e61, #7b2f3b);
 }
 :root[data-accent="mint"] {
-  --setting-accent: light-dark(#126548, #a0e2c8);
+  --setting-accent-light: #126548;
+  --setting-accent: #a0e2c8;
   --accent-ink: var(--setting-accent);
   --portrait-gradient: linear-gradient(#4e9b83, #1e594a);
 }
 :root[data-accent="lilac"] {
-  --setting-accent: light-dark(#6246a0, #cdbbff);
+  --setting-accent-light: #6246a0;
+  --setting-accent: #cdbbff;
   --accent-ink: var(--setting-accent);
   --portrait-gradient: linear-gradient(#8065c6, #4d367f);
 }
 :root[data-accent="mono"] {
-  --setting-accent: light-dark(#383838, #e2e2e2);
+  --setting-accent-light: #383838;
+  --setting-accent: #e2e2e2;
   --accent-ink: var(--setting-accent);
   --portrait-gradient: linear-gradient(#747474, #3a3a3a);
 }
 #about-portrait .portrait { background: var(--portrait-gradient, linear-gradient(#2e74cc, #0958a3)); }
 :root[data-accent="red"] {
-  --setting-accent: light-dark(#a32636, #ff8794);
+  --setting-accent-light: #a32636;
+  --setting-accent: #ff8794;
   --accent-ink: var(--setting-accent);
   --portrait-gradient: linear-gradient(#bc3448, #691827);
 }
 :root[data-accent="white"] {
-  --setting-accent: light-dark(#414958, #fff);
+  --setting-accent-light: #414958;
+  --setting-accent: #fff;
   --accent-ink: var(--setting-accent);
   --portrait-gradient: linear-gradient(#f5f5f5, #aeb4bf);
 }
@@ -50,6 +57,8 @@
   --settings-hover: #edf0f5;
   --settings-line: #c6ccd6;
   --settings-muted: #4b5565;
+  --setting-accent: var(--setting-accent-light);
+  --accent-ink: var(--setting-accent-light);
 }
 
 [data-theme="light"] body { background: linear-gradient(#fff, var(--page-base)); }

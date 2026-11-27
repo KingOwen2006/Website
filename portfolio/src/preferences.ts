@@ -31,7 +31,11 @@ function applyPreferences(preferences: Preferences) {
   const theme = resolvedTheme(preferences.theme);
   root.dataset.theme = theme;
   root.dataset.accent = preferences.accent;
-  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "light" ? "#f3f5f8" : "#080808");
+  const colour = theme === "light" ? "#f3f5f8" : "#080808";
+  document.querySelector('meta[name="color-scheme"]')?.setAttribute("content", theme);
+  for (const meta of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) {
+    meta.content = colour;
+  }
 }
 
 let current = readPreferences();
