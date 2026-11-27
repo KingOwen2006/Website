@@ -2,7 +2,8 @@ type Axis = "vertical" | "horizontal";
 type Direction = "fold" | "unfold";
 type Posture = EventTarget & { readonly type: "folded" | "continuous" };
 type Hinge = { axis: Axis; position: number };
-type Fold = { direction: Direction; hinge: Hinge };
+type FoldSource = "screen size" | "viewport size" | "posture" | "viewport segments";
+type Fold = { direction: Direction; hinge: Hinge; source: FoldSource };
 type Display = {
   screenWidth: number;
   screenHeight: number;
@@ -12,9 +13,16 @@ type Display = {
   hinge?: Hinge;
 };
 
-const handoffKey = "portfolio-fold-display";
+const handoffKey = "portfolio-fold-display-v2";
 const handoffLifetime = 30_000;
+const signalWindow = 650;
 const centerHinge: Hinge = { axis: "vertical", position: 50 };
+const signalPriority: Record<FoldSource, number> = {
+  "screen size": 3,
+  "viewport size": 2,
+  posture: 1,
+  "viewport segments": 1,
+};
 
 function screenOpens(cover: Display, main: Display) {
   // Compare the short sides so rotating the same screen cannot trigger this check.
@@ -31,10 +39,27 @@ function viewportOpens(cover: Display, main: Display) {
   // A width jump with comparable heights excludes browser bars, keyboards and rotation.
   const screenRotated = cover.screenWidth !== main.screenWidth &&
     cover.screenWidth === main.screenHeight && cover.screenHeight === main.screenWidth;
-  if (screenRotated) return false;
+  const fillsScreen = Math.abs(cover.screenWidth - cover.width) <= 40 || Math.abs(main.screenWidth - main.width) <= 40;
+  if (screenRotated || !fillsScreen) return false;
   return main.width - cover.width >= 120 && main.width >= cover.width * 1.28 &&
     cover.width / cover.height <= .82 && main.width / main.height >= .72 &&
     Math.min(cover.height, main.height) >= Math.max(cover.height, main.height) * .72;
+}
+
+function detectFold(before: Display, after: Display, hasTouch: boolean): Fold | undefined {
+  const signals: { source: FoldSource; opens: boolean; closes: boolean }[] = [
+    { source: "screen size", opens: hasTouch && screenOpens(before, after), closes: hasTouch && screenOpens(after, before) },
+    { source: "viewport size", opens: hasTouch && viewportOpens(before, after), closes: hasTouch && viewportOpens(after, before) },
+    { source: "posture", opens: before.folded && !after.folded, closes: !before.folded && after.folded },
+    { source: "viewport segments", opens: !before.hinge && !!after.hinge, closes: !!before.hinge && !after.hinge },
+  ];
+  const signal = signals.find(({ opens, closes }) => opens || closes);
+  if (!signal) return;
+  return {
+    direction: signal.opens ? "unfold" : "fold",
+    hinge: after.hinge ?? before.hinge ?? centerHinge,
+    source: signal.source,
+  };
 }
 
 function readHandoff(page: string): { display: Display; pending?: Fold } | undefined {
@@ -57,7 +82,7 @@ export function installFoldMotion() {
   const page = location.pathname + location.search;
   const hasTouch = navigator.maxTouchPoints > 0 || touchScreen.matches;
   let timeout: number | undefined;
-  let playbackTimeout: number | undefined;
+  let playbackFrame = 0;
   let active: { overlay: HTMLElement; animations: Animation[] } | undefined;
 
   function readDisplay(): Display {
@@ -90,7 +115,7 @@ export function installFoldMotion() {
     playbackStatus = "Interrupted";
   }
 
-  function animateFold({ direction, hinge }: Fold) {
+  function animateFold({ direction, hinge }: Pick<Fold, "direction" | "hinge">) {
     clearAnimation();
     const opening = direction === "unfold";
     const overlay = document.createElement("div");
@@ -103,25 +128,27 @@ export function installFoldMotion() {
     const second = document.createElement("div");
     first.className = second.className = "fold-motion-panel";
     overlay.append(first, second);
-    document.body.append(overlay);
 
-    const timing: KeyframeAnimationOptions = { duration: opening ? 840 : 740, easing: "cubic-bezier(.25,.67,.28,1)", fill: "both" };
-    const veil = overlay.animate(opening
-      ? [{ opacity: .96 }, { opacity: .78, offset: .36 }, { opacity: 0 }]
-      : [{ opacity: .1 }, { opacity: .96, offset: .44 }, { opacity: 0 }], timing);
-
-    const rotation = hinge.axis === "vertical" ? "rotateY" : "rotateX";
-    const angle = hinge.axis === "vertical" ? -49 : 49;
-    const panels = [first, second].map((panel, index) => {
-      const bend = `${rotation}(${index ? -angle : angle}deg)`;
-      return panel.animate(opening
-        ? [{ transform: bend }, { transform: "none" }]
-        : [{ transform: "none" }, { transform: bend }], timing);
+    const slide = hinge.axis === "vertical" ? "translateX" : "translateY";
+    const timing: KeyframeAnimationOptions = { duration: opening ? 460 : 420, fill: "both" };
+    const animations = [first, second].map((panel, index) => {
+      const outside = `${slide}(${index ? 101 : -101}%)`;
+      const centered = `${slide}(0)`;
+      return panel.animate(opening ? [
+        { transform: centered, opacity: 0 },
+        { transform: centered, opacity: 1, offset: .12, easing: "cubic-bezier(.24,.68,.28,1)" },
+        { transform: outside, opacity: 0 },
+      ] : [
+        { transform: outside, opacity: 0, easing: "cubic-bezier(.3,0,.3,1)" },
+        { transform: centered, opacity: 1, offset: .68, easing: "ease-out" },
+        { transform: centered, opacity: 0 },
+      ], timing);
     });
-    active = { overlay, animations: [veil, ...panels] };
+    document.body.append(overlay);
+    active = { overlay, animations };
     playbackStatus = "Playing";
     updateDiagnostic();
-    void veil.finished.then(() => {
+    void Promise.all(animations.map(animation => animation.finished)).then(() => {
       if (active?.overlay !== overlay) return;
       clearAnimation();
       playbackStatus = "Played";
@@ -133,7 +160,8 @@ export function installFoldMotion() {
   let previous = handoff?.display ?? readDisplay();
   let pending = handoff?.pending;
   let hiddenAt: number | undefined;
-  let lastFold = pending ?? { direction: "unfold", hinge: centerHinge } satisfies Fold;
+  let lastFold = pending;
+  let lastFoldAt = pending ? performance.now() : -Infinity;
   let lastDetection = pending ? `Detected ${pending.direction} before the page resumed` : "Waiting for a fold or unfold";
   let playbackStatus = "Ready";
   const diagnostic = new URLSearchParams(location.search).has("fold-test") ? makeDiagnostic() : undefined;
@@ -146,7 +174,7 @@ export function installFoldMotion() {
     replay.type = "button";
     replay.textContent = "Replay animation";
     replay.addEventListener("click", () => {
-      if (!motion.matches) animateFold(lastFold);
+      if (!motion.matches) animateFold(lastFold ?? { direction: "unfold", hinge: centerHinge });
     });
     panel.append(report, replay);
     document.body.append(panel);
@@ -175,16 +203,31 @@ export function installFoldMotion() {
 
   function playWhenDisplaySettles() {
     if (!pending) return;
-    // Give the browser time to present the destination display after the native switch.
+    // Present the settled layout before playing the hinge reveal.
     playbackStatus = "Waiting for display";
-    playbackTimeout = window.setTimeout(() => {
-      playbackTimeout = undefined;
-      if (document.hidden || !pending) return;
-      const fold = pending;
-      pending = undefined;
-      saveDisplay();
-      if (!motion.matches) animateFold(fold);
-    }, 180);
+    playbackFrame = requestAnimationFrame(() => {
+      playbackFrame = requestAnimationFrame(playPendingFold);
+    });
+  }
+
+  function playPendingFold() {
+    playbackFrame = 0;
+    if (document.hidden || !pending) return;
+    const fold = pending;
+    pending = undefined;
+    saveDisplay();
+    if (!motion.matches) animateFold(fold);
+  }
+
+  function queueFold(fold: Fold) {
+    const now = performance.now();
+    const recent = lastFold && now - lastFoldAt < signalWindow ? lastFold : undefined;
+    // The screen and posture signals can arrive separately during a single switch.
+    if (recent && signalPriority[fold.source] < signalPriority[recent.source]) return;
+    lastFold = fold;
+    lastFoldAt = now;
+    lastDetection = `Detected ${fold.direction} via ${fold.source}`;
+    if (!motion.matches && (pending || recent?.direction !== fold.direction)) pending = fold;
   }
 
   function refresh() {
@@ -194,19 +237,8 @@ export function installFoldMotion() {
     const after = readDisplay();
     previous = after;
 
-    const signals = [
-      { name: "screen size", opens: hasTouch && screenOpens(before, after), closes: hasTouch && screenOpens(after, before) },
-      { name: "posture", opens: before.folded && !after.folded, closes: !before.folded && after.folded },
-      { name: "viewport segments", opens: !before.hinge && after.hinge, closes: before.hinge && !after.hinge },
-      { name: "viewport size", opens: hasTouch && viewportOpens(before, after), closes: hasTouch && viewportOpens(after, before) },
-    ];
-    const signal = signals.find(({ opens, closes }) => opens || closes);
-    if (signal) {
-      const direction = signal.opens ? "unfold" : "fold";
-      lastDetection = `Detected ${direction} via ${signal.name}`;
-      lastFold = { direction, hinge: after.hinge ?? before.hinge ?? centerHinge };
-      if (!motion.matches) pending = lastFold;
-    }
+    const fold = detectFold(before, after, hasTouch);
+    if (fold) queueFold(fold);
     saveDisplay();
     playWhenDisplaySettles();
     updateDiagnostic();
@@ -214,19 +246,18 @@ export function installFoldMotion() {
 
   function schedule() {
     if (timeout !== undefined) window.clearTimeout(timeout);
-    window.clearTimeout(playbackTimeout);
-    timeout = window.setTimeout(refresh, 90);
+    cancelAnimationFrame(playbackFrame);
+    timeout = window.setTimeout(refresh, 100);
   }
 
   for (const signal of [folded, columns, rows, posture]) signal?.addEventListener("change", schedule);
   window.addEventListener("resize", schedule, { passive: true });
-  window.visualViewport?.addEventListener("resize", schedule, { passive: true });
   window.addEventListener("focus", schedule);
   screen.orientation?.addEventListener("change", schedule);
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
       hiddenAt = Date.now();
-      window.clearTimeout(playbackTimeout);
+      cancelAnimationFrame(playbackFrame);
       saveDisplay();
       clearAnimation();
       return;
@@ -240,6 +271,7 @@ export function installFoldMotion() {
   });
   motion.addEventListener("change", () => {
     if (motion.matches) {
+      cancelAnimationFrame(playbackFrame);
       pending = undefined;
       clearAnimation();
       saveDisplay();
@@ -248,7 +280,7 @@ export function installFoldMotion() {
     updateDiagnostic();
   });
   window.addEventListener("pagehide", () => {
-    window.clearTimeout(playbackTimeout);
+    cancelAnimationFrame(playbackFrame);
     saveDisplay();
     clearAnimation();
   });
