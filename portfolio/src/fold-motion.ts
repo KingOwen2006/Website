@@ -2,6 +2,7 @@ type Axis = "vertical" | "horizontal";
 type Direction = "fold" | "unfold";
 type Posture = EventTarget & { readonly type: "folded" | "continuous" };
 type Hinge = { axis: Axis; position: number };
+type Fold = { direction: Direction; hinge: Hinge };
 type Display = {
   screenWidth: number;
   screenHeight: number;
@@ -36,13 +37,10 @@ function viewportOpens(cover: Display, main: Display) {
     Math.min(cover.height, main.height) >= Math.max(cover.height, main.height) * .72;
 }
 
-function readHandoff(page: string): Display | undefined {
+function readHandoff(page: string): { display: Display; pending?: Fold } | undefined {
   try {
-    const stored = sessionStorage.getItem(handoffKey);
-    if (stored) {
-      const { display, url, time } = JSON.parse(stored);
-      if (url === page && Date.now() - time < handoffLifetime) return display;
-    }
+    const stored = JSON.parse(sessionStorage.getItem(handoffKey) ?? "null");
+    if (stored?.url === page && Date.now() - stored.time < handoffLifetime) return stored;
   } catch {
     // A blocked storage setting still permits live detection.
   }
@@ -58,12 +56,8 @@ export function installFoldMotion() {
   const viewport = (window as Window & { viewport?: { readonly segments: readonly DOMRectReadOnly[] | null } }).viewport;
   const page = location.pathname + location.search;
   const hasTouch = navigator.maxTouchPoints > 0 || touchScreen.matches;
-  const diagnostic = new URLSearchParams(location.search).has("fold-test") ? document.createElement("pre") : undefined;
-  if (diagnostic) {
-    diagnostic.className = "fold-motion-diagnostic";
-    document.body.append(diagnostic);
-  }
   let timeout: number | undefined;
+  let playbackTimeout: number | undefined;
   let active: { overlay: HTMLElement; animations: Animation[] } | undefined;
 
   function readDisplay(): Display {
@@ -93,9 +87,10 @@ export function installFoldMotion() {
     active = undefined;
     animations.forEach((animation) => animation.cancel());
     overlay.remove();
+    playbackStatus = "Interrupted";
   }
 
-  function animateFold(direction: Direction, hinge: Hinge) {
+  function animateFold({ direction, hinge }: Fold) {
     clearAnimation();
     const opening = direction === "unfold";
     const overlay = document.createElement("div");
@@ -110,32 +105,58 @@ export function installFoldMotion() {
     overlay.append(first, second);
     document.body.append(overlay);
 
-    const timing: KeyframeAnimationOptions = { duration: opening ? 620 : 520, easing: "cubic-bezier(.22,.68,.28,1)", fill: "both" };
+    const timing: KeyframeAnimationOptions = { duration: opening ? 840 : 740, easing: "cubic-bezier(.25,.67,.28,1)", fill: "both" };
     const veil = overlay.animate(opening
-      ? [{ opacity: .92 }, { opacity: .45, offset: .44 }, { opacity: 0 }]
-      : [{ opacity: 0 }, { opacity: .88, offset: .5 }, { opacity: 0 }], timing);
+      ? [{ opacity: .96 }, { opacity: .78, offset: .36 }, { opacity: 0 }]
+      : [{ opacity: .1 }, { opacity: .96, offset: .44 }, { opacity: 0 }], timing);
 
     const rotation = hinge.axis === "vertical" ? "rotateY" : "rotateX";
+    const angle = hinge.axis === "vertical" ? -49 : 49;
     const panels = [first, second].map((panel, index) => {
-      const bend = `${rotation}(${index ? -28 : 28}deg)`;
+      const bend = `${rotation}(${index ? -angle : angle}deg)`;
       return panel.animate(opening
         ? [{ transform: bend }, { transform: "none" }]
         : [{ transform: "none" }, { transform: bend }], timing);
     });
     active = { overlay, animations: [veil, ...panels] };
+    playbackStatus = "Playing";
+    updateDiagnostic();
     void veil.finished.then(() => {
-      if (active?.overlay === overlay) clearAnimation();
+      if (active?.overlay !== overlay) return;
+      clearAnimation();
+      playbackStatus = "Played";
+      updateDiagnostic();
     }, () => {});
   }
 
-  let previous = (hasTouch && readHandoff(page)) || readDisplay();
+  const handoff = hasTouch ? readHandoff(page) : undefined;
+  let previous = handoff?.display ?? readDisplay();
+  let pending = handoff?.pending;
   let hiddenAt: number | undefined;
-  let lastDetection = "Waiting for a fold or unfold";
+  let lastFold = pending ?? { direction: "unfold", hinge: centerHinge } satisfies Fold;
+  let lastDetection = pending ? `Detected ${pending.direction} before the page resumed` : "Waiting for a fold or unfold";
+  let playbackStatus = "Ready";
+  const diagnostic = new URLSearchParams(location.search).has("fold-test") ? makeDiagnostic() : undefined;
+
+  function makeDiagnostic() {
+    const panel = document.createElement("aside");
+    panel.className = "fold-motion-diagnostic";
+    const report = document.createElement("pre");
+    const replay = document.createElement("button");
+    replay.type = "button";
+    replay.textContent = "Replay animation";
+    replay.addEventListener("click", () => {
+      if (!motion.matches) animateFold(lastFold);
+    });
+    panel.append(report, replay);
+    document.body.append(panel);
+    return { report, replay };
+  }
 
   function saveDisplay() {
     if (!hasTouch) return;
     try {
-      sessionStorage.setItem(handoffKey, JSON.stringify({ url: page, display: previous, time: Date.now() }));
+      sessionStorage.setItem(handoffKey, JSON.stringify({ url: page, display: previous, pending, time: Date.now() }));
     } catch {
       // A blocked storage setting still permits live detection.
     }
@@ -143,11 +164,27 @@ export function installFoldMotion() {
 
   function updateDiagnostic() {
     if (!diagnostic) return;
-    diagnostic.textContent = [
+    diagnostic.report.textContent = [
       `Screen ${previous.screenWidth}×${previous.screenHeight} · Viewport ${previous.width}×${previous.height}`,
       `Posture ${posture?.type ?? (previous.folded ? "folded (CSS)" : "unreported")} · Hinge ${previous.hinge?.axis ?? "unreported"}`,
-      `Reduced motion ${motion.matches ? "on" : "off"} · ${lastDetection}`,
+      lastDetection,
+      `Animation ${motion.matches ? "off (reduced motion)" : playbackStatus.toLowerCase()}`,
     ].join("\n");
+    diagnostic.replay.disabled = motion.matches;
+  }
+
+  function playWhenDisplaySettles() {
+    if (!pending) return;
+    // Give the browser time to present the destination display after the native switch.
+    playbackStatus = "Waiting for display";
+    playbackTimeout = window.setTimeout(() => {
+      playbackTimeout = undefined;
+      if (document.hidden || !pending) return;
+      const fold = pending;
+      pending = undefined;
+      saveDisplay();
+      if (!motion.matches) animateFold(fold);
+    }, 180);
   }
 
   function refresh() {
@@ -156,7 +193,6 @@ export function installFoldMotion() {
     const before = previous;
     const after = readDisplay();
     previous = after;
-    saveDisplay();
 
     const signals = [
       { name: "screen size", opens: hasTouch && screenOpens(before, after), closes: hasTouch && screenOpens(after, before) },
@@ -168,13 +204,17 @@ export function installFoldMotion() {
     if (signal) {
       const direction = signal.opens ? "unfold" : "fold";
       lastDetection = `Detected ${direction} via ${signal.name}`;
-      if (!motion.matches) animateFold(direction, after.hinge ?? before.hinge ?? centerHinge);
+      lastFold = { direction, hinge: after.hinge ?? before.hinge ?? centerHinge };
+      if (!motion.matches) pending = lastFold;
     }
+    saveDisplay();
+    playWhenDisplaySettles();
     updateDiagnostic();
   }
 
   function schedule() {
     if (timeout !== undefined) window.clearTimeout(timeout);
+    window.clearTimeout(playbackTimeout);
     timeout = window.setTimeout(refresh, 90);
   }
 
@@ -186,19 +226,29 @@ export function installFoldMotion() {
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
       hiddenAt = Date.now();
+      window.clearTimeout(playbackTimeout);
       saveDisplay();
       clearAnimation();
       return;
     }
-    if (hiddenAt !== undefined && Date.now() - hiddenAt >= handoffLifetime) previous = readDisplay();
+    if (hiddenAt !== undefined && Date.now() - hiddenAt >= handoffLifetime) {
+      previous = readDisplay();
+      pending = undefined;
+    }
     hiddenAt = undefined;
     schedule();
   });
   motion.addEventListener("change", () => {
-    if (motion.matches) clearAnimation();
+    if (motion.matches) {
+      pending = undefined;
+      clearAnimation();
+      saveDisplay();
+      playbackStatus = "Ready";
+    }
     updateDiagnostic();
   });
   window.addEventListener("pagehide", () => {
+    window.clearTimeout(playbackTimeout);
     saveDisplay();
     clearAnimation();
   });

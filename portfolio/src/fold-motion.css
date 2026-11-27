@@ -1,35 +1,39 @@
 .fold-motion {
   --fold-line: 50%;
-  --fold-highlight: rgb(255 255 255 / 25%);
+  --fold-surface: rgb(96 110 130 / 25%);
+  --fold-shadow: rgb(0 0 0 / 82%);
+  --fold-highlight: rgb(255 255 255 / 42%);
   position: fixed;
   z-index: 8;
   inset: 0;
   overflow: clip;
-  perspective: 1050px;
+  perspective: 800px;
   pointer-events: none;
 }
 .fold-motion::after {
   content: "";
   position: absolute;
-  inset: 0 auto 0 calc(var(--fold-line) - 18px);
-  width: 36px;
-  background: linear-gradient(90deg, transparent, var(--fold-highlight), transparent);
+  inset: 0 auto 0 calc(var(--fold-line) - 26px);
+  width: 52px;
+  background: linear-gradient(90deg, transparent, var(--fold-highlight) 49%, transparent 54%);
 }
-[data-theme="light"] .fold-motion { --fold-highlight: rgb(23 29 39 / 24%); }
+[data-theme="light"] .fold-motion {
+  --fold-surface: rgb(255 255 255 / 18%);
+  --fold-shadow: rgb(23 29 39 / 53%);
+  --fold-highlight: rgb(23 29 39 / 51%);
+}
 .fold-motion[data-axis="horizontal"]::after {
-  inset: calc(var(--fold-line) - 18px) 0 auto;
+  inset: calc(var(--fold-line) - 26px) 0 auto;
   width: auto;
-  height: 36px;
-  background: linear-gradient(transparent, var(--fold-highlight), transparent);
+  height: 52px;
+  background: linear-gradient(transparent, var(--fold-highlight) 49%, transparent 54%);
 }
 .fold-motion-panel {
   position: absolute;
   inset: 0 calc(100% - var(--fold-line)) 0 0;
   transform-origin: right center;
   --fold-edge: to right;
-  background: linear-gradient(var(--fold-edge), color-mix(in srgb, var(--page-base) 72%, transparent), transparent);
-  backdrop-filter: blur(9px);
-  mask-image: linear-gradient(var(--fold-edge), #000 8%, #0009 48%, transparent 100%);
+  background: linear-gradient(var(--fold-edge), var(--fold-surface), var(--fold-shadow));
 }
 .fold-motion-panel + .fold-motion-panel {
   --fold-edge: to left;
@@ -57,10 +61,22 @@
   border-radius: 10px;
   background: var(--settings-surface);
   color: var(--settings-muted);
-  font: .6875rem/1.4 ui-monospace, monospace;
-  white-space: pre-wrap;
-  pointer-events: none;
+  display: grid;
+  gap: 4px;
+  justify-items: end;
 }
+.fold-motion-diagnostic pre { margin: 0; font: .6875rem/1.4 ui-monospace, monospace; white-space: pre-wrap; }
+.fold-motion-diagnostic button {
+  min-height: 38px;
+  padding: 0 10px;
+  border: 1px solid var(--settings-line);
+  border-radius: 8px;
+  background: var(--settings-hover);
+  color: var(--setting-accent);
+  font: inherit;
+  font-size: .75rem;
+}
+.fold-motion-diagnostic button:disabled { opacity: .6; }
 @media (prefers-reduced-motion: reduce) {
   .fold-motion { display: none; }
 }
