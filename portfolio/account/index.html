@@ -46,12 +46,12 @@
     <main id="main" class="shop-page account-page">
       <header class="shop-heading"><h1 class="display-title">Your account</h1><p>Your creations, all in one place.</p></header>
       <p id="account-status" role="status">Loading your account…</p>
-      <div id="account-sign-in" class="account-sign-in"></div>
+      <div class="account-auth"><div id="account-sign-in"></div></div>
       <section id="account-dashboard" hidden aria-label="Your purchases">
         <div class="account-toolbar"><p id="account-email"></p><button type="button" id="account-profile">Account settings</button><button type="button" id="account-billing">Manage billing</button><button type="button" id="account-sign-out">Sign out</button></div>
         <h2>Orders</h2><div id="account-orders" class="account-orders"></div><button type="button" id="account-more" hidden>Load more orders</button>
       </section>
-      <p><a href="/shop/">← Back to shop</a></p>
+      <p class="account-back"><a href="/shop/">← Back to shop</a></p>
     </main>
     <dialog id="profile-dialog" aria-label="Account settings"><button class="shop-close" id="profile-close" type="button" aria-label="Close account settings">×</button><div id="profile-content"></div></dialog>
   </body>

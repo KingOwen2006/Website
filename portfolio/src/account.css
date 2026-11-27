@@ -1,6 +1,9 @@
 .account-page { max-width: 1500px; }
 .account-page a { color: var(--setting-accent); }
-.account-sign-in { display: flex; justify-content: center; }
+.account-auth { display: flex; justify-content: center; min-width: 0; }
+.account-auth > div { max-width: 100%; }
+.account-auth .cl-cardBox { max-width: 100%; }
+.account-back { text-align: center; }
 #account-status { text-align: center; color: var(--settings-muted); }
 .account-toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 30px 0; }
 .account-toolbar p { flex: 1; }
