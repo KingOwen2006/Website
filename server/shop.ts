@@ -1,26 +1,32 @@
 import type {IncomingMessage, ServerResponse} from 'node:http'
 import {createClient} from '@sanity/client'
 import Stripe from 'stripe'
+import {defineQuery} from 'groq'
 import {AccountError, authenticateCustomer, clerkKey, customerIdFor} from './customer-auth.js'
 
 export type Product = {
   _id: string; title: string; slug: string; summary?: string; description?: string;
-  category?: string; price: number; availability: string; requiresShipping?: boolean;
+  category?: string; price: number; availability: string; status?: string; requiresShipping?: boolean;
   images?: {url: string; alt?: string}[]; details?: string[];
 }
 type Settings = {title?: string; intro?: string; delivery?: string; returns?: string; shippingPrice?: number; shippingCountries?: string[]}
-export const catalogQuery = `{
-  "products": *[_type == "shopProduct" && (!defined(status) || status == "published")] | order(coalesce(sortOrder, order, 0) asc, title asc) {
+const productFields = `{
     _id, title, "slug": coalesce(slug.current, _id), summary, description, category,
+    "status": coalesce(status, "published"),
     "price": coalesce(price, priceMinor / 100),
     "availability": coalesce(availability, "coming-soon"),
     requiresShipping, "details": coalesce(details[], string::split(details, "\n"), []),
     "images": coalesce(images[]{"url": asset->url, alt}, [thumbnail{"url": asset->url, alt}])[defined(url)]
-  },
+  }`
+export const catalogQuery = defineQuery(`{
+  "products": *[_type == "shopProduct" && (!defined(status) || status == "published")] | order(coalesce(sortOrder, order, 0) asc, title asc) ${productFields},
+  "linkedProducts": *[_type == "shopProduct" && status == "unlisted" &&
+    (coalesce(slug.current, _id) == $productSlug || _id in $productIds)] ${productFields},
   "settings": *[_type == "shopSettings"] | order(_updatedAt desc)[0] {
     title, intro, delivery, returns, shippingPrice, shippingCountries
   }
-}`
+}`)
+type Catalog = {products: Product[]; linkedProducts: Product[]; settings: Settings | null}
 export function sanity(write = false) {
   return createClient({projectId: process.env.SANITY_PROJECT_ID || 'bxr88bn5',
     dataset: process.env.SANITY_DATASET || 'production', apiVersion: '2025-01-01',
@@ -47,8 +53,14 @@ export async function rawBody(req: IncomingMessage): Promise<Buffer> {
 }
 export async function catalog(req: IncomingMessage, res: ServerResponse) {
   if (req.method !== 'GET') return json(res, 405, {error: 'Method not allowed'})
+  const params = new URL(req.url ?? '/', 'https://localhost').searchParams
+  const productSlug = params.get('product') ?? ''
+  let productIds: unknown
+  try { productIds = JSON.parse(params.get('items') ?? '[]') } catch { return json(res, 400, {error: 'Invalid basket'}) }
+  if (productSlug.length > 200 || !Array.isArray(productIds) || productIds.length > 20 ||
+    productIds.some(id => typeof id !== 'string' || id.length > 200)) return json(res, 400, {error: 'Invalid product request'})
   try {
-    const data = await sanity().fetch<{products: Product[]; settings: Settings | null}>(catalogQuery, {}, {signal: AbortSignal.timeout(8000)})
+    const data = await sanity().fetch<Catalog>(catalogQuery, {productSlug, productIds}, {signal: AbortSignal.timeout(8000)})
     json(res, 200, {...data, testMode: process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_') ?? false,
       paymentsReady: !!(process.env.SITE_URL && process.env.STRIPE_SECRET_KEY && process.env.STRIPE_PUBLISHABLE_KEY && process.env.STRIPE_WEBHOOK_SECRET && process.env.SANITY_API_TOKEN && clerkKey() && process.env.CLERK_SECRET_KEY)})
   } catch { json(res, 502, {error: 'The shop could not load. Please try again.'}) }
@@ -71,8 +83,9 @@ export async function checkout(req: IncomingMessage, res: ServerResponse) {
       quantities.set(item.id, (quantities.get(item.id) ?? 0) + item.quantity)
       if (quantities.get(item.id)! > 10) return json(res, 400, {error: 'Maximum ten of each item.'})
     }
-    const data = await sanity().fetch<{products: Product[]; settings: Settings | null}>(catalogQuery)
-    const selected = [...quantities].map(([id, quantity]) => ({product: data.products.find(p => p._id === id), quantity}))
+    const data = await sanity().fetch<Catalog>(catalogQuery, {productSlug: '', productIds: [...quantities.keys()]})
+    const purchasable = [...data.products, ...data.linkedProducts]
+    const selected = [...quantities].map(([id, quantity]) => ({product: purchasable.find(p => p._id === id), quantity}))
     if (selected.some(({product}) => !product || product.availability !== 'available' || !Number.isFinite(product.price) || product.price < .5))
       return json(res, 409, {error: 'An item is no longer available. Refresh your basket.'})
     const shipping = selected.some(({product}) => product?.requiresShipping)

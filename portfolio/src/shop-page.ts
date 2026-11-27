@@ -8,10 +8,10 @@ import { accountFetch } from "./customer-auth";
 mountNavigation("shop");
 type Product = {
   _id: string; title: string; slug: string; summary?: string; description?: string;
-  category?: string; price: number; availability: string;
+  category?: string; price: number; availability: string; status?: string;
   images?: {url: string; alt?: string}[]; details?: string[];
 };
-type Catalog = {products: Product[]; paymentsReady: boolean; testMode?: boolean; settings?: {
+type Catalog = {products: Product[]; linkedProducts?: Product[]; paymentsReady: boolean; testMode?: boolean; settings?: {
   title?: string; intro?: string; delivery?: string; returns?: string;
 } | null};
 let products: Product[] = [];
@@ -48,13 +48,14 @@ function save(replaceItems = true) {
 }
 function renderProducts() {
   const term = search.value.toLowerCase().trim();
-  const selected = products.filter(p => (!category.value || p.category === category.value) &&
+  const listed = products.filter(p => p.status !== "unlisted");
+  const selected = listed.filter(p => (!category.value || p.category === category.value) &&
     `${p.title} ${p.summary ?? ""}`.toLowerCase().includes(term));
   grid.innerHTML = selected.map(p => `<a class="shop-card" href="/shop/?product=${encodeURIComponent(p.slug)}" data-product="${esc(p._id)}">
     <div class="shop-card-image">${photo(p)}<span class="shop-tag">${esc(p.category || "Creation")}</span></div>
     <div class="shop-card-copy"><h2>${esc(p.title)}</h2><p>${esc(p.summary || "")}</p>
     <div class="shop-card-footer"><strong>${money(p.price)}</strong><span>${p.availability === "available" ? "View creation ↗" : p.availability === "sold-out" ? "Sold out" : "Coming soon"}</span></div></div></a>`).join("");
-  status.textContent = !products.length ? "New creations are on their way. Check back soon." : !selected.length ? "No creations match your search." : "";
+  status.textContent = !listed.length ? "New creations are on their way. Check back soon." : !selected.length ? "No creations match your search." : "";
   grid.setAttribute("aria-busy", "false");
 }
 function openProduct(product: Product) {
@@ -144,17 +145,21 @@ element("#checkout-start").addEventListener("click", async () => {
 
 async function load() {
   try {
-    const response = await fetch("/api/shop");
+    const params = new URLSearchParams();
+    const linkedSlug = new URLSearchParams(location.search).get("product");
+    if (linkedSlug) params.set("product", linkedSlug);
+    if (Object.keys(basket).length) params.set("items", JSON.stringify(Object.keys(basket).slice(0, 20)));
+    const response = await fetch(`/api/shop${params.size ? `?${params}` : ""}`);
     if (!response.ok) throw new Error();
     const data: Catalog = await response.json();
-    products = data.products.filter(p => p.slug && Number.isFinite(p.price));
+    products = [...data.products, ...(data.linkedProducts ?? [])].filter(p => p.slug && Number.isFinite(p.price));
     ready = data.paymentsReady;
     element('#shop-test-mode').hidden = !data.testMode;
     for (const key of ["title", "intro"] as const) {
       const value = data.settings?.[key];
       if (value) element(`#shop-${key}`).textContent = value;
     }
-    category.innerHTML += [...new Set(products.map(p => p.category).filter(Boolean))].map(c => `<option value="${esc(c!)}">${esc(c!)}</option>`).join("");
+    category.innerHTML += [...new Set(data.products.map(p => p.category).filter(Boolean))].map(c => `<option value="${esc(c!)}">${esc(c!)}</option>`).join("");
     renderProducts(); renderBasket();
     const slug = new URLSearchParams(location.search).get("product");
     const selected = products.find(p => p.slug === slug);
