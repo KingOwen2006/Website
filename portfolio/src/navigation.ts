@@ -1,5 +1,7 @@
 import "./preferences";
 import "./preferences.css";
+import { installFoldMotion } from "./fold-motion";
+import "./fold-motion.css";
 
 export function element<T extends HTMLElement>(selector: string) {
   const result = document.querySelector<T>(selector);
@@ -63,6 +65,7 @@ function ensurePageEntrance(startSelection: () => void) {
 }
 
 export function mountNavigation(page: Page) {
+  installFoldMotion();
   window.addEventListener("pageswap", (event) => {
     // The outgoing transition's ready promise rejects when its document is hidden.
     void event.viewTransition?.ready.catch(() => {});
