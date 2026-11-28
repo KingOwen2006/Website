@@ -103,6 +103,7 @@ export async function checkout(req: IncomingMessage, res: ServerResponse) {
           product_data: {name: product!.title, metadata: {sanityProductId: product!._id}}}
       })),
       ...(shipping ? {
+        customer_update: {shipping: 'auto'},
         shipping_address_collection: {allowed_countries: (data.settings?.shippingCountries?.length ? data.settings.shippingCountries : ['GB']) as Stripe.Checkout.SessionCreateParams.ShippingAddressCollection.AllowedCountry[]},
         shipping_options: [{shipping_rate_data: {display_name: 'Delivery', type: 'fixed_amount', fixed_amount: {amount: Math.max(0, Math.round((data.settings?.shippingPrice ?? 0) * 100)), currency: 'gbp'}}}],
       } : {}),

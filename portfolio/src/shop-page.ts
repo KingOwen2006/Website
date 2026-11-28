@@ -17,6 +17,8 @@ type Catalog = {products: Product[]; linkedProducts?: Product[]; paymentsReady: 
 let products: Product[] = [];
 let ready = false;
 let embedded: StripeEmbeddedCheckout | undefined;
+let productView = 0;
+let noticeTimer: number | undefined;
 const storageKey = "portfolio-shop-basket";
 let basket: Record<string, number> = {};
 try {
@@ -59,21 +61,60 @@ function renderProducts() {
   grid.setAttribute("aria-busy", "false");
 }
 function openProduct(product: Product) {
+  const view = ++productView;
   const available = product.availability === "available";
+  const remaining = Math.max(0, 10 - (basket[product._id] ?? 0));
+  const canAdd = available && remaining > 0;
   element("#product-content").innerHTML = `<div class="shop-product-layout"><div><div id="product-photo">${photo(product)}</div>
     <div class="shop-thumbnails">${(product.images ?? []).map((_, i) => `<button type="button" data-photo="${i}" aria-label="View image ${i + 1}">${photo(product, i)}</button>`).join("")}</div></div>
     <div class="shop-product-copy"><p class="shop-eyebrow">${esc(product.category || "Creation")}</p><h2 id="product-title">${esc(product.title)}</h2>
     <p class="shop-product-price">${money(product.price)}</p><p class="shop-description">${esc(product.description || product.summary || "")}</p>
     <ul>${(product.details ?? []).map(d => `<li>${esc(d)}</li>`).join("")}</ul>
-    <button type="button" class="shop-primary" id="product-add" ${available ? "" : "disabled"}>${available ? "Add to basket" : product.availability === "sold-out" ? "Sold out" : "Coming soon"}</button>
-    <p role="status" id="product-message"></p></div></div>`;
+    <div class="shop-purchase-row"><div class="shop-quantity"><button type="button" id="quantity-minus" aria-label="Decrease quantity" disabled>−</button>
+    <input id="product-quantity" aria-label="Product quantity" type="number" inputmode="numeric" min="1" max="${Math.max(1, remaining)}" step="1" value="1" ${canAdd ? "" : "disabled"}>
+    <button type="button" id="quantity-plus" aria-label="Increase quantity" ${canAdd && remaining > 1 ? "" : "disabled"}>+</button></div><p id="product-total">Total ${money(product.price)}</p></div>
+    <button type="button" class="shop-primary" id="product-add" ${canAdd ? "" : "disabled"}>${!available ? product.availability === "sold-out" ? "Sold out" : "Coming soon" : remaining ? "Add to basket" : "Basket limit reached"}</button>
+    <p role="status" id="product-message">${available && !remaining ? "You already have the maximum of 10 in your basket." : ""}</p></div></div>`;
   element("#product-content").querySelectorAll<HTMLButtonElement>("[data-photo]").forEach(button => button.addEventListener("click", () => {
     element("#product-photo").innerHTML = photo(product, Number(button.dataset.photo));
   }));
-  element("#product-add").addEventListener("click", () => {
-    basket[product._id] = Math.min(10, (basket[product._id] ?? 0) + 1);
+  const quantity = element<HTMLInputElement>("#product-quantity");
+  const minus = element<HTMLButtonElement>("#quantity-minus");
+  const plus = element<HTMLButtonElement>("#quantity-plus");
+  const updateQuantity = () => {
+    const count = quantity.valueAsNumber;
+    minus.disabled = !canAdd || !Number.isFinite(count) || count <= 1;
+    plus.disabled = !canAdd || !Number.isFinite(count) || count >= remaining;
+    element("#product-total").textContent = quantity.validity.valid ? `Total ${money(product.price * count)}` : `Choose 1–${remaining}`;
+  };
+  quantity.addEventListener("input", updateQuantity);
+  minus.addEventListener("click", () => { quantity.stepDown(); updateQuantity(); });
+  plus.addEventListener("click", () => { quantity.stepUp(); updateQuantity(); });
+  element("#product-add").addEventListener("click", async event => {
+    if (!quantity.reportValidity()) return;
+    const count = quantity.valueAsNumber;
+    const button = event.currentTarget as HTMLButtonElement;
+    button.disabled = true;
+    minus.disabled = true; plus.disabled = true; quantity.disabled = true;
+    basket[product._id] = (basket[product._id] ?? 0) + count;
     save();
-    element("#product-message").textContent = "Added to your basket.";
+    button.textContent = "✓ Added to basket";
+    const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!reducedMotion) await element(".shop-product-layout").animate([
+      {opacity: 1, transform: "translateY(0) scale(1)"},
+      {opacity: 0, transform: "translateY(14px) scale(.97)"},
+    ], {duration: 240, easing: "cubic-bezier(.4,0,.2,1)"}).finished.catch(() => {});
+    if (view === productView && productDialog.open) productDialog.close();
+    const notice = element("#shop-basket-notice");
+    element("#shop-basket-notice-text").textContent = `${count} × ${product.title} added to your basket`;
+    notice.hidden = false;
+    clearTimeout(noticeTimer);
+    noticeTimer = window.setTimeout(() => { notice.hidden = true; }, 3200);
+    if (!reducedMotion) {
+      notice.getAnimations().forEach(animation => animation.cancel());
+      notice.animate([{opacity: 0, transform: "translateY(18px) scale(.94)"}, {opacity: 1, transform: "translateY(0) scale(1)"}], {duration: 400, easing: "cubic-bezier(.16,1,.3,1)"});
+      element("#basket-open").animate([{transform: "scale(1)"}, {transform: "scale(1.08)", offset: .45}, {transform: "scale(1)"}], {duration: 460, easing: "cubic-bezier(.16,1,.3,1)"});
+    }
   });
   if (!productDialog.open) productDialog.showModal();
   document.title = `${product.title} | King Owen`;
